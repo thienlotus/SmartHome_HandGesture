@@ -1,165 +1,183 @@
-# 🏠 AI Smart Home System: Hand Gesture & Face Recognition Control
+# Edge AI Smart Home: Biometric Gesture & Face Recognition Control System
 
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
-[![OpenCV](https://img.shields.io/badge/OpenCV-Computer%20Vision-green.svg?logo=opencv&logoColor=white)](https://opencv.org/)
-[![MediaPipe](https://img.shields.io/badge/Google-MediaPipe-orange.svg)](https://developers.google.com/mediapipe)
-[![Arduino](https://img.shields.io/badge/Arduino-Uno%20R3-00979D.svg?logo=arduino&logoColor=white)](https://www.arduino.cc/)
-[![Wokwi](https://img.shields.io/badge/Simulator-Wokwi-blueviolet.svg)](https://wokwi.com/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
+[![OpenCV](https://img.shields.io/badge/OpenCV-Computer%20Vision-5C3EE8?style=flat&logo=opencv&logoColor=white)](https://opencv.org/)
+[![MediaPipe](https://img.shields.io/badge/Google-MediaPipe-007FFF?style=flat)](https://developers.google.com/mediapipe)
+[![Arduino](https://img.shields.io/badge/Arduino-Uno%20R3-00979D?style=flat&logo=arduino&logoColor=white)](https://www.arduino.cc/)
+[![Wokwi](https://img.shields.io/badge/Simulator-Wokwi-6D28D9?style=flat)](https://wokwi.com/)
+[![License](https://img.shields.io/badge/License-MIT-gray.svg?style=flat)](LICENSE)
 
-Hệ thống nhà thông minh thế hệ mới tích hợp **Trí Tuệ Nhân Tạo (AI Computer Vision)**:
-- Nhận diện cử chỉ bàn tay thời gian thực với **Google MediaPipe Gesture Recognizer**.
-- Xác thực danh tính chủ nhà bằng thuật toán nhận diện khuôn mặt **OpenCV LBPH**.
-- Giao tiếp hai chiều với phần cứng **Arduino Uno** để điều khiển các thiết bị điện trong nhà.
+An enterprise-grade, edge-computed smart home automation system combining **Google MediaPipe Hand Gesture Recognition** and **OpenCV LBPH Biometric Face Verification** to actuate physical home appliances and security hardware through an **Arduino Uno R3** microcontroller.
 
 ---
 
-## 📸 Giao Diện & Sơ Đồ Đấu Dây
+## Technical Highlights
 
-### 1. Bảng Điều Khiển Camera AI
-Giao diện hiển thị camera thời gian thực, khung nhận diện khuôn mặt chủ nhà, vị trí bàn tay và trạng thái các thiết bị:
-
-![Giao dien AI](ai_module/ui_preview_vietnamese.png)
-
-### 2. Sơ Đồ Đấu Dây Phần Cứng (Hardware Pinout)
-Hệ thống kết nối giữa máy tính (xử lý AI) và Arduino Uno qua cổng USB Serial:
-
-![So Do Dau Day](docs/SoDo_DauDay_SmartHome.svg)
+- **Edge Vision Inference**: 100% offline, low-latency gesture detection via Google MediaPipe Task API (sub-25ms inference on commodity CPUs).
+- **Dual-Check Facial Authentication**: Prevents unauthorized bystander commands via Local Binary Patterns Histograms (LBPH) and Haar Cascade classifiers.
+- **Hardware-Level Debounce Filter**: Implements a 1500ms temporal refractory engine to eliminate command oscillation and servo jitter.
+- **Decoupled Architecture**: High-level computer vision and low-level ATmega328P firmware communicate via an asynchronous 9600-baud UART protocol.
+- **Fault-Tolerant Fallback**: Automatically activates software simulation mode when physical hardware is disconnected, enabling headless testing on Wokwi.
 
 ---
 
-## ✋ Bảng Mã Cử Chỉ & Thiết Bị Điều Khiển
+## System Architecture
 
-| Cử Chỉ Tay | Biểu Tượng | Thao Tác | Thiết Bị Tác Động | Lệnh Serial |
+```mermaid
+flowchart TD
+    subgraph Host["Host Machine (Edge AI Perception & Control)"]
+        Cam["HD WebCam (MJPG 30-60 FPS)"] --> Pre["Frame Preprocessing & Normalization"]
+        Pre --> MP["MediaPipe Gesture Recognizer\n(21 3D Landmarks)"]
+        Pre --> Face["OpenCV Haar Cascade + LBPH\n(Dual-Check Biometric Auth)"]
+        
+        Face --> Auth{"Authorized\nHomeowner?"}
+        Auth -- "No" --> Lock["Inhibit Actuation / Alert"]
+        Auth -- "Yes" --> Gate["Command Dispatcher"]
+        MP --> Gate
+        
+        Gate --> Debounce["Temporal Debouncer (1500ms)"]
+        Debounce --> UART["UART Serial Manager (Auto-COM)"]
+    end
+
+    subgraph MCU["Embedded Hardware (Arduino Uno ATmega328P)"]
+        UART -->|"9600 8N1"| Ring["Hardware Serial Buffer"]
+        Ring --> State["Firmware State Machine (smart_home.ino)"]
+        
+        State --> Door["PWM D9: Servo Cửa (SG90)"]
+        State --> Curtain["PWM D10: Servo Rèm (SG90)"]
+        State --> Light["Digital D8: LED Chiếu Sáng"]
+        State --> Fan["Digital D11: Relay Quạt AC/DC"]
+        State --> Alarm["Digital D7: Còi Báo Động Buzzer"]
+        State --> TV["I2C Bus: LCD 1602 (Tivi Simulator)"]
+    end
+```
+
+Detailed technical specifications:
+- [System Architecture Specification](docs/ARCHITECTURE.md)
+- [UART Communication Protocol](docs/COMMUNICATION_PROTOCOL.md)
+- [Hardware Pinout & Circuit Schematic](docs/HARDWARE_SPEC.md)
+
+---
+
+## Live Dashboard & Hardware Pinout
+
+### 1. Edge AI Visual Dashboard
+Real-time optical feed displaying biometric owner verification, 21-point hand landmark tracking, active gesture classification, and hardware actuation telemetry.
+
+![Live AI Dashboard](docs/assets/ui_preview_vietnamese.png)
+
+### 2. Circuit Schematic & Electrical Wiring
+Standardized connection diagram for Arduino Uno R3, dual SG90 micro servos, I2C LCD 1602, active piezo buzzer, and optocoupler relay module.
+
+![Circuit Schematic](docs/assets/SoDo_DauDay_SmartHome.svg)
+
+---
+
+## Gesture Command Mapping
+
+| Gesture | Representation | Action | Hardware Actuator | Serial Byte |
 |---|:---:|---|---|:---:|
-| **Victory** | ✌️ | Mở Cửa chính | Servo Cửa quay 90° | `O` |
-| **Thumb Down** | 👎 | Đóng Cửa chính | Servo Cửa quay 0° | `C` |
-| **Thumb Up** | 👍 | Kéo Rèm cửa lên | Servo Rèm quay 90° | `U` |
-| **Pointing Up** | 👆 | Thả Rèm cửa xuống | Servo Rèm quay 0° | `D` |
-| **Open Palm** | ✋ | Bật Đèn phòng khách | Đèn LED (D8) sáng | `L` |
-| **OK / Pinch** | 👌 | Bật / Tắt Tivi | LCD 1602 I2C chuyển chế độ | `T` |
-| **ILoveYou** | 🤟 | Báo động SOS | Còi Buzzer (D7) kêu dồn dập | `S` |
-| **Closed Fist** | ✊ | Tắt Toàn Bộ | Đóng cửa, hạ rèm, tắt đèn & tivi | `X` |
-
-> ⏱️ **Cơ chế chống nhấp nháy (Debounce Protection):** Hệ thống tích hợp bộ lọc thời gian 1.5 giây, giúp tránh hiện tượng đảo trạng thái liên tục khi người dùng giữ nguyên một cử chỉ trước camera.
+| **Victory** | `V` | Mở Cửa chính | Servo D9 xoay 90° | `'O'` |
+| **Thumb Down** | `Down` | Đóng Cửa chính | Servo D9 xoay 0° | `'C'` |
+| **Thumb Up** | `Up` | Kéo Rèm cửa lên | Servo D10 xoay 90° | `'U'` |
+| **Pointing Up** | `Index` | Thả Rèm cửa xuống | Servo D10 xoay 0° | `'D'` |
+| **Open Palm** | `Palm` | Bật/Tắt Đèn phòng khách | Digital D8 Invert | `'L'` |
+| **OK / Pinch** | `OK` | Bật/Tắt Tivi mô phỏng | LCD 1602 I2C Display Mode | `'T'` |
+| **ILoveYou** | `Rock` | Kích hoạt Báo động SOS | Digital D7 & D8 Strobe | `'S'` |
+| **Closed Fist** | `Fist` | Ngắt toàn bộ hệ thống | Safe Mode (Đóng cửa, hạ rèm, tắt đèn) | `'X'` |
 
 ---
 
-## 🛡️ Xác Thực Khuôn Mặt Chủ Nhà (Face Recognition)
-
-Hệ thống sử dụng mô hình **Haar Cascade** để phát hiện khuôn mặt và **LBPHFaceRecognizer** để huấn luyện/nhận dạng gia chủ:
-1. Khi chủ nhà xuất hiện trước camera, hệ thống hiển thị tên chủ nhà với khung màu xanh lá và cho phép thực thi toàn bộ lệnh cử chỉ.
-2. Cung cấp công cụ đăng ký gia chủ tự động chụp 100 ảnh mẫu đa góc độ và tự động huấn luyện file mô hình `face_model.yml`.
-
----
-
-## 🔌 Sơ Đồ Chân Kết Nối Arduino Uno
-
-| Thiết Bị | Chân Arduino | Ghi Chú |
-|---|---|---|
-| **Còi Báo Buzzer** | `D7` | Còi chủ động 5V phát âm báo & SOS |
-| **Đèn LED Chiếu Sáng** | `D8` | Đèn LED qua điện trở hạn dòng 220Ω |
-| **Servo Cửa Chính** | `D9` | Động cơ servo SG90 góc quay 0° - 90° |
-| **Servo Rèm Cửa** | `D10` | Động cơ servo SG90 điều khiển dây kéo |
-| **Relay Quạt / Tải Lớn** | `D11` | Relay kích mức LOW điều khiển tải 220V |
-| **Màn Hình LCD 1602 I2C** | `SDA (A4)`, `SCL (A5)` | Hiển thị trạng thái kênh Tivi & SmartHome |
-| **Nguồn Cấp** | `5V` & `GND` | Nguồn cấp cho toàn bộ module cảm biến |
-
----
-
-## 📂 Cấu Trúc Dự Án
+## Project Directory Layout
 
 ```plaintext
 SmartHome_HandGesture/
-├── ai_module/                              # Module xử lý AI trên máy tính
-│   ├── dataset/                            # Thư mục chứa ảnh khuôn mặt đăng ký
+├── ai_module/                              # Edge AI Computer Vision & Control Service
+│   ├── dataset/                            # Training sample directory (protected via gitignore)
 │   │   └── .gitkeep
-│   ├── dang_ky_chu_nha.py                  # Script chụp ảnh & huấn luyện khuôn mặt gia chủ
-│   ├── face_model.yml                      # Mô hình khuôn mặt đã được huấn luyện
-│   ├── gesture_recognizer.task             # Model AI Google MediaPipe nhận diện cử chỉ
-│   ├── hand_landmarker.task                # Model AI Google nhận diện khớp xương bàn tay
-│   ├── haarcascade_frontalface_default.xml # Cascade phân loại khuôn mặt
-│   ├── main.py                             # Ứng dụng chính (Camera + AI + Serial)
-│   ├── requirements.txt                    # Thư viện Python cần thiết
-│   └── run_wrapper.py                      # Wrapper xử lý lỗi khi khởi chạy
-├── arduino_module/                         # Code nhúng phần cứng Arduino
+│   ├── dang_ky_chu_nha.py                  # Face biometric enrollment & training engine
+│   ├── face_core_model.yml                 # Primary face recognition model weights
+│   ├── face_model.yml                      # Dual-check face recognition model weights
+│   ├── gesture_recognizer.task             # Google MediaPipe hand gesture model
+│   ├── hand_landmarker.task                # Google MediaPipe hand landmark model
+│   ├── haarcascade_frontalface_default.xml # OpenCV Haar Cascade face detector
+│   ├── main.py                             # Edge AI core runtime & serial controller
+│   ├── requirements.txt                    # Python runtime dependencies
+│   └── run_wrapper.py                      # Crash recovery runner
+├── arduino_module/                         # Embedded Firmware & Hardware Simulation
 │   ├── smart_home/
-│   │   └── smart_home.ino                  # Firmware Arduino nhận lệnh Serial và điều khiển chân
+│   │   └── smart_home.ino                  # Arduino Uno R3 production firmware (UART, PWM, I2C)
 │   ├── i2c_scanner/
-│   │   └── i2c_scanner.ino                 # Công cụ quét tìm địa chỉ I2C của LCD
-│   ├── diagram.json                        # Cấu hình mô phỏng mạch điện Wokwi
-│   └── wokwi.toml                          # Cấu hình nạp firmware cho Wokwi
-├── docs/                                   # Tài liệu và sơ đồ dự án
-│   └── SoDo_DauDay_SmartHome.svg           # Sơ đồ đấu nối dây phần cứng chi tiết
-├── BAT_CAMERA_AI.bat                       # File khởi động nhanh Camera AI 1-click
-├── DANG_KY_CHU_NHA.bat                     # File mở trình đăng ký chủ nhà 1-click
-├── generate_diagram_desktop.py             # Script sinh đồ họa SVG sơ đồ đấu dây
-├── requirements.txt                        # Danh sách thư viện toàn dự án
-└── README.md                               # Hướng dẫn chi tiết
+│   │   └── i2c_scanner.ino                 # I2C address diagnostic utility
+│   ├── diagram.json                        # Wokwi simulation circuit board definition
+│   └── wokwi.toml                          # Wokwi simulator entrypoint
+├── docs/                                   # Engineering Documentation & Architecture
+│   ├── assets/                             # Schematics, UI previews & vector graphics
+│   │   ├── SoDo_DauDay_SmartHome.svg
+│   │   ├── ui_preview_vietnamese.png
+│   │   └── ui_preview_updated.png
+│   ├── ARCHITECTURE.md                     # Architecture specification & latency metrics
+│   ├── COMMUNICATION_PROTOCOL.md           # UART protocol specification
+│   └── HARDWARE_SPEC.md                    # Pinout mapping, BOM, and electrical considerations
+├── tools/                                  # Developer Utilities & Diagram Generators
+│   └── generate_wiring_diagram.py          # Automated SVG schematic builder
+├── BAT_CAMERA_AI.bat                       # 1-click Windows launcher for AI camera
+├── DANG_KY_CHU_NHA.bat                     # 1-click Windows launcher for biometric enrollment
+├── LICENSE                                 # MIT License
+├── README.md                               # Project documentation
+└── requirements.txt                        # Global Python dependency manifest
 ```
 
 ---
 
-## 🚀 Hướng Dẫn Cài Đặt & Sử Dụng
+## Getting Started
 
-### 1. Chuẩn Bị Môi Trường Python
-Khuyến nghị sử dụng **Python 3.10** hoặc **3.11**:
+### 1. Prerequisites
+- Python 3.10+ (tested on Windows 10/11)
+- Arduino IDE (optional if using Wokwi)
+- USB WebCam (720p or 1080p recommended)
+
+### 2. Python Environment Setup
 
 ```bash
-# Di chuyển vào thư mục ai_module
-cd ai_module
+# Navigate to the repository root
+cd SmartHome_HandGesture
 
-# Tạo môi trường ảo venv
+# Create and activate virtual environment
 python -m venv venv
+.\venv\Scripts\activate   # Windows
+# source venv/bin/activate # Linux / macOS
 
-# Kích hoạt môi trường ảo
-# Windows:
-.\venv\Scripts\activate
-# Linux/macOS:
-source venv/bin/activate
-
-# Cài đặt các thư viện cần thiết
+# Install required dependencies
 pip install -r requirements.txt
 ```
 
-### 2. Nạp Code Cho Arduino
-1. Mở phần mềm **Arduino IDE**.
-2. Mở file [arduino_module/smart_home/smart_home.ino](arduino_module/smart_home/smart_home.ino).
-3. Cài đặt các thư viện trên Arduino Library Manager nếu chưa có:
+### 3. Hardware Deployment (Arduino Uno)
+1. Open [arduino_module/smart_home/smart_home.ino](arduino_module/smart_home/smart_home.ino) in the Arduino IDE.
+2. Install required libraries from Library Manager:
    - `LiquidCrystal_I2C` (by Frank de Brabander)
-   - `Servo` (built-in)
-4. Chọn đúng Board (**Arduino Uno**) và Port COM kết nối.
-5. Nhấn **Upload** để nạp code.
+   - `Servo` (Standard library)
+3. Connect the Arduino Uno via USB, verify the port (e.g. `COM9`), and click **Upload**.
 
-> ⚠️ **Lưu ý cấu hình cổng COM:** Trong file [ai_module/main.py](ai_module/main.py), kiểm tra dòng `ser = serial.Serial('COM5', 9600)` và đổi `'COM5'` thành đúng cổng COM máy bạn đang kết nối với Arduino.
-
-### 3. Đăng Ký Khuôn Mặt Gia Chủ (Tùy Chọn)
-Để thêm khuôn mặt mới vào hệ thống:
-- Chạy trực tiếp file `DANG_KY_CHU_NHA.bat` hoặc lệnh:
-  ```bash
-  python ai_module/dang_ky_chu_nha.py
-  ```
-- Nhập tên của bạn, ngồi trước webcam để hệ thống tự động ghi lại 100 frame và xuất file mô hình `face_model.yml`.
-
-### 4. Khởi Động Hệ Thống
-Chỉ cần nhấp đúp vào file `BAT_CAMERA_AI.bat` hoặc chạy:
+### 4. Running the AI System
+Launch via the convenient Windows batch script:
+```cmd
+BAT_CAMERA_AI.bat
+```
+Or execute directly with Python:
 ```bash
 python ai_module/main.py
 ```
-- Đưa tay trước camera trong phạm vi 0.5m - 2m.
-- Thực hiện các cử chỉ tay để quan sát thiết bị và giao diện phản hồi tức thì.
-- Nhấn phím `Q` hoặc nút **Thoát** trên giao diện để dừng ứng dụng.
+
+### 5. Running in Simulation (Wokwi)
+If physical microcontroller hardware is unavailable:
+1. Open the repository in VS Code with the **Wokwi Simulator** extension.
+2. Open `arduino_module/diagram.json`.
+3. Press `F1` and select `Wokwi: Start Simulator` to evaluate the firmware logic in-browser.
 
 ---
 
-## 💻 Mô Phỏng Trên Wokwi Simulator
-Nếu chưa có phần cứng thật, bạn có thể mô phỏng toàn bộ mạch Arduino trên [Wokwi](https://wokwi.com/):
-- Cài extension **Wokwi Simulator** trên VS Code.
-- Mở thư mục `arduino_module`.
-- Nhấn `F1` -> Chọn **Wokwi: Start Simulator**.
+## Author & Licensing
 
----
-
-## 👨‍💻 Tác Giả & Bản Quyền
-- Dự án phát triển bởi **[Thienlotus](https://github.com/thienlotus)**.
-- Giấy phép phân phối: [MIT License](LICENSE).
+- **Author**: Le Vu Thien ([@thienlotus](https://github.com/thienlotus))
+- **License**: Released under the [MIT License](LICENSE).

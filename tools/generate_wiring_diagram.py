@@ -1,6 +1,8 @@
 import os
 
-desktop_path = r"C:\Users\ADMIN\Desktop"
+repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+output_dir = os.path.join(repo_root, "docs", "assets")
+os.makedirs(output_dir, exist_ok=True)
 
 svg_content = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1150" width="100%" height="100%" style="background:#0b1120; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;">
   <defs>
@@ -358,8 +360,8 @@ svg_content = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1150"
   </text>
 </svg>"""
 
-# 1. Ghi file SVG ra Desktop
-svg_file_path = os.path.join(desktop_path, "SoDo_DauDay_SmartHome.svg")
+# 1. Ghi file SVG ra docs/assets
+svg_file_path = os.path.join(output_dir, "SoDo_DauDay_SmartHome.svg")
 with open(svg_file_path, "w", encoding="utf-8") as f:
     f.write(svg_content)
 
@@ -616,7 +618,7 @@ html_content = f"""<!DOCTYPE html>
 </html>
 """
 
-html_file_path = os.path.join(desktop_path, "SoDo_DauDay_SmartHome.html")
+html_file_path = os.path.join(output_dir, "SoDo_DauDay_SmartHome.html")
 with open(html_file_path, "w", encoding="utf-8") as f:
     f.write(html_content)
 
@@ -646,16 +648,16 @@ txt_content = """===============================================================
      + Dây Nâu (GND) 2 Servo: Nối cực Âm (GND) của Adapter ngoài 5V.
      + QUAN TRỌNG: DÙNG 1 DÂY NỐI CHÂN GND CỦA ARDUINO VỚI CỰC ÂM (GND) NGUỒN NGOÀI!
 
-3. DANH SÁCH FILE TRÊN MÀN HÌNH DESKTOP:
+3. DANH SÁCH FILE XUẤT RA:
 --------------------------------------------------------------------------------
-   - SoDo_DauDay_SmartHome.html : Mở bằng trình duyệt (Chrome/Edge), sơ đồ đồ họa trực quan.
-   - SoDo_DauDay_SmartHome.svg  : File ảnh Vector độ nét cao để chèn vào báo cáo Word/Slide.
-   - BAT_CAMERA_AI.bat          : Nhấp đúp chuột để bật camera AI nhận diện cử chỉ.
+   - docs/assets/SoDo_DauDay_SmartHome.html : Mở bằng trình duyệt, sơ đồ đồ họa trực quan.
+   - docs/assets/SoDo_DauDay_SmartHome.svg  : File ảnh Vector độ nét cao để chèn vào báo cáo.
+   - BAT_CAMERA_AI.bat                     : Khởi động camera AI nhận diện cử chỉ.
 ================================================================================
 """
 
-txt_file_path = os.path.join(desktop_path, "HUONG_DAN_DAU_DAY_SMARTHOME.txt")
+txt_file_path = os.path.join(output_dir, "HUONG_DAN_DAU_DAY_SMARTHOME.txt")
 with open(txt_file_path, "w", encoding="utf-8") as f:
     f.write(txt_content)
 
-print("DA XUAT THANH CONG SO DO MOI NHAT RA DESKTOP!")
+print(f"DA XUAT THANH CONG SO DO VA HUONG DAN VAO: {output_dir}")
