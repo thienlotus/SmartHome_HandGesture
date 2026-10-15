@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "author": "Antigravity",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-arduino-uno", "id": "uno", "top": 50, "left": 0, "attrs": {} },
+    { "type": "wokwi-led", "id": "led1", "top": -120, "left": -20, "attrs": { "color": "green", "label": "Đèn Xanh" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": -30, "left": -24, "attrs": { "value": "220" } },
+    { "type": "wokwi-led", "id": "led2", "top": -120, "left": 120, "attrs": { "color": "red", "label": "Đèn Đỏ" } },
+    { "type": "wokwi-resistor", "id": "r2", "top": -30, "left": 116, "attrs": { "value": "220" } }
+  ],
+  "connections": [
+    [ "r1:1", "uno:8", "green", [ "v0" ] ],
+    [ "r1:2", "led1:A", "green", [ "v0" ] ],
+    [ "led1:C", "uno:GND.1", "black", [ "v-30", "h-80", "v350", "h200" ] ],
+    
+    [ "r2:1", "uno:9", "orange", [ "v0" ] ],
+    [ "r2:2", "led2:A", "orange", [ "v0" ] ],
+    [ "led2:C", "uno:GND.2", "black", [ "v-30", "h120", "v350", "h-120" ] ]
+  ]
+}

@@ -1,0 +1,355 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1150" width="100%" height="100%" style="background:#0b1120; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;">
+  <defs>
+    <!-- Gradients & Filters -->
+    <linearGradient id="arduinoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00878F" />
+      <stop offset="100%" stop-color="#00565B" />
+    </linearGradient>
+    <linearGradient id="relayGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <linearGradient id="ledGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#854d0e" />
+      <stop offset="100%" stop-color="#451a03" />
+    </linearGradient>
+    <linearGradient id="lcdGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#14532d" />
+      <stop offset="100%" stop-color="#052e16" />
+    </linearGradient>
+    <linearGradient id="servoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="100%" stop-color="#0369a1" />
+    </linearGradient>
+    <linearGradient id="buzzerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#334155" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+    <linearGradient id="powerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#b45309" />
+      <stop offset="100%" stop-color="#78350f" />
+    </linearGradient>
+    
+    <filter id="shadow" x="-5%" y="-5%" width="115%" height="115%">
+      <feDropShadow dx="3" dy="6" stdDeviation="6" flood-color="#000" flood-opacity="0.6"/>
+    </filter>
+    <filter id="glow-cyan" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="glow-yellow" x="-25%" y="-25%" width="150%" height="150%">
+      <feGaussianBlur stdDeviation="5" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Header Banner -->
+  <rect x="0" y="0" width="1600" height="95" fill="#1e293b" />
+  <text x="800" y="45" font-size="28" font-weight="900" fill="#38bdf8" text-anchor="middle">SƠ ĐỒ ĐẤU DÂY THỰC TẾ HỆ THỐNG SMART HOME (ARDUINO UNO R3 - COM9)</text>
+  <text x="800" y="78" font-size="16" fill="#94a3b8" text-anchor="middle">
+    💡 <tspan fill="#fde047" font-weight="bold">ĐÈN LED = DIGITAL D8 (TRỞ 220Ω)</tspan> • ⚡ <tspan fill="#06b6d4" font-weight="bold">RELAY QUẠT = DIGITAL D11</tspan> • 🚪 <tspan fill="#ec4899" font-weight="bold">CỬA = D9</tspan> • 🪟 <tspan fill="#c084fc" font-weight="bold">RÈM = D10</tspan> • 🔔 <tspan fill="#fb923c" font-weight="bold">BUZZER = D7</tspan> • 📺 <tspan fill="#86efac" font-weight="bold">LCD = A4, A5</tspan>
+  </text>
+
+  <!-- ==================== 1. ARDUINO UNO R3 (CENTER) ==================== -->
+  <g transform="translate(560, 260)" filter="url(#shadow)">
+    <!-- Board Body -->
+    <rect x="0" y="0" width="370" height="460" rx="16" fill="url(#arduinoGrad)" stroke="#38bdf8" stroke-width="2.5"/>
+    <text x="185" y="42" font-size="22" font-weight="bold" fill="#ffffff" text-anchor="middle">ARDUINO UNO R3</text>
+    <text x="185" y="66" font-size="13" fill="#bae6fd" text-anchor="middle">Bo Điều Khiển Trung Tâm (Cổng COM9)</text>
+    
+    <!-- USB Port -->
+    <rect x="145" y="-32" width="80" height="36" rx="4" fill="#94a3b8" stroke="#475569" stroke-width="2"/>
+    <text x="185" y="-10" font-size="11" font-weight="bold" fill="#0f172a" text-anchor="middle">USB (COM9)</text>
+    
+    <!-- ATmega328P Chip -->
+    <rect x="115" y="190" width="140" height="75" rx="4" fill="#0f172a" stroke="#334155"/>
+    <text x="185" y="235" font-size="14" font-weight="bold" fill="#94a3b8" text-anchor="middle">ATmega328P</text>
+
+    <!-- RIGHT HEADER: DIGITAL PINS D0 - D13 (x=335) -->
+    <g transform="translate(335, 70)">
+      <rect x="0" y="0" width="30" height="370" rx="4" fill="#0f172a" />
+      
+      <!-- D13 -->
+      <circle cx="15" cy="40" r="5" fill="#64748b" />
+      <text x="-10" y="44" font-size="11" fill="#64748b" text-anchor="end">D13</text>
+
+      <!-- D12 -->
+      <circle cx="15" cy="65" r="5" fill="#64748b" />
+      <text x="-10" y="69" font-size="11" fill="#64748b" text-anchor="end">D12</text>
+      
+      <!-- D11: RELAY QUẠT -->
+      <circle cx="15" cy="95" r="9" fill="#06b6d4" stroke="#ffffff" stroke-width="2.5" filter="url(#glow-cyan)"/>
+      <rect x="-145" y="77" width="135" height="34" rx="6" fill="#0e7490" stroke="#06b6d4" stroke-width="1.5"/>
+      <text x="-15" y="99" font-size="13" font-weight="900" fill="#ffffff" text-anchor="end">⚡ D11 (QUẠT)</text>
+      
+      <!-- D10: SERVO RÈM -->
+      <circle cx="15" cy="130" r="7" fill="#a855f7" stroke="#ffffff" stroke-width="1.5" />
+      <text x="-10" y="135" font-size="12" font-weight="bold" fill="#c084fc" text-anchor="end">D10 (Rèm)</text>
+      
+      <!-- D9: SERVO CỬA -->
+      <circle cx="15" cy="160" r="7" fill="#ec4899" stroke="#ffffff" stroke-width="1.5" />
+      <text x="-10" y="165" font-size="12" font-weight="bold" fill="#f472b6" text-anchor="end">D9 (Cửa)</text>
+      
+      <!-- D8: ĐÈN LED (NỐI TRỰC TIẾP QUA TRỞ - VÀNG RỰC RỠ) -->
+      <circle cx="15" cy="190" r="9" fill="#eab308" stroke="#ffffff" stroke-width="2.5" filter="url(#glow-yellow)" />
+      <rect x="-150" y="172" width="140" height="34" rx="6" fill="#854d0e" stroke="#eab308" stroke-width="2"/>
+      <text x="-15" y="195" font-size="13" font-weight="900" fill="#fef08a" text-anchor="end">💡 D8 (LED ĐÈN)</text>
+      
+      <!-- D7: BUZZER -->
+      <circle cx="15" cy="225" r="7" fill="#f97316" stroke="#ffffff" stroke-width="1.5" />
+      <text x="-10" y="230" font-size="12" font-weight="bold" fill="#fb923c" text-anchor="end">D7 (Buzzer)</text>
+      
+      <!-- D6 - D2 -->
+      <circle cx="15" cy="255" r="5" fill="#64748b" />
+      <text x="-10" y="259" font-size="11" fill="#64748b" text-anchor="end">D6</text>
+      <circle cx="15" cy="280" r="5" fill="#64748b" />
+      <text x="-10" y="284" font-size="11" fill="#64748b" text-anchor="end">D5</text>
+      <circle cx="15" cy="305" r="5" fill="#64748b" />
+      <text x="-10" y="309" font-size="11" fill="#64748b" text-anchor="end">D4</text>
+      <circle cx="15" cy="330" r="5" fill="#64748b" />
+      <text x="-10" y="334" font-size="11" fill="#64748b" text-anchor="end">D3</text>
+      <circle cx="15" cy="355" r="5" fill="#64748b" />
+      <text x="-10" y="359" font-size="11" fill="#64748b" text-anchor="end">D2</text>
+    </g>
+
+    <!-- LEFT HEADER: POWER & ANALOG PINS (x=5) -->
+    <g transform="translate(5, 120)">
+      <rect x="0" y="0" width="30" height="310" rx="4" fill="#0f172a" />
+      <!-- 5V -->
+      <circle cx="15" cy="40" r="7" fill="#ef4444" stroke="#fff" stroke-width="1.5"/>
+      <text x="40" y="45" font-size="13" font-weight="bold" fill="#ef4444">5V Out</text>
+      
+      <!-- GND 1 -->
+      <circle cx="15" cy="70" r="7" fill="#1e293b" stroke="#fff" stroke-width="1.5"/>
+      <text x="40" y="75" font-size="13" font-weight="bold" fill="#f1f5f9">GND (1)</text>
+
+      <!-- GND 2 -->
+      <circle cx="15" cy="100" r="7" fill="#1e293b" stroke="#fff" stroke-width="1.5"/>
+      <text x="40" y="105" font-size="13" font-weight="bold" fill="#f1f5f9">GND (2)</text>
+
+      <!-- Analog A4, A5 -->
+      <circle cx="15" cy="215" r="5" fill="#64748b"/>
+      <circle cx="15" cy="245" r="7" fill="#22c55e" stroke="#fff" stroke-width="1.5"/>
+      <text x="40" y="250" font-size="13" font-weight="bold" fill="#22c55e">A4 (SDA LCD)</text>
+      
+      <circle cx="15" cy="275" r="7" fill="#3b82f6" stroke="#fff" stroke-width="1.5"/>
+      <text x="40" y="280" font-size="13" font-weight="bold" fill="#3b82f6">A5 (SCL LCD)</text>
+    </g>
+  </g>
+
+  <!-- ==================== 2. KHỐI ĐÈN LED (NỐI DIGITAL D8) ==================== -->
+  <g transform="translate(1140, 110)" filter="url(#shadow)">
+    <rect x="0" y="0" width="410" height="180" rx="14" fill="url(#ledGrad)" stroke="#eab308" stroke-width="2.5"/>
+    <text x="205" y="32" font-size="17" font-weight="900" fill="#fde047" text-anchor="middle">💡 ĐÈN LED (GẮN CHÂN DIGITAL D8)</text>
+    <text x="205" y="52" font-size="12" fill="#fef08a" text-anchor="middle">Mô phỏng Đèn chiếu sáng (Nhận tín hiệu trực tiếp từ D8)</text>
+    
+    <!-- Bulb Icon & Glow -->
+    <circle cx="70" cy="115" r="32" fill="#facc15" filter="url(#glow-yellow)"/>
+    <circle cx="70" cy="115" r="22" fill="#ffffff" opacity="0.9"/>
+    <rect x="62" y="142" width="16" height="12" rx="2" fill="#713f12" />
+    
+    <!-- Resistor 220 Ohm -->
+    <g transform="translate(130, 85)">
+      <rect x="20" y="20" width="70" height="22" rx="4" fill="#d97706" stroke="#78350f" stroke-width="1.5"/>
+      <rect x="32" y="20" width="6" height="22" fill="#ef4444"/>
+      <rect x="45" y="20" width="6" height="22" fill="#ef4444"/>
+      <rect x="58" y="20" width="6" height="22" fill="#78350f"/>
+      <rect x="73" y="20" width="6" height="22" fill="#fbbf24"/>
+      <text x="55" y="12" font-size="11" font-weight="bold" fill="#fef08a" text-anchor="middle">Trở 220Ω</text>
+    </g>
+
+    <!-- Pins -->
+    <g transform="translate(230, 75)">
+      <circle cx="20" cy="20" r="7" fill="#eab308" stroke="#ffffff" stroke-width="2" filter="url(#glow-yellow)"/>
+      <text x="35" y="25" font-size="13" font-weight="bold" fill="#fef08a">Chân Anode (+): Nối D8 (qua 220Ω)</text>
+      
+      <circle cx="20" cy="55" r="7" fill="#1e293b" stroke="#ffffff" stroke-width="1.5"/>
+      <text x="35" y="60" font-size="13" font-weight="bold" fill="#cbd5e1">Chân Cathode (-): Nối GND Arduino</text>
+    </g>
+  </g>
+
+  <!-- ==================== 3. KHỐI MODULE RELAY QUẠT (DIGITAL D11) ==================== -->
+  <g transform="translate(1140, 310)" filter="url(#shadow)">
+    <rect x="0" y="0" width="410" height="180" rx="14" fill="url(#relayGrad)" stroke="#06b6d4" stroke-width="2.5"/>
+    <text x="205" y="30" font-size="17" font-weight="900" fill="#22d3ee" text-anchor="middle">⚡ MODULE RELAY (ĐIỀU KHIỂN QUẠT)</text>
+    <text x="205" y="50" font-size="12" fill="#a5f3fc" text-anchor="middle">Đóng ngắt nguồn cho Quạt 5V / 12V an toàn</text>
+    
+    <!-- Relay Box -->
+    <rect x="30" y="65" width="130" height="95" rx="6" fill="#0e7490" stroke="#06b6d4" stroke-width="1.5" filter="url(#glow-cyan)"/>
+    <text x="95" y="95" font-size="14" font-weight="bold" fill="#fff" text-anchor="middle">RELAY QUẠT</text>
+    <rect x="40" y="115" width="40" height="32" rx="3" fill="#15803d" />
+    <text x="60" y="135" font-size="10" font-weight="bold" fill="#fff" text-anchor="middle">NO/COM</text>
+    <circle cx="125" cy="130" r="14" fill="#06b6d4" />
+    <text x="125" y="134" font-size="10" fill="#000" text-anchor="middle" font-weight="bold">FAN</text>
+
+    <!-- Pins -->
+    <g transform="translate(180, 65)">
+      <circle cx="20" cy="18" r="8" fill="#06b6d4" stroke="#ffffff" stroke-width="2" filter="url(#glow-cyan)"/>
+      <text x="35" y="23" font-size="13" font-weight="900" fill="#22d3ee">Chân IN: ➔ CHÂN DIGITAL D11</text>
+      
+      <circle cx="20" cy="48" r="6" fill="#ef4444" stroke="#ffffff" stroke-width="1.5"/>
+      <text x="35" y="52" font-size="12" font-weight="bold" fill="#fca5a5">Chân VCC: ➔ 5V Arduino</text>
+      
+      <circle cx="20" cy="78" r="6" fill="#1e293b" stroke="#ffffff" stroke-width="1.5"/>
+      <text x="35" y="82" font-size="12" font-weight="bold" fill="#cbd5e1">Chân GND: ➔ GND Chung</text>
+    </g>
+  </g>
+
+  <!-- ==================== 4. SERVO 1: CỬA TỰ ĐỘNG (D9) ==================== -->
+  <g transform="translate(1160, 510)" filter="url(#shadow)">
+    <rect x="0" y="0" width="380" height="125" rx="12" fill="url(#servoGrad)" stroke="#ec4899" stroke-width="2"/>
+    <text x="190" y="26" font-size="15" font-weight="bold" fill="#fff" text-anchor="middle">SERVO 1: CỬA TỰ ĐỘNG (SG90)</text>
+    <text x="190" y="44" font-size="11" fill="#fbcfe8" text-anchor="middle">0° (Đóng Cửa) ➔ 90° (Mở Cửa)</text>
+    <circle cx="60" cy="80" r="16" fill="#fff"/>
+    <rect x="60" y="75" width="35" height="10" rx="3" fill="#fff"/>
+    
+    <g transform="translate(140, 55)">
+      <circle cx="20" cy="14" r="6" fill="#ec4899" stroke="#fff" stroke-width="1.5"/>
+      <text x="35" y="18" font-size="12" font-weight="bold" fill="#f472b6">Dây Cam (Signal) ➔ CHÂN D9</text>
+      <circle cx="20" cy="36" r="6" fill="#ef4444" stroke="#fff" stroke-width="1.5"/>
+      <text x="35" y="40" font-size="12" font-weight="bold" fill="#fca5a5">Dây Đỏ (VCC) ➔ +5V Nguồn Ngoài</text>
+      <circle cx="20" cy="58" r="6" fill="#1e293b" stroke="#fff" stroke-width="1.5"/>
+      <text x="35" y="62" font-size="12" font-weight="bold" fill="#cbd5e1">Dây Nâu (GND) ➔ Mass Chung</text>
+    </g>
+  </g>
+
+  <!-- ==================== 5. SERVO 2: RÈM CỬA (D10) ==================== -->
+  <g transform="translate(1160, 655)" filter="url(#shadow)">
+    <rect x="0" y="0" width="380" height="125" rx="12" fill="url(#servoGrad)" stroke="#a855f7" stroke-width="2"/>
+    <text x="190" y="26" font-size="15" font-weight="bold" fill="#fff" text-anchor="middle">SERVO 2: RÈM CỬA (SG90 / STEP)</text>
+    <text x="190" y="44" font-size="11" fill="#e9d5ff" text-anchor="middle">Cuộn kéo / Buông thả rèm</text>
+    <circle cx="60" cy="80" r="16" fill="#fff"/>
+    <rect x="60" y="75" width="35" height="10" rx="3" fill="#fff"/>
+    
+    <g transform="translate(140, 55)">
+      <circle cx="20" cy="14" r="6" fill="#a855f7" stroke="#fff" stroke-width="1.5"/>
+      <text x="35" y="18" font-size="12" font-weight="bold" fill="#c084fc">Dây Cam (Signal) ➔ CHÂN D10</text>
+      <circle cx="20" cy="36" r="6" fill="#ef4444" stroke="#fff" stroke-width="1.5"/>
+      <text x="35" y="40" font-size="12" font-weight="bold" fill="#fca5a5">Dây Đỏ (VCC) ➔ +5V Nguồn Ngoài</text>
+      <circle cx="20" cy="58" r="6" fill="#1e293b" stroke="#fff" stroke-width="1.5"/>
+      <text x="35" y="62" font-size="12" font-weight="bold" fill="#cbd5e1">Dây Nâu (GND) ➔ Mass Chung</text>
+    </g>
+  </g>
+
+  <!-- ==================== 6. MÀN HÌNH LCD 1602 (TIVI MÔ PHỎNG) ==================== -->
+  <g transform="translate(50, 480)" filter="url(#shadow)">
+    <rect x="0" y="0" width="350" height="210" rx="10" fill="url(#lcdGrad)" stroke="#22c55e" stroke-width="2"/>
+    <text x="175" y="30" font-size="16" font-weight="bold" fill="#86efac" text-anchor="middle">MÀN HÌNH LCD 1602 (TIVI MÔ PHỎNG)</text>
+    <rect x="25" y="45" width="300" height="90" rx="6" fill="#15803d" stroke="#166534" stroke-width="2"/>
+    <text x="40" y="80" font-family="Courier New, monospace" font-size="17" font-weight="bold" fill="#dcfce7">> TV: NETFLIX [ON]</text>
+    <text x="40" y="112" font-family="Courier New, monospace" font-size="16" font-weight="bold" fill="#bbf7d0">> VOLUME: 25 | CH-03</text>
+    
+    <rect x="45" y="145" width="260" height="50" rx="4" fill="#0f172a" stroke="#334155"/>
+    <text x="95" y="175" font-size="12" fill="#94a3b8">Module I2C (PCF8574)</text>
+    <circle cx="215" cy="170" r="5" fill="#1e293b" stroke="#fff"/>
+    <text x="215" y="190" font-size="10" fill="#cbd5e1" text-anchor="middle">GND</text>
+    <circle cx="240" cy="170" r="5" fill="#ef4444" stroke="#fff"/>
+    <text x="240" y="190" font-size="10" fill="#fca5a5" text-anchor="middle">VCC</text>
+    <circle cx="265" cy="170" r="5" fill="#22c55e" stroke="#fff"/>
+    <text x="265" y="190" font-size="10" fill="#86efac" text-anchor="middle">SDA</text>
+    <circle cx="290" cy="170" r="5" fill="#3b82f6" stroke="#fff"/>
+    <text x="290" y="190" font-size="10" fill="#93c5fd" text-anchor="middle">SCL</text>
+  </g>
+
+  <!-- ==================== 7. CÒI BÁO (BUZZER 5V) ==================== -->
+  <g transform="translate(90, 240)" filter="url(#shadow)">
+    <rect x="0" y="0" width="270" height="150" rx="12" fill="url(#buzzerGrad)" stroke="#f97316" stroke-width="2"/>
+    <text x="135" y="32" font-size="16" font-weight="bold" fill="#fdba74" text-anchor="middle">CÒI BÁO (BUZZER 5V)</text>
+    <text x="135" y="55" font-size="12" fill="#fed7aa" text-anchor="middle">Báo hiệu Chủ / Khách Lạ</text>
+    <circle cx="80" cy="100" r="28" fill="#0f172a" stroke="#cbd5e1" stroke-width="2"/>
+    <circle cx="80" cy="100" r="8" fill="#475569" />
+    <circle cx="190" cy="90" r="6" fill="#f97316" stroke="#fff" stroke-width="1.5"/>
+    <text x="205" y="94" font-size="12" font-weight="bold" fill="#fdba74">(+) D7</text>
+    <circle cx="190" cy="120" r="6" fill="#1e293b" stroke="#fff" stroke-width="1.5"/>
+    <text x="205" y="124" font-size="12" font-weight="bold" fill="#cbd5e1">(-) GND</text>
+  </g>
+
+  <!-- ==================== 8. NGUỒN NGOÀI 5V ADAPTER ==================== -->
+  <g transform="translate(560, 850)" filter="url(#shadow)">
+    <rect x="0" y="0" width="370" height="150" rx="14" fill="url(#powerGrad)" stroke="#f59e0b" stroke-width="2"/>
+    <text x="185" y="32" font-size="17" font-weight="bold" fill="#fef3c7" text-anchor="middle">BỘ NGUỒN NGOÀI 5V (2A - 3A)</text>
+    <text x="185" y="55" font-size="12" fill="#fed7aa" text-anchor="middle">Cấp nguồn riêng cho 2 Servo chống sụt áp</text>
+    <rect x="50" y="80" width="115" height="45" rx="6" fill="#0f172a" stroke="#ef4444" stroke-width="1.5"/>
+    <text x="107" y="108" font-size="15" font-weight="bold" fill="#ef4444" text-anchor="middle">+ 5V OUT</text>
+    <rect x="205" y="80" width="115" height="45" rx="6" fill="#0f172a" stroke="#94a3b8" stroke-width="1.5"/>
+    <text x="262" y="108" font-size="15" font-weight="bold" fill="#f1f5f9" text-anchor="middle">GND (ÂM)</text>
+  </g>
+
+  <!-- ==================== CÁC ĐƯỜNG DÂY NỐI CHÍNH XÁC ==================== -->
+  
+  <!-- 1. DÂY ĐÈN LED: CHÂN DIGITAL D8 -> TRỞ 220Ω -> LED ANODE (VÀNG RỰC RỠ) -->
+  <g filter="url(#glow-yellow)">
+    <path d="M 910 520 H 1020 V 205 H 1390" fill="none" stroke="#eab308" stroke-width="4.5" stroke-linecap="round"/>
+    <circle cx="910" cy="520" r="6" fill="#fff"/>
+    <circle cx="1390" cy="205" r="6" fill="#fff"/>
+  </g>
+  <rect x="1010" y="185" width="280" height="30" rx="6" fill="#451a03" stroke="#eab308" stroke-width="1.5"/>
+  <text x="1150" y="205" font-size="12" font-weight="bold" fill="#fef08a" text-anchor="middle">DÂY DIGITAL D8 ➔ ĐIỆN TRỞ ➔ LED (+)</text>
+
+  <!-- DÂY CATHODE LED (-) VỀ GND ARDUINO -->
+  <path d="M 1390 240 H 1470 V 280 H 1050 V 820" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- 2. DÂY RELAY QUẠT: CHÂN DIGITAL D11 -> RELAY IN (XANH CYAN) -->
+  <g filter="url(#glow-cyan)">
+    <path d="M 910 425 H 1060 V 393 H 1340" fill="none" stroke="#06b6d4" stroke-width="4.5" stroke-linecap="round"/>
+    <circle cx="910" cy="425" r="6" fill="#fff"/>
+    <circle cx="1340" cy="393" r="6" fill="#fff"/>
+  </g>
+  <rect x="1040" y="375" width="220" height="30" rx="6" fill="#083344" stroke="#06b6d4" stroke-width="1.5"/>
+  <text x="1150" y="395" font-size="12" font-weight="bold" fill="#22d3ee" text-anchor="middle">DÂY DIGITAL D11 ➔ RELAY IN</text>
+
+  <!-- 3. DÂY SERVO CỬA: D9 (HỒNG) -->
+  <path d="M 910 490 H 1080 V 570 H 1320" fill="none" stroke="#ec4899" stroke-width="3.5" stroke-linecap="round"/>
+  <circle cx="910" cy="490" r="5" fill="#fff"/>
+  <text x="1000" y="480" font-size="12" font-weight="bold" fill="#f472b6">D9 ➔ Servo Cửa (Signal)</text>
+
+  <!-- 4. DÂY SERVO RÈM: D10 (TÍM) -->
+  <path d="M 910 460 H 1060 V 715 H 1320" fill="none" stroke="#a855f7" stroke-width="3.5" stroke-linecap="round"/>
+  <circle cx="910" cy="460" r="5" fill="#fff"/>
+  <text x="975" y="452" font-size="12" font-weight="bold" fill="#c084fc">D10 ➔ Servo Rèm (Signal)</text>
+
+  <!-- 5. DÂY CÒI BUZZER: D7 (CAM) -->
+  <path d="M 910 555 H 980 V 210 H 310 V 330 H 280" fill="none" stroke="#f97316" stroke-width="3" stroke-linecap="round" stroke-dasharray="6,3"/>
+  <circle cx="910" cy="555" r="5" fill="#fff"/>
+  <text x="600" y="202" font-size="12" font-weight="bold" fill="#fb923c">D7 ➔ Còi Buzzer (+)</text>
+
+  <!-- 6. DÂY LCD I2C: A4 (SDA) & A5 (SCL) -->
+  <path d="M 580 625 H 480 V 650 H 315" fill="none" stroke="#22c55e" stroke-width="3"/>
+  <text x="440" y="642" font-size="12" font-weight="bold" fill="#86efac">A4 ➔ SDA</text>
+  <path d="M 580 655 H 460 V 675 H 340" fill="none" stroke="#3b82f6" stroke-width="3"/>
+  <text x="440" y="688" font-size="12" font-weight="bold" fill="#93c5fd">A5 ➔ SCL</text>
+
+  <!-- 7. NGUỒN 5V TỪ ARDUINO CHO RELAY & LCD (ĐỎ) -->
+  <path d="M 580 420 H 420 V 650 H 290" fill="none" stroke="#ef4444" stroke-width="2.5"/>
+  <path d="M 420 420 V 170 H 1100 V 360 H 1340" fill="none" stroke="#ef4444" stroke-width="2.5"/>
+  <text x="740" y="160" font-size="12" font-weight="bold" fill="#fca5a5">5V Arduino ➔ Cấp cho Relay VCC & LCD VCC</text>
+
+  <!-- 8. NGUỒN NGOÀI 5V CẤP CHO 2 SERVO (ĐỎ DÀY) -->
+  <path d="M 667 950 H 1110 V 605 H 1320" fill="none" stroke="#dc2626" stroke-width="4.5"/>
+  <path d="M 1110 605 V 750 H 1320" fill="none" stroke="#dc2626" stroke-width="4.5"/>
+  <text x="830" y="940" font-size="13" font-weight="bold" fill="#fca5a5">+5V Nguồn Ngoài ➔ Cấp riêng VCC (Dây Đỏ) cho 2 Servo Cửa & Rèm</text>
+
+  <!-- 9. ĐƯỜNG DÂY MASS CHUNG (COMMON GND) -->
+  <path d="M 580 450 H 510 V 820 H 822 V 950" fill="none" stroke="#94a3b8" stroke-width="4.5"/>
+  <path d="M 510 450 V 360 H 280" fill="none" stroke="#94a3b8" stroke-width="2.5"/>
+  <path d="M 510 630 H 265" fill="none" stroke="#94a3b8" stroke-width="2.5"/>
+  <path d="M 822 950 H 1080 V 628 H 1320" fill="none" stroke="#94a3b8" stroke-width="3"/>
+  <path d="M 1080 628 V 773 H 1320" fill="none" stroke="#94a3b8" stroke-width="3"/>
+  <path d="M 1080 390 H 1340" fill="none" stroke="#94a3b8" stroke-width="2.5"/>
+  <text x="600" y="835" font-size="14" font-weight="bold" fill="#38bdf8">★ CHUNG GND: Arduino GND nối liền cực âm GND Nguồn Ngoài</text>
+
+  <!-- HỘP TỔNG KẾT SO SÁNH ĐÈN VÀ QUẠT -->
+  <g transform="translate(1140, 830)" filter="url(#shadow)">
+    <rect x="0" y="0" width="410" height="170" rx="12" fill="#1e293b" stroke="#eab308" stroke-width="2"/>
+    <text x="205" y="32" font-size="16" font-weight="900" fill="#fde047" text-anchor="middle">📌 SỰ KHÁC BIỆT ĐẤU NỐI ĐÈN VS QUẠT</text>
+    <text x="20" y="65" font-size="13" fill="#fef08a">• <tspan font-weight="bold">ĐÈN LED (Chân D8):</tspan> Nối TRỰC TIẾP từ chân D8 qua trở 220Ω vào chân dương (+) của LED, chân âm (-) nối GND.</text>
+    <text x="20" y="100" font-size="13" fill="#a5f3fc">• <tspan font-weight="bold">QUẠT (Chân D11):</tspan> Nối qua MODULE RELAY (vì quạt là tải động cơ dòng cao, không nên cắm trực tiếp vào chân Arduino).</text>
+    <text x="20" y="140" font-size="13" fill="#cbd5e1">• Cả 2 đều dùng chuẩn chân xuất tín hiệu <tspan fill="#38bdf8" font-weight="bold">OUTPUT DIGITAL (0V - 5V)</tspan>.</text>
+  </g>
+
+  <!-- Footer Notice -->
+  <rect x="0" y="1080" width="1600" height="70" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+  <text x="800" y="1120" font-size="15" fill="#94a3b8" text-anchor="middle">
+    💡 <tspan fill="#eab308" font-weight="bold">LED Đèn = Digital D8</tspan> | ⚡ <tspan fill="#06b6d4" font-weight="bold">Relay Quạt = Digital D11</tspan> | 🚪 <tspan fill="#ec4899" font-weight="bold">Servo Cửa = Digital D9</tspan> | 🪟 <tspan fill="#a855f7" font-weight="bold">Servo Rèm = Digital D10</tspan> | 🔔 <tspan fill="#f97316" font-weight="bold">Buzzer = Digital D7</tspan>
+  </text>
+</svg>
