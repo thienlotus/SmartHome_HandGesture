@@ -51,3 +51,6 @@ Desktop.ini
 # Temporary files & Logs
 *.log
 *.tmp
+ai_module/test_*.jpg
+ai_module/dataset_backup/
+

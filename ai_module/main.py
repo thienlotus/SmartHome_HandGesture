@@ -40,7 +40,17 @@ def get_arduino_port():
 target_port = get_arduino_port()
 try:
     ser = serial.Serial(target_port, 9600, timeout=1)
-    time.sleep(2)
+    # Đợi Arduino Uno hoàn tất bootloader và khởi tạo setup()
+    start_wait = time.time()
+    while time.time() - start_wait < 3.2:
+        if ser.in_waiting > 0:
+            line = ser.readline().decode(errors='ignore')
+            if "ARDUINO_READY" in line:
+                break
+        time.sleep(0.05)
+    # Xả sạch bộ đệm ban đầu
+    if ser.in_waiting > 0:
+        ser.read(ser.in_waiting)
     print(f"Da ket noi Serial voi Arduino ({target_port}) thanh cong!")
     arduino_connected = True
 except Exception as e:
@@ -55,42 +65,43 @@ last_arduino_check_time = 0
 # ====================================================================
 model_path = os.path.join(os.path.dirname(__file__), 'gesture_recognizer.task')
 base_options = python.BaseOptions(model_asset_path=model_path)
-options = vision.GestureRecognizerOptions(base_options=base_options)
+options = vision.GestureRecognizerOptions(
+    base_options=base_options,
+    min_hand_detection_confidence=0.65,
+    min_hand_presence_confidence=0.65,
+    min_tracking_confidence=0.65
+)
 recognizer = vision.GestureRecognizer.create_from_options(options)
 
-# Khởi tạo Face Detector (Haar Cascade)
-cascade_path = os.path.join(os.path.dirname(__file__), 'haarcascade_frontalface_default.xml')
-face_cascade = cv2.CascadeClassifier(cascade_path)
+# Khởi tạo Deep Learning Face Detector (YuNet ONNX) & Face Embeddings (SFace ONNX 128-D)
+yunet_path = os.path.join(os.path.dirname(__file__), 'face_detection_yunet_2023mar.onnx')
+sface_path = os.path.join(os.path.dirname(__file__), 'face_recognition_sface_2021dec.onnx')
+embeddings_path = os.path.join(os.path.dirname(__file__), 'owner_embeddings.npz')
 
-# Tải mô hình nhận diện khuôn mặt Chủ nhà Thiên (Dual-Check Engine)
-face_model_path = os.path.join(os.path.dirname(__file__), 'face_model.yml')
-face_core_path = os.path.join(os.path.dirname(__file__), 'face_core_model.yml')
+face_detector = None
 face_recognizer = None
-face_core_recognizer = None
+owner_embeddings = {}
 owner_model_loaded = False
 
-if os.path.exists(face_model_path):
-    try:
-        face_recognizer = cv2.face.LBPHFaceRecognizer_create()
-        face_recognizer.read(face_model_path)
+try:
+    if os.path.exists(yunet_path) and os.path.exists(sface_path):
+        face_detector = cv2.FaceDetectorYN.create(yunet_path, "", (640, 360), 0.55, 0.3)
+        face_recognizer = cv2.FaceRecognizerSF.create(sface_path, "")
         
-        if os.path.exists(face_core_path):
-            face_core_recognizer = cv2.face.LBPHFaceRecognizer_create()
-            face_core_recognizer.read(face_core_path)
-            
-        owner_model_loaded = True
-        print("Da tai mo hinh Nhan dien Khuon mat Chu nha THIEN & HUNG (Dual-Check Engine) thanh cong!")
-    except Exception as e:
-        print(f"Loi khi tai face_model.yml: {e}")
-        face_recognizer = None
-else:
-    print("CHUA CO DU LIEU CHU NHA: Vui long chay file DANG_KY_CHU_NHA.bat tren Desktop de dang ky khuon mat.")
+        if os.path.exists(embeddings_path):
+            data = np.load(embeddings_path)
+            for k in data.files:
+                bank = data[k]
+                owner_embeddings[k] = bank / np.linalg.norm(bank, axis=1, keepdims=True)
+            owner_model_loaded = True
+            print(f"Da tai mo hinh Deep Learning SFace thanh cong! Danh sach chu nha: {[k.upper() for k in owner_embeddings.keys()]}")
+        else:
+            print("CHUA CO DU LIEU CHU NHA: Vui long chay file DANG_KY_CHU_NHA.bat tren Desktop.")
+    else:
+        print("CHUA CO FILE ONNX: Dang thieu face_detection_yunet hoac face_recognition_sface.")
+except Exception as e:
+    print(f"Loi khi khoi tao Deep Learning Face ID: {e}")
 
-# Danh sách nhãn chủ nhà hợp lệ (Label 1 = THIÊN, Label 2 = HƯNG)
-OWNER_LABELS = {
-    1: "THIÊN",
-    2: "HƯNG"
-}
 detected_owner_name = "THIÊN"
 
 # ====================================================================
@@ -115,7 +126,7 @@ HAND_CONNECTIONS = [
 # Ánh xạ tên cử chỉ sang tiếng Việt có dấu
 GESTURE_VN_MAP = {
     "Pointing_Up": "1 Ngón trỏ (Đèn)",
-    "Victory": "2 Ngón chữ V (Cửa)",
+    "Victory": "2 Ngón chữ V (Mở / Đóng cửa)",
     "Three_Fingers": "3 Ngón tay (Rèm)",
     "Open_Palm": "Xòe 5 ngón (Quạt)",
     "OK_SIGN": "Dấu OK (Tivi)",
@@ -126,8 +137,8 @@ GESTURE_VN_MAP = {
 # Danh mục cử chỉ & tính năng Face ID (Quy ước: Ký hiệu = Lòng tay, Nắm đấm = Tắt hết)
 GESTURE_LIST = [
     {"key": "Pointing_Up",  "icon": "[1]",   "title": "1 ngón trỏ (Lòng tay)",   "desc": "Bật đèn chiếu sáng",        "cmd": "A"},
-    {"key": "Victory",      "icon": "[V]",   "title": "2 ngón chữ V (Lòng tay)", "desc": "Mở cửa chính (90°)",        "cmd": "O"},
-    {"key": "Three_Fingers","icon": "[3]",   "title": "3 ngón tay (Lòng tay)",   "desc": "Kéo rèm cửa lên",           "cmd": "U"},
+    {"key": "Victory",      "icon": "[V]",   "title": "2 ngón chữ V (Mở/Đóng)",  "desc": "Mở / Đóng cửa chính (90°/0°)", "cmd": "O"},
+    {"key": "Three_Fingers","icon": "[3]",   "title": "3 ngón tay (Lòng tay)",   "desc": "Kéo / Hạ rèm cửa (90°/0°)", "cmd": "U/D"},
     {"key": "Open_Palm",    "icon": "[5]",   "title": "Xòe 5 ngón (Lòng tay)",   "desc": "Bật / Tắt quạt làm mát",     "cmd": "F"},
     {"key": "OK_SIGN",      "icon": "[OK]",  "title": "Dấu OK (Lòng bàn tay)",   "desc": "Bật / Tắt Tivi LCD",         "cmd": "T"},
     {"key": "Closed_Fist",  "icon": "[FIST]","title": "Nắm đấm (Tắt hết)",       "desc": "Tắt toàn bộ thiết bị",       "cmd": "B"},
@@ -150,6 +161,8 @@ candidate_start_time = 0
 last_executed_gesture = None
 last_action_time = 0
 last_hand_seen_time = time.time()
+latched_gesture = None
+unlatch_time = 0
 tv_is_on = False
 door_is_open = False
 
@@ -259,11 +272,18 @@ def mouse_click(event, x, y, flags, param):
             lx1, ly1, lx2, ly2 = btn_lock_rect
             if lx1 <= x <= lx2 and ly1 <= y <= ly2:
                 if ser:
-                    try: ser.write(b'C')
+                    try:
+                        ser.write(b'C')
+                        ser.flush()
+                        time.sleep(0.01)
+                        if ser.in_waiting > 0:
+                            ser.read(ser.in_waiting)
                     except Exception: pass
                 door_is_open = False
-                device_status["Cua"] = "CLOSED"
+                device_status["Cua"] = "CLOSE"
                 device_status["Security"] = "STANDBY"
+                latched_gesture = None
+                unlatch_time = 0
                 toast_message = "ĐÃ KHÓA NHÀ! SẴN SÀNG QUÉT MẶT"
                 toast_time = time.time()
                 reset_face_gate()
@@ -438,25 +458,27 @@ def get_anatomical_gesture(landmarks, w, h):
     p0 = landmarks[0]
     p9 = landmarks[9]
     palm_len = math.hypot(p9.x - p0.x, p9.y - p0.y)
-    if palm_len < 0.01:
+    palm_len_px = palm_len * h
+    # Bàn tay người thật khi đưa lên điều khiển luôn có chiều dài lòng bàn tay >= 35px
+    if palm_len < 0.01 or palm_len_px < 35:
         return "None"
         
-    ext_idx = math.hypot(landmarks[8].x - p0.x, landmarks[8].y - p0.y) > 1.35 * palm_len
-    ext_mid = math.hypot(landmarks[12].x - p0.x, landmarks[12].y - p0.y) > 1.35 * palm_len
+    ext_idx = math.hypot(landmarks[8].x - p0.x, landmarks[8].y - p0.y) > 1.25 * palm_len
+    ext_mid = math.hypot(landmarks[12].x - p0.x, landmarks[12].y - p0.y) > 1.25 * palm_len
     ext_ring = math.hypot(landmarks[16].x - p0.x, landmarks[16].y - p0.y) > 1.35 * palm_len
     ext_pinky = math.hypot(landmarks[20].x - p0.x, landmarks[20].y - p0.y) > 1.35 * palm_len
     
     dist_ok = get_distance(landmarks[4], landmarks[8], w, h)
     
-    # 1. Dấu OK: Ngón cái chạm ngón trỏ, ngón giữa duỗi -> BẬT/TẮT TIVI
-    if dist_ok < 45 and ext_mid:
+    # 1. Dấu OK: Ngón cái chạm ngón trỏ, các ngón còn lại (ngón giữa & ngón áp út) duỗi thẳng -> BẬT/TẮT TIVI
+    if dist_ok < 45 and ext_mid and ext_ring:
         return "OK_SIGN"
         
     # 2. 1 ngón trỏ duỗi, các ngón còn lại gập -> BẬT ĐÈN
     if ext_idx and not ext_mid and not ext_ring and not ext_pinky:
         return "Pointing_Up"
 
-    # 3. 2 ngón (trỏ & giữa duỗi, áp út & út gập) -> MỞ CỬA (90°)
+    # 3. 2 ngón (trỏ & giữa duỗi, áp út & út gập) -> MỞ / ĐÓNG CỬA (90° / 0°)
     if ext_idx and ext_mid and not ext_ring and not ext_pinky:
         return "Victory"
         
@@ -903,6 +925,7 @@ print("San sang! Ban hay mo cua so Camera len nhe...")
 
 # Biến lưu trữ khuôn mặt giữa các frame để đạt 60 FPS
 detected_faces = []
+detected_faces_data = []
 frame_idx = 0
 
 # ====================================================================
@@ -956,61 +979,76 @@ while cap.isOpened() and not exit_requested:
     # -------------------------------------------------------------
     has_owner = False
     has_stranger = False
-    active_conf_score = 100
+    active_conf_score = "0%"
 
     # =============================================================
-    # GIAO DIỆN 1: CỔNG QUÉT MẶT AN NINH (STATE_FACE_GATE)
+    # GIAO DIỆN 1: CỔNG QUÉT MẶT AN NINH (DEEP LEARNING YUNET & SFACE)
     # =============================================================
     if current_app_state == STATE_FACE_GATE:
-        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        
-        # Quét khuôn mặt mỗi 3 frame
-        if frame_idx % 3 == 0:
-            small_gray = cv2.resize(gray_frame, (640, 360))
-            raw_faces = face_cascade.detectMultiScale(small_gray, scaleFactor=1.18, minNeighbors=5, minSize=(50, 50))
+        # 1. Phát hiện khuôn mặt bằng Deep Neural Network YuNet mỗi 2 frame
+        if frame_idx % 2 == 0 and face_detector is not None:
+            small_frame = cv2.resize(frame, (640, 360))
+            face_detector.setInputSize((640, 360))
+            _, raw_faces = face_detector.detect(small_frame)
             valid_faces = []
-            for (x, y, fw, fh) in raw_faces:
-                bx, by, bw, bh = int(x * 2), int(y * 2), int(fw * 2), int(fh * 2)
-                cx = bx + bw // 2
-                if bw >= 80 and bh >= 80 and 100 <= cx <= (w - 100):
-                    valid_faces.append((bx, by, bw, bh))
-            valid_faces.sort(key=lambda f: f[2] * f[3], reverse=True)
-            detected_faces = valid_faces[:1]
+            if raw_faces is not None:
+                for rf in raw_faces:
+                    fx, fy, fw, fh = int(rf[0] * 2), int(rf[1] * 2), int(rf[2] * 2), int(rf[3] * 2)
+                    score = rf[14]
+                    if fw >= 40 and fh >= 40 and score >= 0.50:
+                        rf_1280 = rf.copy()
+                        rf_1280[:14] *= 2.0
+                        valid_faces.append(((fx, fy, fw, fh), rf_1280))
+            valid_faces.sort(key=lambda item: item[0][2] * item[0][3], reverse=True)
+            detected_faces_data = valid_faces[:1]
+            detected_faces = [item[0] for item in detected_faces_data]
 
         if len(detected_faces) > 0:
             last_face_time = cur_t
 
         time_rem = GATE_DURATION
 
-        # CHỈ KHI NGƯỜI DÙNG BẤM [ BẬT QUÉT MẶT ] HOẶC NHẤN SPACE THÌ MỚI BẮT ĐẦU XÁC THỰC
+        # 2. XÁC THỰC SINH TRẮC HỌC ĐỘC BẢN 128 CHIỀU KHI BẬT QUÉT MẶT
         if gate_scanning:
-            for (fx, fy, fw, fh) in detected_faces:
-                face_crop = gray_frame[fy:fy+fh, fx:fx+fw]
+            for ((fx, fy, fw, fh), rf_1280) in detected_faces_data:
                 is_owner = False
+                matched_name = ""
+                highest_sim = 0.0
                 
-                if owner_model_loaded and face_recognizer is not None and face_crop.size > 0:
+                if owner_model_loaded and face_recognizer is not None:
                     try:
-                        face_resized = cv2.resize(face_crop, (200, 200))
-                        label_full, conf_full = face_recognizer.predict(face_resized)
+                        aligned = face_recognizer.alignCrop(frame, rf_1280)
+                        query_feat = face_recognizer.feature(aligned)
+                        norm_q = query_feat / np.linalg.norm(query_feat, axis=1, keepdims=True)
                         
-                        # Kiểm tra tầng 2: Vùng ngũ quan trung tâm (Mắt, Kính, Sống mũi, Gò má)
-                        conf_core = 100.0
-                        if face_core_recognizer is not None:
-                            core_crop = cv2.resize(face_resized[50:160, 20:180], (160, 160))
-                            _, conf_core = face_core_recognizer.predict(core_crop)
+                        for name, bank in owner_embeddings.items():
+                            sims = np.dot(bank, norm_q.T).flatten()
+                            max_s = float(np.max(sims))
+                            if max_s > highest_sim:
+                                highest_sim = max_s
+                                matched_name = name
+                                
+                        recent_confs.append(highest_sim)
+                        if len(recent_confs) > 5: recent_confs.pop(0)
+                        avg_sim = sum(recent_confs) / len(recent_confs)
                         
-                        recent_confs.append(conf_full)
-                        if len(recent_confs) > 3: recent_confs.pop(0)
-                        avg_conf = sum(recent_confs) / len(recent_confs)
-                        active_conf_score = int(avg_conf)
+                        # Ánh xạ Cosine similarity của SFace sang % trực quan:
+                        # Người lạ (sim <= 0.35) -> 10% - 35%
+                        # Chủ nhà (sim >= 0.52)  -> 75% - 98%
+                        if avg_sim <= 0.35:
+                            match_pct = int(max(5, (avg_sim / 0.35) * 35))
+                        else:
+                            match_pct = int(min(99, 35 + ((avg_sim - 0.35) / 0.28) * 64))
+                        active_conf_score = f"{match_pct}%"
                         
-                        # QUY TẮC XÁC THỰC KÉP ĐA TẦNG (HỖ TRỢ CẢ CHỦ NHÀ THIÊN & HƯNG):
-                        if label_full in OWNER_LABELS and (avg_conf <= 63.5 or (avg_conf <= 66.5 and conf_core <= 89.0)):
+                        # NGƯỠNG SINH TRẮC HỌC DEEP LEARNING SFACE:
+                        # >= 0.52: Chủ nhà thực sự (loại bỏ 100% người lạ < 0.40, nhận diện trơn tru không giật lag)
+                        if avg_sim >= 0.52 and matched_name:
                             is_owner = True
-                            detected_owner_name = OWNER_LABELS[label_full]
+                            detected_owner_name = matched_name.upper()
                         else:
                             is_owner = False
-                    except Exception:
+                    except Exception as e:
                         is_owner = False
                 
                 if is_owner:
@@ -1023,53 +1061,66 @@ while cap.isOpened() and not exit_requested:
             # Đếm ngược thời gian nhận diện mặt
             time_rem = max(0.0, GATE_DURATION - (cur_t - gate_start_time))
             
-            # 1. Cơ chế xác thực nhanh (Fast-Pass): Nếu nhận diện rõ chủ nhà 5 frame thì mở ngay không cần đợi hết 3s
-            if gate_green_frames >= 5 and gate_green_frames >= 2 * gate_red_frames:
+            # 1. Cơ chế xác thực nhanh (Fast-Pass): Nhận diện đúng chủ nhà 4 frame liên tiếp với độ khớp cao
+            if gate_green_frames >= 4 and avg_sim >= 0.54:
                 door_is_open = True
                 device_status["Cua"] = "OPEN"
                 device_status["Security"] = "OWNER_VERIFIED"
                 if ser:
-                    try: ser.write(b'O')
+                    try:
+                        ser.write(b'O')
+                        ser.flush()
+                        time.sleep(0.01)
+                        if ser.in_waiting > 0:
+                            ser.read(ser.in_waiting)
                     except Exception: pass
-                print(f"[FACE GATE] XAC THUC NHANH CHU NHA {detected_owner_name} THANH CONG! CHUYEN CANH SANG GIAO DIEN 2.")
-                toast_message = f"FACE ID: CHÀO MỪNG CHỦ NHÀ {detected_owner_name}! ĐÃ MỞ CỬA"
+                print(f"[FACE GATE] XAC THUC DEEP AI CHU NHA {detected_owner_name} ({active_conf_score}) THANH CONG! MO CUA.")
+                toast_message = f"FACE ID: CHÀO MỪNG CHỦ NHÀ {detected_owner_name} ({active_conf_score})! ĐÃ MỞ CỬA"
                 toast_time = cur_t
                 gate_scanning = False
                 switch_state(STATE_HOME_DASHBOARD, frame)
 
             # 2. Hết thời gian 3.0s -> ĐƯA RA QUYẾT ĐỊNH
             elif time_rem <= 0.0:
-                if gate_green_frames >= 4 and gate_green_frames > gate_red_frames:
-                    # Là Chủ Nhà -> Mở cửa & Chuyển sang Giao diện 2
+                if gate_green_frames >= 6 and avg_sim >= 0.50:
                     door_is_open = True
                     device_status["Cua"] = "OPEN"
                     device_status["Security"] = "OWNER_VERIFIED"
                     if ser:
-                        try: ser.write(b'O')
+                        try:
+                            ser.write(b'O')
+                            ser.flush()
+                            time.sleep(0.01)
+                            if ser.in_waiting > 0:
+                                ser.read(ser.in_waiting)
                         except Exception: pass
-                    print(f"[FACE GATE] XAC THUC CHU NHA {detected_owner_name} THANH CONG! CHUYEN CANH SANG GIAO DIEN 2.")
-                    toast_message = f"FACE ID: CHÀO MỪNG CHỦ NHÀ {detected_owner_name}! ĐÃ MỞ CỬA"
+                    print(f"[FACE GATE] XAC THUC DEEP AI CHU NHA {detected_owner_name} ({active_conf_score}) THANH CONG! MO CUA.")
+                    toast_message = f"FACE ID: CHÀO MỪNG CHỦ NHÀ {detected_owner_name} ({active_conf_score})! ĐÃ MỞ CỬA"
                     toast_time = cur_t
                     gate_scanning = False
                     switch_state(STATE_HOME_DASHBOARD, frame)
-                elif gate_red_frames >= 4 and gate_red_frames > gate_green_frames:
-                    # Là Khách / Người Lạ -> Hú còi & Chuyển sang Giao diện 3
+                elif gate_red_frames >= 15 and avg_sim < 0.45 and gate_red_frames > 2 * gate_green_frames:
                     door_is_open = False
                     device_status["Cua"] = "CLOSED"
                     device_status["Security"] = "STRANGER_ALERT"
                     if ser:
-                        try: ser.write(b'S')
+                        try:
+                            ser.write(b'S')
+                            ser.flush()
+                            time.sleep(0.01)
+                            if ser.in_waiting > 0:
+                                ser.read(ser.in_waiting)
                         except Exception: pass
                     alarm_active = True
-                    print("[FACE GATE] PHAT HIEN NGUOI LA! KICH HOAT COI BAO DONG VA CHUYEN CANH SANG GIAO DIEN 3.")
-                    toast_message = "CẢNH BÁO AN NINH: PHÁT HIỆN NGƯỜI LẠ! ĐANG HÚ CÒI!"
+                    print(f"[FACE GATE] PHAT HIEN NGUOI LA! (KHOP: {active_conf_score}) KICH HOAT COI BAO DONG.")
+                    toast_message = f"CẢNH BÁO AN NINH: PHÁT HIỆN NGƯỜI LẠ ({active_conf_score})! ĐANG HÚ CÒI!"
                     toast_time = cur_t
                     gate_scanning = False
                     switch_state(STATE_SECURITY_ALARM, frame)
                 else:
-                    # Chưa rõ khuôn mặt (chưa đủ mẫu hoặc không đứng trước cam) -> KHÔNG HÚ CÒI BẬY BẠ
+                    # Chưa rõ khuôn mặt hoặc chưa đủ mẫu -> Nhắc người dùng quét lại, tuyệt đối KHÔNG hú còi oan
                     gate_scanning = False
-                    toast_message = "CHƯA RÕ KHUÔN MẶT! VUI LÒNG ĐỨNG GẦN VÀ BẤM BẬT QUÉT LẠI"
+                    toast_message = "KHÔNG THẤY RÕ MẶT! VUI LÒNG HƯỚNG VỀ CAMERA VÀ QUÉT LẠI"
                     toast_time = cur_t
 
         # Render Giao diện 1
@@ -1088,17 +1139,34 @@ while cap.isOpened() and not exit_requested:
         hand_cmd = None
         hand_action_text = ""
         
-        if detection_result.gestures:
+        # BỘ LỌC CHỐNG NHẬN DIỆN NHẦM KHUÔN MẶT/BÓNG MŨI THÀNH BÀN TAY:
+        has_valid_hand = False
+        if detection_result.gestures and len(detection_result.hand_landmarks) > 0:
+            hlm = detection_result.hand_landmarks[0]
+            plen = math.hypot((hlm[9].x - hlm[0].x) * w, (hlm[9].y - hlm[0].y) * h)
+            xs_c = [lm.x * w for lm in hlm]
+            ys_c = [lm.y * h for lm in hlm]
+            hw = max(xs_c) - min(xs_c)
+            hh = max(ys_c) - min(ys_c)
+            if plen >= 28 and (hw >= 45 or hh >= 45):
+                has_valid_hand = True
+        
+        if has_valid_hand:
             gesture_name = detection_result.gestures[0][0].category_name
             score = detection_result.gestures[0][0].score
             hand_landmarks = detection_result.hand_landmarks[0]
             
             # 0. Xác định tay Trái / Phải & Hướng bàn tay (Lòng tay vs Mặt sấp)
-            hand_label = "Right"
+            raw_hand_label = "Right"
             if detection_result.handedness and len(detection_result.handedness) > 0:
-                hand_label = detection_result.handedness[0][0].category_name
+                raw_hand_label = detection_result.handedness[0][0].category_name
                 
-            hand_facing = check_hand_facing(hand_landmarks, hand_label)
+            hand_facing = check_hand_facing(hand_landmarks, raw_hand_label)
+            
+            # Chuẩn hóa tay Trái / Tay Phải chuẩn 100% theo góc nhìn người dùng thực tế:
+            # Do webcam trước (camera laptop) đang lật gương (cv2.flip(1)), MediaPipe phân loại theo
+            # người đứng đối diện nên bị đảo ngược: "Right" của MediaPipe là TAY TRÁI ngoài đời của bạn
+            real_hand_label = "Left" if raw_hand_label == "Right" else "Right"
             
             # 1. Vẽ xương bàn tay (Skeleton line)
             for p1_idx, p2_idx in HAND_CONNECTIONS:
@@ -1135,26 +1203,72 @@ while cap.isOpened() and not exit_requested:
             tag_color = (0, 240, 255)
             target_cmd = None
             action_desc = ""
+            current_time = time.time()
+            last_hand_seen_time = current_time
+
+            # Cơ chế nhả khóa cử chỉ (Unlatch) siêu nhạy:
+            # Khi người dùng đổi sang cử chỉ khác hoặc thả lỏng ngón tay:
+            if latched_gesture is not None:
+                if gesture_name != latched_gesture:
+                    if unlatch_time == 0:
+                        unlatch_time = current_time
+                    elif current_time - unlatch_time >= 0.10: # Chỉ cần 0.10s (1-2 frame) thả lỏng/đổi cử chỉ là nhả khóa ngay
+                        latched_gesture = None
+                        unlatch_time = 0
+                else:
+                    unlatch_time = 0
             
-            if gesture_name in ["Victory", "Pointing_Up", "Three_Fingers", "Open_Palm", "OK_SIGN"]:
-                if hand_facing == "PALM":
-                    is_facing_valid = True
-                    facing_tag = "[ HỢP LỆ: LÒNG BÀN TAY ]"
+            if gesture_name == "Victory":
+                # Cử chỉ chữ V: Chấp nhận mọi hướng giơ tay tự nhiên (Mở khi đang đóng, Đóng khi đang mở)
+                is_facing_valid = True
+                if latched_gesture == "Victory":
+                    facing_tag = "[ ĐÃ THỰC THI - THẢ LỎNG/HẠ TAY ĐỂ ĐỔI LỆNH ]"
+                    tag_color = (0, 220, 255)
+                else:
+                    door_intent = "ĐÓNG CỬA" if door_is_open else "MỞ CỬA"
+                    facing_tag = f"[ HỢP LỆ: 2 NGÓN {door_intent} ]"
                     tag_color = (70, 220, 30) # Xanh lá
+            elif gesture_name in ["Pointing_Up", "Three_Fingers", "Open_Palm", "OK_SIGN"]:
+                if hand_facing in ["PALM", "EDGE"]:
+                    is_facing_valid = True
+                    if latched_gesture == gesture_name:
+                        facing_tag = "[ ĐÃ THỰC THI - THẢ LỎNG/HẠ TAY ĐỂ ĐỔI LỆNH ]"
+                        tag_color = (0, 220, 255)
+                    else:
+                        if gesture_name == "Three_Fingers":
+                            rem_is_up = (device_status.get("Rem") == "UP")
+                            rem_intent = "HẠ RÈM (0°)" if rem_is_up else "KÉO RÈM (90°)"
+                            facing_tag = f"[ HỢP LỆ: 3 NGÓN {rem_intent} ]"
+                        elif gesture_name == "Open_Palm":
+                            fan_is_on = (device_status.get("Quat") == "ON")
+                            fan_intent = "TẮT QUẠT" if fan_is_on else "BẬT QUẠT"
+                            facing_tag = f"[ HỢP LỆ: XÒE TAY {fan_intent} ]"
+                        elif gesture_name == "OK_SIGN":
+                            tv_intent = "TẮT TV" if tv_is_on else "BẬT TV"
+                            facing_tag = f"[ HỢP LỆ: OK {tv_intent} ]"
+                        elif gesture_name == "Pointing_Up":
+                            facing_tag = "[ HỢP LỆ: 1 NGÓN BẬT ĐÈN ]"
+                        else:
+                            facing_tag = "[ HỢP LỆ: LÒNG BÀN TAY ]"
+                        tag_color = (70, 220, 30) # Xanh lá
                 else:
                     is_facing_valid = False
                     facing_tag = "[ TỪ CHỐI: CẦN QUAY LÒNG TAY ]"
                     tag_color = (0, 100, 255) # Cam đỏ cảnh báo
             elif gesture_name == "Closed_Fist":
                 is_facing_valid = True
-                facing_tag = "[ HỢP LỆ: NẮM ĐẤM TẮT HẾT ]"
-                tag_color = (70, 220, 30) # Xanh lá
+                if latched_gesture == "Closed_Fist":
+                    facing_tag = "[ ĐÃ THỰC THI - ĐÃ TẮT TOÀN BỘ ]"
+                    tag_color = (0, 220, 255)
+                else:
+                    facing_tag = "[ HỢP LỆ: NẮM ĐẤM TẮT HẾT ]"
+                    tag_color = (70, 220, 30) # Xanh lá
             else:
                 is_facing_valid = False
                 facing_tag = ""
 
-            # Hiển thị thông tin tay và trạng thái hướng mặt trên HUD
-            hand_vn = "TAY PHẢI" if hand_label == "Right" else "TAY TRÁI"
+            # Hiển thị thông tin tay và trạng thái hướng mặt trên HUD (Đúng 100% ngoài đời thực)
+            hand_vn = "TAY PHẢI" if real_hand_label == "Right" else "TAY TRÁI"
             gesture_vn = GESTURE_VN_MAP.get(gesture_name, gesture_name)
             score_pct = int(score * 100)
             hand_title = f"{hand_vn}: {gesture_vn} ({score_pct}%)"
@@ -1166,56 +1280,79 @@ while cap.isOpened() and not exit_requested:
 
             # Ánh xạ cử chỉ thành lệnh khi thỏa mãn quy ước hướng mặt
             if is_facing_valid:
-                if gesture_name == "Victory":
-                    target_cmd = 'O'
-                    action_desc = "ĐÃ MỞ CỬA (90°)"
-                elif gesture_name == "Three_Fingers":
-                    target_cmd = 'U'
-                    action_desc = "ĐÃ KÉO RÈM CỬA LÊN"
-                elif gesture_name == "Pointing_Up":
-                    target_cmd = 'A'
-                    action_desc = "BẬT ĐÈN CHIẾU SÁNG"
-                elif gesture_name == "Open_Palm":
-                    target_cmd = 'F'
-                    action_desc = "BẬT / TẮT QUẠT LÀM MÁT"
-                elif gesture_name == "OK_SIGN":
-                    target_cmd = 'T'
-                    action_desc = "BẬT / TẮT TIVI LCD"
-                elif gesture_name == "Closed_Fist":
-                    target_cmd = 'B'
-                    action_desc = "TẮT TOÀN BỘ THIẾT BỊ"
+                # Nếu cử chỉ này đang giữ nguyên sau khi vừa kích hoạt xong: khóa chống lặp lại liên tục
+                if latched_gesture == gesture_name:
+                    target_cmd = None
+                else:
+                    if gesture_name == "Victory":
+                        target_cmd = 'DOOR_CLOSE' if door_is_open else 'DOOR_OPEN'
+                        action_desc = "CỬA CHÍNH: ĐÃ ĐÓNG (0°)" if door_is_open else "CỬA CHÍNH: ĐÃ MỞ (90°)"
+                    elif gesture_name == "Three_Fingers":
+                        rem_is_up = (device_status.get("Rem") == "UP")
+                        target_cmd = 'REM_DOWN' if rem_is_up else 'REM_UP'
+                        action_desc = "RÈM CỬA: ĐÃ HẠ XUỐNG (0°)" if rem_is_up else "RÈM CỬA: ĐÃ KÉO LÊN (90°)"
+                    elif gesture_name == "Pointing_Up":
+                        target_cmd = 'A'
+                        action_desc = "BẬT ĐÈN CHIẾU SÁNG"
+                    elif gesture_name == "Open_Palm":
+                        fan_is_on = (device_status.get("Quat") == "ON")
+                        target_cmd = 'FAN_OFF' if fan_is_on else 'FAN_ON'
+                        action_desc = "QUẠT: ĐÃ TẮT" if fan_is_on else "QUẠT: ĐANG CHẠY"
+                    elif gesture_name == "OK_SIGN":
+                        target_cmd = 'TV_OFF' if tv_is_on else 'TV_ON'
+                        action_desc = "TIVI: ĐÃ TẮT" if tv_is_on else "TIVI: BẬT (NETFLIX)"
+                    elif gesture_name == "Closed_Fist":
+                        target_cmd = 'B'
+                        action_desc = "TẮT TOÀN BỘ THIẾT BỊ"
 
             # -------------------------------------------------------------
-            # ỔN ĐỊNH CỬ CHỈ (HOLD 0.35s) & THỰC THI 1 LẦN DUY NHẤT
+            # ỔN ĐỊNH CỬ CHỈ (HOLD 0.15s - CỰC NHẠY NHƯ RÈM) & THỰC THI
             # -------------------------------------------------------------
-            current_time = time.time()
-            last_hand_seen_time = current_time
-            
             if target_cmd is not None:
                 if target_cmd != candidate_gesture:
                     candidate_gesture = target_cmd
                     candidate_start_time = current_time
                 else:
                     held_duration = current_time - candidate_start_time
-                    if held_duration >= 0.35:
-                        if (candidate_gesture != last_executed_gesture) and (current_time - last_action_time >= 1.0):
-                            if candidate_gesture == 'T':
-                                tv_is_on = not tv_is_on
+                    # 0.15s (~2-3 frame): Phản hồi tức thì, không một chút delay
+                    if held_duration >= 0.15:
+                        # Cooldown 0.35s giữa các lần bấm/thực thi
+                        if (current_time - last_action_time >= 0.35):
+                            send_char = None
+                            if candidate_gesture in ['DOOR_OPEN', 'DOOR_CLOSE']:
+                                door_is_open = (candidate_gesture == 'DOOR_OPEN')
+                                if door_is_open:
+                                    device_status["Cua"] = "OPEN"
+                                    action_desc = "CỬA CHÍNH: ĐÃ MỞ (90°)"
+                                    send_char = 'O'
+                                else:
+                                    device_status["Cua"] = "CLOSE"
+                                    action_desc = "CỬA CHÍNH: ĐÃ ĐÓNG (0°)"
+                                    send_char = 'C'
+                            elif candidate_gesture in ['TV_ON', 'TV_OFF']:
+                                tv_is_on = (candidate_gesture == 'TV_ON')
                                 device_status["TV"] = "ON" if tv_is_on else "OFF"
                                 action_desc = f"TIVI: {'BẬT (NETFLIX)' if tv_is_on else 'ĐÃ TẮT'}"
-                            elif candidate_gesture == 'O':
-                                door_is_open = True
-                                device_status["Cua"] = "OPEN"
-                                action_desc = "ĐÃ MỞ CỬA (90°)"
-                            elif candidate_gesture == 'F':
-                                device_status["Quat"] = "OFF" if device_status["Quat"] == "ON" else "ON"
-                                action_desc = f"QUẠT: {'ĐANG CHẠY' if device_status['Quat'] == 'ON' else 'ĐÃ TẮT'}"
+                                send_char = 'T'
+                            elif candidate_gesture in ['FAN_ON', 'FAN_OFF']:
+                                fan_on = (candidate_gesture == 'FAN_ON')
+                                device_status["Quat"] = "ON" if fan_on else "OFF"
+                                action_desc = f"QUẠT: {'ĐANG CHẠY' if fan_on else 'ĐÃ TẮT'}"
+                                send_char = 'F'
                             elif candidate_gesture == 'A':
                                 device_status["Den"] = "ON"
                                 action_desc = "ĐÃ BẬT ĐÈN CHIẾU SÁNG"
-                            elif candidate_gesture == 'U':
-                                device_status["Rem"] = "UP"
-                                action_desc = "ĐÃ KÉO RÈM CỬA LÊN"
+                                send_char = 'A'
+                            elif candidate_gesture in ['REM_UP', 'REM_DOWN', 'U', 'D']:
+                                rem_is_up = (candidate_gesture in ['REM_UP', 'U'])
+                                if rem_is_up:
+                                    device_status["Rem"] = "UP"
+                                    action_desc = "RÈM CỬA: ĐÃ KÉO LÊN (90°)"
+                                    send_char = 'U'
+                                else:
+                                    device_status["Rem"] = "DOWN"
+                                    action_desc = "RÈM CỬA: ĐÃ HẠ XUỐNG (0°)"
+                                    send_char = 'D'
                             elif candidate_gesture == 'B':
                                 device_status["Den"] = "OFF"
                                 device_status["Cua"] = "CLOSE"
@@ -1228,24 +1365,37 @@ while cap.isOpened() and not exit_requested:
                                 action_desc = "ĐÃ TẮT TOÀN BỘ THIẾT BỊ"
                                 if alarm_active:
                                     alarm_active = False
+                                send_char = 'B'
 
-                            if ser:
+                            if ser and send_char:
                                 try:
-                                    ser.write(candidate_gesture.encode())
-                                except Exception:
-                                    pass
+                                    ser.write(send_char.encode())
+                                    ser.flush()
+                                    time.sleep(0.02)
+                                    if ser.in_waiting > 0:
+                                        ser.read(ser.in_waiting)
+                                    if send_char == 'B':
+                                        ser.write(b'C') # Đảm bảo đóng cửa Servo triệt để khi tắt hết
+                                        ser.flush()
+                                except Exception as e:
+                                    print(f"[SERIAL ERROR] Khong the gui lenh '{send_char}': {e}")
                                     
-                            print(f"[ACTION] Cu chi: {gesture_name} -> Lenh: {action_desc} (Char: '{candidate_gesture}')")
+                            print(f"[ACTION] Cu chi: {gesture_name} -> Lenh: {action_desc} (Char: '{send_char}')")
                             
                             toast_message = f"LỆNH: {action_desc}"
                             toast_time = current_time
                             last_executed_gesture = candidate_gesture
                             last_action_time = current_time
+                            latched_gesture = gesture_name # Khóa giữ cử chỉ này cho đến khi hạ hoặc đổi tay
+                            candidate_gesture = None
             else:
                 candidate_gesture = None
         else:
             current_time = time.time()
-            if current_time - last_hand_seen_time > 0.8:
+            # Khi hạ tay hoặc bàn tay ra khỏi khung hình: Nhả khóa ngay sau 0.10s
+            if current_time - last_hand_seen_time > 0.10:
+                latched_gesture = None
+                unlatch_time = 0
                 last_executed_gesture = None
                 candidate_gesture = None
 
@@ -1340,7 +1490,12 @@ while cap.isOpened() and not exit_requested:
     elif key == ord(' ') or key == 32:
         if current_app_state == STATE_HOME_DASHBOARD:
             if ser:
-                try: ser.write(b'C')
+                try:
+                    ser.write(b'C')
+                    ser.flush()
+                    time.sleep(0.01)
+                    if ser.in_waiting > 0:
+                        ser.read(ser.in_waiting)
                 except Exception: pass
             door_is_open = False
             device_status["Cua"] = "CLOSED"
@@ -1351,7 +1506,12 @@ while cap.isOpened() and not exit_requested:
             switch_state(STATE_FACE_GATE, frame)
         elif current_app_state == STATE_SECURITY_ALARM:
             if ser:
-                try: ser.write(b'C')
+                try:
+                    ser.write(b'C')
+                    ser.flush()
+                    time.sleep(0.01)
+                    if ser.in_waiting > 0:
+                        ser.read(ser.in_waiting)
                 except Exception: pass
             alarm_active = False
             device_status["Security"] = "STANDBY"

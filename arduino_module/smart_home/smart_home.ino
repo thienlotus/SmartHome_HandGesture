@@ -27,6 +27,7 @@ bool tvState      = false;
 bool doorState    = false; // false = Đóng (0 độ), true = Mở (90 độ)
 bool curtainState = false; // false = Thả (0 độ), true = Cuộn (90 độ)
 bool sosActive    = false;
+bool hasLcd       = false; // Cờ kiểm tra phần cứng LCD có kết nối không
 
 // Hàm phát tiếng bíp qua Buzzer
 void beep(int times, int durationMs, int pauseMs) {
@@ -40,6 +41,7 @@ void beep(int times, int durationMs, int pauseMs) {
 
 // Cập nhật hiển thị màn hình LCD (Tivi mô phỏng)
 void updateTvDisplay() {
+  if (!hasLcd) return; // Nếu không cắm LCD thì bỏ qua, không làm chậm CPU
   lcd.backlight();
   lcd.clear();
   if (tvState) {
@@ -69,19 +71,42 @@ void setup() {
   digitalWrite(LED_PIN, LOW);
   digitalWrite(FAN_RELAY_PIN, LOW);  // Tắt quạt ban đầu (Mức LOW)
   
-  // Cấu hình Servo Cửa và Rèm
+  // Gắn chân và giữ vị trí ban đầu cho Servo (Cửa đóng 0 độ, Rèm hạ 0 độ)
   servoDoor.attach(SERVO_DOOR_PIN);
   servoCurtain.attach(SERVO_CURTAIN_PIN);
   servoDoor.write(0);      // Ban đầu: Cửa đóng 0 độ
   servoCurtain.write(0);  // Ban đầu: Rèm hạ 0 độ
   
-  // Khởi động màn hình LCD 1602 I2C
-  lcd.init();
-  lcd.backlight();
-  updateTvDisplay();
+  // Chống treo vi điều khiển nếu màn hình LCD I2C chưa cắm hoặc sai địa chỉ
+  Wire.begin();
+  Wire.setWireTimeout(25000, true); // 25ms timeout với tự động reset bus I2C
+
+  // Quét kiểm tra sự tồn tại của LCD ở địa chỉ 0x27 hoặc 0x3F
+  Wire.beginTransmission(0x27);
+  if (Wire.endTransmission() == 0) {
+    hasLcd = true;
+    lcd = LiquidCrystal_I2C(0x27, 16, 2);
+  } else {
+    Wire.beginTransmission(0x3F);
+    if (Wire.endTransmission() == 0) {
+      hasLcd = true;
+      lcd = LiquidCrystal_I2C(0x3F, 16, 2);
+    }
+  }
+
+  if (hasLcd) {
+    lcd.init();
+    lcd.backlight();
+    updateTvDisplay();
+    Serial.println("LCD_INIT_OK");
+  } else {
+    Serial.println("LCD_NOT_FOUND_SKIPPING");
+  }
   
   // Bíp 2 tiếng chào khởi động hệ thống
   beep(2, 80, 80);
+  
+  // Báo sẵn sàng ở cuối setup để đảm bảo Arduino đã khởi tạo hoàn tất
   Serial.println("ARDUINO_READY");
 }
 
@@ -123,18 +148,18 @@ void loop() {
         Serial.println("ACK: CUA_DONG_0");
         break;
 
-      // 2. CUỘN RÈM (Lệnh 'U' - Thumb Up)
+      // 2. CUỘN RÈM (Lệnh 'U' - Kéo rèm lên)
       case 'U':
         curtainState = true;
-        servoCurtain.write(90); // Cuộn kéo rèm lên
+        servoCurtain.write(90); // Cuộn kéo rèm lên 90 độ
         beep(1, 80, 0);
         Serial.println("ACK: REM_CUON_LEN");
         break;
 
-      // 3. THẢ RÈM (Lệnh 'D' - Thumb Down)
+      // 3. THẢ RÈM (Lệnh 'D' - Thả rèm xuống)
       case 'D':
         curtainState = false;
-        servoCurtain.write(0);  // Thả rèm xuống
+        servoCurtain.write(0);  // Thả rèm xuống 0 độ
         beep(1, 80, 0);
         Serial.println("ACK: REM_THA_XUONG");
         break;
@@ -176,8 +201,8 @@ void loop() {
         digitalWrite(LED_PIN, LOW);
         digitalWrite(FAN_RELAY_PIN, LOW);  // Tắt quạt
         digitalWrite(BUZZER_PIN, LOW);
-        servoDoor.write(0);      // Đóng cửa
-        servoCurtain.write(0);  // Thả rèm
+        servoDoor.write(0);      // Đóng cửa 0 độ
+        servoCurtain.write(0);  // Thả rèm 0 độ
         updateTvDisplay();
         beep(2, 60, 60);
         Serial.println("ACK: TAT_TAT_CA");
@@ -193,11 +218,10 @@ void loop() {
       case 'H':
         // Còi bíp 2 tiếng chào đón
         beep(2, 100, 80);
-        // Mở cửa đón chủ & Bật đèn
-        servoDoor.write(90);
-        doorState = true;
         digitalWrite(LED_PIN, HIGH);
         ledState = true;
+        doorState = true;
+        servoDoor.write(90); // Mở cửa đón chủ nhà 90 độ
         Serial.println("ACK: CHU_NHA_VE");
         break;
 
