@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Ký Khuôn Mặt Chủ Nhà Từ Xa - Smart Home AI</title>
+    <meta name="description" content="Trang thu thập dữ liệu khuôn mặt 100 ảnh sinh trắc học chuẩn AI từ xa cho khách hàng hoặc chủ nhà mới.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- JSZip & FileSaver to package 100 photos directly in browser -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        :root {
+            --bg-base: #070a12;
+            --bg-card: rgba(15, 23, 42, 0.85);
+            --border-subtle: rgba(56, 189, 248, 0.2);
+            --color-cyan: #06b6d4;
+            --color-cyan-bright: #22d3ee;
+            --color-emerald: #10b981;
+            --color-amber: #f59e0b;
+            --color-red: #ef4444;
+            --text-primary: #f8fafc;
+            --text-muted: #94a3b8;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --font-sans: 'Outfit', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            padding: 20px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 680px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(6, 182, 212, 0.15);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, #ffffff, var(--color-cyan-bright));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+        }
+
+        .header p {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+        }
+
+        .step-guide-box {
+            background: rgba(2, 6, 23, 0.65);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
+            margin-bottom: 16px;
+        }
+
+        .step-title {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--color-cyan-bright);
+            margin-bottom: 4px;
+        }
+
+        .step-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            background: rgba(2, 6, 23, 0.8);
+            border: 1px solid var(--border-subtle);
+            color: #ffffff;
+            font-family: var(--font-sans);
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        .input-group input:focus {
+            border-color: var(--color-cyan);
+            box-shadow: 0 0 12px rgba(6, 182, 212, 0.4);
+        }
+
+        /* Camera Box */
+        .camera-box {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            background: #020617;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 2px solid var(--border-subtle);
+            margin-bottom: 16px;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+
+        canvas { display: none; }
+
+        .cam-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .face-oval {
+            width: 58%;
+            height: 78%;
+            border: 2px dashed rgba(6, 182, 212, 0.6);
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+            transition: all 0.25s ease;
+        }
+
+        .face-oval.capturing {
+            border-color: var(--color-emerald);
+            border-style: solid;
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.6);
+        }
+
+        /* Shutter flash */
+        .shutter-flash {
+            position: absolute;
+            inset: 0;
+            background: #ffffff;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.08s ease;
+        }
+
+        /* Progress Area */
+        .progress-box {
+            margin-bottom: 16px;
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-cyan), var(--color-emerald));
+            transition: width 0.1s linear;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: var(--radius-md);
+            font-family: var(--font-sans);
+            font-size: 1rem;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0284c7, #06b6d4, #10b981);
+            color: #ffffff;
+            box-shadow: 0 6px 20px rgba(6, 182, 212, 0.4);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(6, 182, 212, 0.7);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: #ffffff;
+            margin-top: 10px;
+        }
+
+        /* Success Dialog */
+        .success-box {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid var(--color-emerald);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            text-align: center;
+            margin-top: 16px;
+        }
+
+        .success-box h3 {
+            color: var(--color-emerald);
+            font-size: 1.15rem;
+            margin-bottom: 6px;
+        }
+
+        .success-box p {
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>ĐĂNG KÝ KHUÔN MẶT CHỦ NHÀ AI</h1>
+            <p>Thu thập 100 ảnh sinh trắc học để nạp vào hệ thống nhà thông minh</p>
+        </div>
+
+        <!-- Step Instructions -->
+        <div class="step-guide-box">
+            <div class="step-title" id="stepTitle">HƯỚNG DẪN 4 BƯỚC CHỤP ẢNH (MẤT 15 GIÂY):</div>
+            <div class="step-desc" id="stepDesc">
+                1. Nhìn thẳng (25 ảnh) • 2. Nghiêng nhẹ đầu trái/phải (25 ảnh)<br>
+                3. Tháo kính / ngước lên (25 ảnh) • 4. Biểu cảm tự nhiên (25 ảnh)
+            </div>
+        </div>
+
+        <!-- Name Input -->
+        <div class="input-group" id="inputGroup">
+            <input type="text" id="ownerNameInput" placeholder="Nhập tên của bạn (Ví dụ: Tuan, Minh, Hung...)" value="KhachHang">
+        </div>
+
+        <!-- Video Camera Box -->
+        <div class="camera-box">
+            <video id="webcam" playsinline autoplay muted></video>
+            <div class="cam-overlay">
+                <div class="face-oval" id="faceOval"></div>
+            </div>
+            <div class="shutter-flash" id="shutterFlash"></div>
+        </div>
+        <canvas id="captureCanvas"></canvas>
+
+        <!-- Progress Bar -->
+        <div class="progress-box">
+            <div class="progress-labels">
+                <span id="progressText">Sẵn sàng chụp</span>
+                <strong id="counterText">0 / 100 ảnh (0%)</strong>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+
+        <!-- Main Action Button -->
+        <button class="btn btn-primary" id="btnStartCapture">
+            📸 BẮT ĐẦU CHỤP 100 ẢNH
+        </button>
+
+        <!-- Success Result Box -->
+        <div class="success-box hidden" id="successBox">
+            <h3>🎉 ĐÃ THU THẬP THÀNH CÔNG 100 ẢNH!</h3>
+            <p>Trình duyệt đã tự động tải xuống file: <strong id="zipFileName">dataset_khach.zip</strong>.</p>
+            <p style="margin-top: 8px; color: var(--color-cyan-bright);">
+                👉 <strong>Bước tiếp theo:</strong> Bạn vui lòng gửi file <code>.zip</code> này cho kỹ thuật viên qua <strong>Zalo</strong> để nạp vào hệ thống nhận diện mở cửa nhé!
+            </p>
+            <button class="btn btn-success" id="btnDownloadAgain">
+                📥 BẤM ĐỂ TẢI LẠI FILE ZIP NẾU CHƯA TẢI ĐƯỢC
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('webcam');
+        const canvas = document.getElementById('captureCanvas');
+        const ctx = canvas.getContext('2d');
+        const faceOval = document.getElementById('faceOval');
+        const shutterFlash = document.getElementById('shutterFlash');
+        const btnStartCapture = document.getElementById('btnStartCapture');
+        const ownerNameInput = document.getElementById('ownerNameInput');
+        const progressText = document.getElementById('progressText');
+        const counterText = document.getElementById('counterText');
+        const progressFill = document.getElementById('progressFill');
+        const successBox = document.getElementById('successBox');
+        const zipFileNameLabel = document.getElementById('zipFileName');
+        const btnDownloadAgain = document.getElementById('btnDownloadAgain');
+        const stepTitle = document.getElementById('stepTitle');
+        const stepDesc = document.getElementById('stepDesc');
+
+        let isRunning = false;
+        let generatedZipBlob = null;
+        let finalZipName = "dataset_chu_nha.zip";
+
+        // Web Audio Synthesizer Beep
+        function playBeep(freq = 880, dur = 0.05) {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                const actx = new AudioCtx();
+                const osc = actx.createOscillator();
+                const gain = actx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, actx.currentTime);
+                gain.gain.setValueAtTime(0.08, actx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + dur);
+                osc.connect(gain);
+                gain.connect(actx.destination);
+                osc.start();
+                osc.stop(actx.currentTime + dur);
+            } catch(e) {}
+        }
+
+        // Initialize Webcam on page load
+        async function initCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
+                    audio: false
+                });
+                video.srcObject = stream;
+            } catch (err) {
+                alert("Vui lòng cho phép quyền truy cập Camera trên trình duyệt để chụp ảnh!");
+            }
+        }
+        window.addEventListener('DOMContentLoaded', initCamera);
+
+        btnStartCapture.addEventListener('click', async () => {
+            if (isRunning) return;
+            const name = ownerNameInput.value.trim().toLowerCase().replace(/\s+/g, '_') || "khach_hang";
+            finalZipName = `dataset_${name}.zip`;
+
+            isRunning = true;
+            btnStartCapture.disabled = true;
+            faceOval.classList.add('capturing');
+            successBox.classList.add('hidden');
+
+            const zip = new JSZip();
+            const folder = zip.folder(name);
+
+            canvas.width = 640;
+            canvas.height = 480;
+
+            let count = 0;
+            const total = 100;
+            const intervalMs = 130; // 130ms per shot -> ~13 seconds total
+
+            const captureTimer = setInterval(() => {
+                count++;
+                
+                // Update Step Prompts
+                if (count <= 25) {
+                    stepTitle.textContent = "BƯỚC 1/4: GIỮ THẲNG ĐẦU - NHÌN VÀO CAMERA";
+                    stepDesc.textContent = "Giữ khuôn mặt tự nhiên, nhìn thẳng vào ống kính.";
+                } else if (count <= 50) {
+                    stepTitle.textContent = "BƯỚC 2/4: NGHIÊNG NHẸ ĐẦU SANG TRÁI VÀ PHẢI";
+                    stepDesc.textContent = "Nghiêng nhẹ mặt sang trái rồi sang phải để AI lấy các góc cạnh.";
+                } else if (count <= 75) {
+                    stepTitle.textContent = "BƯỚC 3/4: NGƯỚC LÊN / CÚI XUỐNG HOẶC THÁO KÍNH";
+                    stepDesc.textContent = "Nếu đang đeo kính, hãy tháo kính ra hoặc ngước cằm nhẹ lên.";
+                } else {
+                    stepTitle.textContent = "BƯỚC 4/4: CƯỜI TỰ NHIÊN / BIỂU CẢM ĐA DẠNG";
+                    stepDesc.textContent = "Cười nhẹ hoặc nói chuyện tự nhiên để AI nhận diện khi giao tiếp.";
+                }
+
+                // Capture image frame
+                ctx.save();
+                ctx.translate(canvas.width, 0);
+                ctx.scale(-1, 1);
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                ctx.restore();
+
+                // Convert canvas to JPEG Base64
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+                const base64Data = dataUrl.split(',')[1];
+                const filename = `anh_${String(count).padStart(3, '0')}.jpg`;
+                folder.file(filename, base64Data, { base64: true });
+
+                // UI feedback
+                const progressPct = Math.round((count / total) * 100);
+                progressFill.style.width = `${progressPct}%`;
+                counterText.textContent = `${count} / ${total} ảnh (${progressPct}%)`;
+                progressText.textContent = `Đang chụp ảnh ${count}...`;
+
+                if (count % 10 === 0) {
+                    playBeep(980, 0.04);
+                }
+
+                // Done capturing 100 photos
+                if (count >= total) {
+                    clearInterval(captureTimer);
+                    isRunning = false;
+                    faceOval.classList.remove('capturing');
+                    progressText.textContent = "Đang đóng gói file ZIP...";
+
+                    playBeep(523, 0.1);
+                    setTimeout(() => playBeep(659, 0.1), 100);
+                    setTimeout(() => playBeep(1046, 0.2), 200);
+
+                    // Package into ZIP and trigger download
+                    zip.generateAsync({ type: "blob" }).then((content) => {
+                        generatedZipBlob = content;
+                        saveAs(content, finalZipName);
+
+                        progressText.textContent = "Đã hoàn thành!";
+                        zipFileNameLabel.textContent = finalZipName;
+                        successBox.classList.remove('hidden');
+                        btnStartCapture.disabled = false;
+                        btnStartCapture.textContent = "🔄 CHỤP LẠI NẾU MUỐN";
+                    });
+                }
+            }, intervalMs);
+        });
+
+        btnDownloadAgain.addEventListener('click', () => {
+            if (generatedZipBlob) {
+                saveAs(generatedZipBlob, finalZipName);
+            }
+        });
+    </script>
+</body>
+</html>
