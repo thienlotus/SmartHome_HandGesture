@@ -379,25 +379,33 @@ def flush_vn_text(frame):
     text_render_queue.clear()
     return cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
 
-def draw_rounded_rect(img, top_left, bottom_right, color, thickness=-1, radius=10):
-    x1, y1 = top_left
-    x2, y2 = bottom_right
+def draw_rounded_rect(img, top_left, bottom_right, color, thickness=-1, radius=4):
+    x1, y1 = int(top_left[0]), int(top_left[1])
+    x2, y2 = int(bottom_right[0]), int(bottom_right[1])
+    w = x2 - x1
+    h = y2 - y1
+    if w <= 0 or h <= 0:
+        return
+    r = min(radius, w // 2, h // 2)
+    if r <= 1:
+        cv2.rectangle(img, (x1, y1), (x2, y2), color, thickness)
+        return
     if thickness == -1:
-        cv2.rectangle(img, (x1 + radius, y1), (x2 - radius, y2), color, -1)
-        cv2.rectangle(img, (x1, y1 + radius), (x2, y2 - radius), color, -1)
-        cv2.circle(img, (x1 + radius, y1 + radius), radius, color, -1)
-        cv2.circle(img, (x2 - radius, y1 + radius), radius, color, -1)
-        cv2.circle(img, (x1 + radius, y2 - radius), radius, color, -1)
-        cv2.circle(img, (x2 - radius, y2 - radius), radius, color, -1)
+        cv2.rectangle(img, (x1 + r, y1), (x2 - r, y2), color, -1)
+        cv2.rectangle(img, (x1, y1 + r), (x2, y2 - r), color, -1)
+        cv2.circle(img, (x1 + r, y1 + r), r, color, -1)
+        cv2.circle(img, (x2 - r, y1 + r), r, color, -1)
+        cv2.circle(img, (x1 + r, y2 - r), r, color, -1)
+        cv2.circle(img, (x2 - r, y2 - r), r, color, -1)
     else:
-        cv2.line(img, (x1 + radius, y1), (x2 - radius, y1), color, thickness, cv2.LINE_AA)
-        cv2.line(img, (x1 + radius, y2), (x2 - radius, y2), color, thickness, cv2.LINE_AA)
-        cv2.line(img, (x1, y1 + radius), (x1, y2 - radius), color, thickness, cv2.LINE_AA)
-        cv2.line(img, (x2, y1 + radius), (x2, y2 - radius), color, thickness, cv2.LINE_AA)
-        cv2.ellipse(img, (x1 + radius, y1 + radius), (radius, radius), 180, 0, 90, color, thickness, cv2.LINE_AA)
-        cv2.ellipse(img, (x2 - radius, y1 + radius), (radius, radius), 270, 0, 90, color, thickness, cv2.LINE_AA)
-        cv2.ellipse(img, (x1 + radius, y2 - radius), (radius, radius), 90, 0, 90, color, thickness, cv2.LINE_AA)
-        cv2.ellipse(img, (x2 - radius, y2 - radius), (radius, radius), 0, 0, 90, color, thickness, cv2.LINE_AA)
+        cv2.line(img, (x1 + r, y1), (x2 - r, y1), color, thickness, cv2.LINE_AA)
+        cv2.line(img, (x1 + r, y2), (x2 - r, y2), color, thickness, cv2.LINE_AA)
+        cv2.line(img, (x1, y1 + r), (x1, y2 - r), color, thickness, cv2.LINE_AA)
+        cv2.line(img, (x2, y1 + r), (x2, y2 - r), color, thickness, cv2.LINE_AA)
+        cv2.ellipse(img, (x1 + r, y1 + r), (r, r), 180, 0, 90, color, thickness, cv2.LINE_AA)
+        cv2.ellipse(img, (x2 - r, y1 + r), (r, r), 270, 0, 90, color, thickness, cv2.LINE_AA)
+        cv2.ellipse(img, (x1 + r, y2 - r), (r, r), 90, 0, 90, color, thickness, cv2.LINE_AA)
+        cv2.ellipse(img, (x2 - r, y2 - r), (r, r), 0, 0, 90, color, thickness, cv2.LINE_AA)
 
 def draw_hud_brackets(img, x1, y1, x2, y2, color=(0, 240, 255), length=18, thickness=2):
     cv2.line(img, (x1, y1), (x1 + length, y1), color, thickness, cv2.LINE_AA)
@@ -499,8 +507,30 @@ def get_anatomical_gesture(landmarks, w, h):
 
 
 # ====================================================================
-# 5. HÀM RENDER 3 GIAO DIỆN (FACE GATE, DASHBOARD, SECURITY ALARM)
+# 5. BẢNG MÀU & HÀM RENDER GIAO DIỆN HIỆN ĐẠI (OBSIDIAN SLATE UI)
 # ====================================================================
+
+# Bảng màu BGR Obsidian Modern Dark Mode (Chuẩn Apple / Tesla Industrial UI)
+UI_OBSIDIAN_BG   = (22, 18, 14)     # Nền panel tối sâu mờ kính (Deep Slate)
+UI_PANEL_BG      = (28, 22, 17)     # Nền panel cạnh
+UI_CARD_BG       = (35, 28, 22)     # Nền card thiết bị thường
+UI_CARD_ACTIVE   = (48, 38, 26)     # Nền card khi active
+UI_BORDER_SUBTLE = (58, 48, 38)     # Viền thanh mảnh 1px tinh tế
+UI_BORDER_MUTED  = (75, 62, 50)     # Viền phân cách
+
+# Bảng màu chỉ báo trạng thái trực quan (Tự nhiên, sắc nét, không chói)
+UI_EMERALD       = (129, 185, 16)   # Xanh ngọc (Cửa mở / Chủ nhà) - RGB(16, 185, 129)
+UI_AMBER         = (11, 158, 245)   # Vàng hổ phách ấm (Đèn LED) - RGB(245, 158, 11)
+UI_SKY           = (233, 165, 14)   # Xanh điện tử (Quạt làm mát) - RGB(14, 165, 233)
+UI_IRIS          = (246, 92, 139)   # Tím Iris hiện đại (Rèm cửa) - RGB(139, 92, 246)
+UI_COBALT        = (246, 130, 59)   # Xanh Cobalt (Tivi LCD) - RGB(59, 130, 246)
+UI_RUBY          = (72, 29, 225)    # Đỏ Ruby sang trọng (Thoát, Báo động) - RGB(225, 29, 72)
+
+# Bảng màu Typography
+UI_WHITE         = (255, 255, 255)  # Trắng tinh khiết
+UI_TEXT_SUB      = (175, 170, 165)  # Bạc xám thanh lịch
+UI_TEXT_MUTED    = (120, 115, 110)  # Xám mờ ghi chú
+
 
 # --------------------------------------------------------------------
 # GIAO DIỆN 1: CỔNG QUÉT MẶT AN NINH SINH TRẮC HỌC (FACE GATE UI)
@@ -510,83 +540,76 @@ def render_face_gate_ui(img, current_fps, is_scanning, time_rem, total_time, gre
     h, w, _ = img.shape
     overlay = img.copy()
 
-    C_NAVY_BG     = (32, 22, 14)
-    C_CYAN        = (255, 230, 0)
-    C_GREEN       = (70, 220, 30)
-    C_YELLOW      = (30, 215, 255)
-    C_RED         = (50, 50, 240)
-    C_WHITE       = (255, 255, 255)
-    C_TEXT_DIM    = (180, 180, 180)
+    # 1. TOP HEADER BAR (Chiều cao 48px, góc vuông bo nhẹ 4px)
+    draw_rounded_rect(overlay, (16, 10), (w - 16, 58), UI_OBSIDIAN_BG, -1, 4)
+    draw_rounded_rect(overlay, (16, 10), (w - 16, 58), UI_BORDER_SUBTLE, 1, 4)
 
-    # 1. TOP HEADER BAR
-    draw_rounded_rect(overlay, (20, 12), (w - 20, 68), C_NAVY_BG, -1, 14)
-    draw_rounded_rect(overlay, (20, 12), (w - 20, 68), C_CYAN, 1, 14)
-
-    img = cv2.addWeighted(overlay, 0.78, img, 0.22, 0)
+    img = cv2.addWeighted(overlay, 0.82, img, 0.18, 0)
 
     # Header Texts
-    draw_vn_text("CỔNG AN NINH SINH TRẮC HỌC AI", 38, 24, size=18, color=C_CYAN, bold=True)
-    mode_desc = "| ĐANG QUÉT MẶT XÁC THỰC DANH TÍNH" if is_scanning else "| CHẾ ĐỘ CHỜ: BẤM NÚT ĐỂ BẬT QUÉT MẶT"
-    draw_vn_text(mode_desc, 345, 30, size=13, color=C_TEXT_DIM, bold=False)
+    draw_vn_text("SMART HOME SECURITY", 32, 22, size=15, color=UI_WHITE, bold=True)
+    mode_desc = "| ĐANG QUÉT MẶT XÁC THỰC DANH TÍNH" if is_scanning else "| CỔNG AN NINH SINH TRẮC HỌC"
+    draw_vn_text(mode_desc, 242, 25, size=12, color=UI_TEXT_SUB, bold=False)
 
-    dot_color = C_GREEN if arduino_connected else (50, 160, 240)
-    cv2.circle(img, (740, 40), 5, dot_color, -1, cv2.LINE_AA)
+    dot_color = UI_EMERALD if arduino_connected else UI_AMBER
+    cv2.circle(img, (680, 34), 4, dot_color, -1, cv2.LINE_AA)
     conn_text = f"ARDUINO: {target_port}" if arduino_connected else "ARDUINO: MÔ PHỎNG"
-    draw_vn_text(conn_text, 752, 29, size=13, color=dot_color, bold=True)
+    draw_vn_text(conn_text, 692, 25, size=12, color=dot_color, bold=True)
 
     now_str = datetime.now().strftime("%H:%M:%S")
-    draw_vn_text(f"GIỜ: {now_str}  |  FPS: {current_fps}", 920, 29, size=13, color=C_TEXT_DIM, bold=False)
+    draw_vn_text(f"GIỜ: {now_str}  |  FPS: {current_fps}", 860, 25, size=12, color=UI_TEXT_MUTED, bold=False)
 
-    # Nút Thoát
-    ex1, ey1 = w - 165, 18
-    ex2, ey2 = w - 35, 62
+    # Nút Thoát (Góc vuông bo nhẹ 4px, Deep Ruby)
+    ex1, ey1 = w - 124, 15
+    ex2, ey2 = w - 24, 53
     btn_exit_rect = (ex1, ey1, ex2, ey2)
-    draw_rounded_rect(img, (ex1, ey1), (ex2, ey2), (40, 30, 180), -1, 8)
-    draw_rounded_rect(img, (ex1, ey1), (ex2, ey2), C_RED, 1, 8)
-    draw_vn_text("[X] THOÁT", 0, 0, size=14, color=C_WHITE, bold=True, anchor_rect=(ex1, ey1, ex2, ey2))
+    draw_rounded_rect(img, (ex1, ey1), (ex2, ey2), (40, 20, 85), -1, 4)
+    draw_rounded_rect(img, (ex1, ey1), (ex2, ey2), UI_RUBY, 1, 4)
+    draw_vn_text("[X] THOÁT", 0, 0, size=12, color=UI_WHITE, bold=True, anchor_rect=(ex1, ey1, ex2, ey2))
 
     # -------------------------------------------------------------
     # TRƯỜNG HỢP 1: CHẾ ĐỘ CHỜ (STANDBY - CHƯA BẬT QUÉT MẶT)
     # -------------------------------------------------------------
     if not is_scanning:
-        # Khung viền ngắm trung tâm (Target Reticle)
-        cx, cy = w // 2, (h // 2) - 40
+        # Khung viền ngắm trung tâm sắc nét, tinh xảo (Target Reticle)
+        cx, cy = w // 2, (h // 2) - 45
         box_w, box_h = 320, 340
         rx1, ry1 = cx - box_w // 2, cy - box_h // 2
         rx2, ry2 = cx + box_w // 2, cy + box_h // 2
-        draw_hud_brackets(img, rx1, ry1, rx2, ry2, C_CYAN, 35, 2)
-        cv2.circle(img, (cx, cy), 6, C_CYAN, -1, cv2.LINE_AA)
+        draw_hud_brackets(img, rx1, ry1, rx2, ry2, UI_SKY, 28, 2)
+        cv2.circle(img, (cx, cy), 4, UI_SKY, -1, cv2.LINE_AA)
+        cv2.circle(img, (cx, cy), 8, UI_SKY, 1, cv2.LINE_AA)
         
-        # Nếu có mặt thì vẽ khung ngắm màu vàng hỗ trợ căn chỉnh
+        # Nếu có mặt: Vẽ khung nhận diện mỏng 1.5px màu hổ phách hỗ trợ căn chỉnh
         if len(detected_faces) > 0:
             (fx, fy, fw, fh) = detected_faces[0]
-            draw_hud_brackets(img, fx - 4, fy - 4, fx + fw + 4, fy + fh + 4, C_YELLOW, 22, 2)
-            cv2.rectangle(img, (fx, fy), (fx + fw, fy + fh), (60, 45, 25), 1, cv2.LINE_AA)
+            draw_hud_brackets(img, fx - 4, fy - 4, fx + fw + 4, fy + fh + 4, UI_AMBER, 18, 2)
+            cv2.rectangle(img, (fx, fy), (fx + fw, fy + fh), (50, 40, 30), 1, cv2.LINE_AA)
 
-        # NÚT BẬT QUÉT MẶT AN NINH (LỚN, NỔI BẬT Ở ĐÁY MÀN HÌNH)
+        # NÚT BẬT QUÉT MẶT AN NINH (Góc vuông bo nhẹ 4px, thanh lịch)
         pulse = (int(time.time() * 2.5) % 2 == 0)
-        btn_w, btn_h = 620, 58
+        btn_w, btn_h = 580, 48
         bx1 = (w - btn_w) // 2
-        by1 = h - 145
+        by1 = h - 135
         bx2 = bx1 + btn_w
         by2 = by1 + btn_h
         btn_gate_scan_rect = (bx1, by1, bx2, by2)
 
-        btn_bg = (35, 80, 25) if pulse else (20, 60, 20)
-        btn_border = C_GREEN if pulse else (50, 180, 25)
-        draw_rounded_rect(img, (bx1, by1), (bx2, by2), btn_bg, -1, 12)
-        draw_rounded_rect(img, (bx1, by1), (bx2, by2), btn_border, 2, 12)
-        draw_vn_text("[ ⚡ BẬT QUÉT MẶT AN NINH (HOẶC NHẤN SPACE) ⚡ ]", 0, 0, size=16, color=C_WHITE, bold=True, anchor_rect=(bx1, by1, bx2, by2))
+        btn_bg = (32, 58, 24) if pulse else (24, 45, 18)
+        btn_border = UI_EMERALD if pulse else (60, 140, 20)
+        draw_rounded_rect(img, (bx1, by1), (bx2, by2), btn_bg, -1, 4)
+        draw_rounded_rect(img, (bx1, by1), (bx2, by2), btn_border, 1, 4)
+        draw_vn_text("[ ⚡ BẬT QUÉT MẶT AN NINH (HOẶC NHẤN SPACE) ⚡ ]", 0, 0, size=14, color=UI_WHITE, bold=True, anchor_rect=(bx1, by1, bx2, by2))
 
         # Thanh hướng dẫn quy trình bên dưới
-        pw, ph = 820, 40
+        pw, ph = 780, 36
         px1 = (w - pw) // 2
         py1 = by2 + 10
         px2 = px1 + pw
         py2 = py1 + ph
-        draw_rounded_rect(img, (px1, py1), (px2, py2), (25, 20, 15), -1, 8)
-        draw_rounded_rect(img, (px1, py1), (px2, py2), (60, 50, 40), 1, 8)
-        draw_vn_text("QUY TRÌNH: ĐỨNG TRƯỚC CAMERA -> BẤM NÚT BẬT QUÉT -> CHỦ NHÀ MỞ CỬA, KHÁCH HÚ CÒI", 0, 0, size=13, color=C_CYAN, bold=False, anchor_rect=(px1, py1, px2, py2))
+        draw_rounded_rect(img, (px1, py1), (px2, py2), UI_OBSIDIAN_BG, -1, 4)
+        draw_rounded_rect(img, (px1, py1), (px2, py2), UI_BORDER_SUBTLE, 1, 4)
+        draw_vn_text("QUY TRÌNH: ĐỨNG TRƯỚC CAMERA -> BẤM QUÉT MẶT -> CHỦ NHÀ MỞ CỬA, NGƯỜI LẠ BÁO ĐỘNG", 0, 0, size=11, color=UI_TEXT_SUB, bold=False, anchor_rect=(px1, py1, px2, py2))
 
         return img
 
@@ -597,110 +620,110 @@ def render_face_gate_ui(img, current_fps, is_scanning, time_rem, total_time, gre
 
     # Tia Laser quét sinh trắc học di chuyển mềm mại
     gate_laser_y += 7 * gate_laser_dir
-    if gate_laser_y > h - 165:
+    if gate_laser_y > h - 155:
         gate_laser_dir = -1
-    elif gate_laser_y < 85:
+    elif gate_laser_y < 75:
         gate_laser_dir = 1
     
-    cv2.line(img, (120, gate_laser_y), (w - 120, gate_laser_y), (0, 240, 255), 2, cv2.LINE_AA)
-    cv2.line(img, (120, gate_laser_y - 1), (w - 120, gate_laser_y - 1), (255, 255, 255), 1, cv2.LINE_AA)
+    cv2.line(img, (140, gate_laser_y), (w - 140, gate_laser_y), UI_SKY, 2, cv2.LINE_AA)
+    cv2.line(img, (140, gate_laser_y - 1), (w - 140, gate_laser_y - 1), UI_WHITE, 1, cv2.LINE_AA)
 
     # Hiển thị Khung nhận diện khuôn mặt
     if len(detected_faces) > 0:
         (fx, fy, fw, fh) = detected_faces[0]
-        color_face = C_GREEN if is_owner else C_RED
-        banner_bg = (20, 140, 20) if is_owner else (0, 0, 220)
+        color_face = UI_EMERALD if is_owner else UI_RUBY
+        banner_bg = (24, 60, 20) if is_owner else (30, 15, 80)
         banner_title = f"CHỦ NHÀ: {owner_name} (Khớp: {conf_score})" if is_owner else f"CẢNH BÁO: NGƯỜI LẠ ! (Khớp: {conf_score})"
-        sub_tag = "[ ĐANG TÍCH LŨY MẪU HỢP LỆ ]" if is_owner else "[ CẢNH BÁO: ĐỐI TƯỢNG BẤT THƯỜNG ]"
+        sub_tag = "[ ĐANG TÍCH LŨY MẪU HỢP LỆ ]" if is_owner else "[ ĐỐI TƯỢNG BẤT THƯỜNG ]"
 
-        cv2.rectangle(img, (fx, fy), (fx + fw, fy + fh), color_face, 3, cv2.LINE_AA)
-        draw_hud_brackets(img, fx - 4, fy - 4, fx + fw + 4, fy + fh + 4, color_face, 26, 3)
+        cv2.rectangle(img, (fx, fy), (fx + fw, fy + fh), color_face, 2, cv2.LINE_AA)
+        draw_hud_brackets(img, fx - 4, fy - 4, fx + fw + 4, fy + fh + 4, color_face, 22, 2)
 
         bw_box = fw
-        bh_box = 30
+        bh_box = 28
         by1_box = max(10, fy - bh_box)
         by2_box = by1_box + bh_box
-        cv2.rectangle(img, (fx, by1_box), (fx + bw_box, by2_box), banner_bg, -1)
-        cv2.rectangle(img, (fx, by1_box), (fx + bw_box, by2_box), color_face, 1)
-        draw_vn_text(banner_title, 0, 0, size=13, color=C_WHITE, bold=True, anchor_rect=(fx, by1_box, fx + bw_box, by2_box))
+        draw_rounded_rect(img, (fx, by1_box), (fx + bw_box, by2_box), banner_bg, -1, 3)
+        draw_rounded_rect(img, (fx, by1_box), (fx + bw_box, by2_box), color_face, 1, 3)
+        draw_vn_text(banner_title, 0, 0, size=12, color=UI_WHITE, bold=True, anchor_rect=(fx, by1_box, fx + bw_box, by2_box))
 
-        cv2.rectangle(img, (fx, fy + fh), (fx + bw_box, fy + fh + 24), (25, 20, 15), -1)
-        cv2.rectangle(img, (fx, fy + fh), (fx + bw_box, fy + fh + 24), color_face, 1)
-        draw_vn_text(sub_tag, 0, 0, size=12, color=color_face, bold=True, anchor_rect=(fx, fy + fh, fx + bw_box, fy + fh + 24))
+        draw_rounded_rect(img, (fx, fy + fh), (fx + bw_box, fy + fh + 24), UI_OBSIDIAN_BG, -1, 3)
+        draw_rounded_rect(img, (fx, fy + fh), (fx + bw_box, fy + fh + 24), color_face, 1, 3)
+        draw_vn_text(sub_tag, 0, 0, size=11, color=color_face, bold=True, anchor_rect=(fx, fy + fh, fx + bw_box, fy + fh + 24))
     else:
         # Nếu chưa thấy mặt: hiển thị hướng dẫn
-        tw = 520
+        tw = 480
         tx1 = (w - tw) // 2
         ty1 = (h // 2) - 30
-        draw_rounded_rect(img, (tx1, ty1), (tx1 + tw, ty1 + 50), (25, 20, 15), -1, 10)
-        draw_rounded_rect(img, (tx1, ty1), (tx1 + tw, ty1 + 50), C_YELLOW, 1, 10)
-        draw_vn_text("VUI LÒNG ĐỨNG THẲNG TRƯỚC CAMERA ĐỂ QUÉT MẶT...", 0, 0, size=14, color=C_YELLOW, bold=True, anchor_rect=(tx1, ty1, tx1 + tw, ty1 + 50))
+        draw_rounded_rect(img, (tx1, ty1), (tx1 + tw, ty1 + 46), UI_OBSIDIAN_BG, -1, 4)
+        draw_rounded_rect(img, (tx1, ty1), (tx1 + tw, ty1 + 46), UI_AMBER, 1, 4)
+        draw_vn_text("VUI LÒNG ĐỨNG THẲNG TRƯỚC CAMERA ĐỂ QUÉT MẶT...", 0, 0, size=13, color=UI_AMBER, bold=True, anchor_rect=(tx1, ty1, tx1 + tw, ty1 + 46))
 
     # BẢNG PHÂN TÍCH ĐÁY (ĐẾM NGƯỢC & MẪU XANH / ĐỎ)
-    bw = 780
+    bw = 760
     bx1 = (w - bw) // 2
-    by1 = h - 145
+    by1 = h - 135
     bx2 = bx1 + bw
-    by2 = h - 18
+    by2 = h - 16
     overlay_bot = img.copy()
-    draw_rounded_rect(overlay_bot, (bx1, by1), (bx2, by2), C_NAVY_BG, -1, 16)
-    draw_rounded_rect(overlay_bot, (bx1, by1), (bx2, by2), (80, 60, 40), 1, 16)
-    img = cv2.addWeighted(overlay_bot, 0.78, img, 0.22, 0)
+    draw_rounded_rect(overlay_bot, (bx1, by1), (bx2, by2), UI_OBSIDIAN_BG, -1, 4)
+    draw_rounded_rect(overlay_bot, (bx1, by1), (bx2, by2), UI_BORDER_SUBTLE, 1, 4)
+    img = cv2.addWeighted(overlay_bot, 0.82, img, 0.18, 0)
 
     progress = max(0.0, min(1.0, (total_time - time_rem) / total_time)) if total_time > 0 else 0.0
     
     # Progress Bar đếm ngược
-    pb_x1 = bx1 + 30
-    pb_y1 = by1 + 16
-    pb_x2 = bx2 - 30
-    pb_y2 = pb_y1 + 26
-    draw_rounded_rect(img, (pb_x1, pb_y1), (pb_x2, pb_y2), (40, 30, 20), -1, 6)
+    pb_x1 = bx1 + 24
+    pb_y1 = by1 + 14
+    pb_x2 = bx2 - 24
+    pb_y2 = pb_y1 + 24
+    draw_rounded_rect(img, (pb_x1, pb_y1), (pb_x2, pb_y2), (32, 26, 20), -1, 3)
     fill_w = int((pb_x2 - pb_x1) * progress)
     if fill_w > 0:
-        bar_color = C_GREEN if green_cnt > red_cnt else (50, 180, 255)
-        draw_rounded_rect(img, (pb_x1, pb_y1), (pb_x1 + fill_w, pb_y2), bar_color, -1, 6)
-    draw_rounded_rect(img, (pb_x1, pb_y1), (pb_x2, pb_y2), C_CYAN, 1, 6)
+        bar_color = UI_EMERALD if green_cnt > red_cnt else UI_SKY
+        draw_rounded_rect(img, (pb_x1, pb_y1), (pb_x1 + fill_w, pb_y2), bar_color, -1, 3)
+    draw_rounded_rect(img, (pb_x1, pb_y1), (pb_x2, pb_y2), UI_BORDER_MUTED, 1, 3)
     
     pb_text = f"ĐANG XÁC THỰC DANH TÍNH: CÒN {time_rem:.1f}s / {total_time:.0f}s ({int(progress * 100)}%)"
-    draw_vn_text(pb_text, 0, 0, size=13, color=C_WHITE, bold=True, anchor_rect=(pb_x1, pb_y1, pb_x2, pb_y2))
+    draw_vn_text(pb_text, 0, 0, size=12, color=UI_WHITE, bold=True, anchor_rect=(pb_x1, pb_y1, pb_x2, pb_y2))
 
     # Các thẻ thống kê khung hình Xanh / Đỏ
-    c_y1 = by1 + 54
-    c_y2 = by2 - 14
+    c_y1 = by1 + 48
+    c_y2 = by2 - 12
     
     # Thẻ 1: Khung xanh (Chủ nhà)
     card1_x1 = pb_x1
-    card1_x2 = pb_x1 + 225
-    draw_rounded_rect(img, (card1_x1, c_y1), (card1_x2, c_y2), (20, 60, 25), -1, 8)
-    draw_rounded_rect(img, (card1_x1, c_y1), (card1_x2, c_y2), C_GREEN, 1, 8)
-    draw_vn_text(f"CHỦ NHÀ (KHUNG XANH): {green_cnt}", 0, 0, size=13, color=C_GREEN, bold=True, anchor_rect=(card1_x1, c_y1, card1_x2, c_y2))
+    card1_x2 = pb_x1 + 220
+    draw_rounded_rect(img, (card1_x1, c_y1), (card1_x2, c_y2), (22, 50, 20), -1, 4)
+    draw_rounded_rect(img, (card1_x1, c_y1), (card1_x2, c_y2), UI_EMERALD, 1, 4)
+    draw_vn_text(f"CHỦ NHÀ (KHUNG XANH): {green_cnt}", 0, 0, size=11, color=UI_EMERALD, bold=True, anchor_rect=(card1_x1, c_y1, card1_x2, c_y2))
 
     # Thẻ 2: Khung đỏ (Người lạ)
-    card2_x1 = card1_x2 + 15
-    card2_x2 = card2_x1 + 225
-    draw_rounded_rect(img, (card2_x1, c_y1), (card2_x2, c_y2), (30, 20, 60), -1, 8)
-    draw_rounded_rect(img, (card2_x1, c_y1), (card2_x2, c_y2), C_RED, 1, 8)
-    draw_vn_text(f"NGƯỜI LẠ (KHUNG ĐỎ): {red_cnt}", 0, 0, size=13, color=(80, 100, 255), bold=True, anchor_rect=(card2_x1, c_y1, card2_x2, c_y2))
+    card2_x1 = card1_x2 + 12
+    card2_x2 = card2_x1 + 220
+    draw_rounded_rect(img, (card2_x1, c_y1), (card2_x2, c_y2), (32, 18, 60), -1, 4)
+    draw_rounded_rect(img, (card2_x1, c_y1), (card2_x2, c_y2), UI_RUBY, 1, 4)
+    draw_vn_text(f"NGƯỜI LẠ (KHUNG ĐỎ): {red_cnt}", 0, 0, size=11, color=UI_RUBY, bold=True, anchor_rect=(card2_x1, c_y1, card2_x2, c_y2))
 
     # Thẻ 3: Đánh giá thời gian thực
-    card3_x1 = card2_x2 + 15
+    card3_x1 = card2_x2 + 12
     card3_x2 = pb_x2
     if green_cnt >= 4 and green_cnt > red_cnt:
         status_text = f"DỰ KIẾN: CHỦ NHÀ {owner_name} (MỞ CỬA)"
-        st_color = C_GREEN
-        st_bg = (20, 80, 25)
+        st_color = UI_EMERALD
+        st_bg = (20, 60, 20)
     elif red_cnt >= 4 and red_cnt > green_cnt:
         status_text = "DỰ KIẾN: NGƯỜI LẠ (BÁO ĐỘNG)"
-        st_color = C_RED
-        st_bg = (20, 20, 80)
+        st_color = UI_RUBY
+        st_bg = (35, 15, 75)
     else:
         status_text = "ĐANG PHÂN TÍCH KHUÔN MẶT..."
-        st_color = C_YELLOW
-        st_bg = (30, 30, 40)
+        st_color = UI_AMBER
+        st_bg = (35, 28, 22)
         
-    draw_rounded_rect(img, (card3_x1, c_y1), (card3_x2, c_y2), st_bg, -1, 8)
-    draw_rounded_rect(img, (card3_x1, c_y1), (card3_x2, c_y2), st_color, 1, 8)
-    draw_vn_text(status_text, 0, 0, size=13, color=st_color, bold=True, anchor_rect=(card3_x1, c_y1, card3_x2, c_y2))
+    draw_rounded_rect(img, (card3_x1, c_y1), (card3_x2, c_y2), st_bg, -1, 4)
+    draw_rounded_rect(img, (card3_x1, c_y1), (card3_x2, c_y2), st_color, 1, 4)
+    draw_vn_text(status_text, 0, 0, size=11, color=st_color, bold=True, anchor_rect=(card3_x1, c_y1, card3_x2, c_y2))
 
     return img
 
@@ -713,133 +736,152 @@ def render_cyberpunk_dashboard(img, status_dict, active_gesture, current_fps, fa
     h, w, _ = img.shape
     overlay = img.copy()
 
-    # Bảng màu BGR chuẩn Sci-Fi
-    C_NAVY_BG     = (32, 22, 14)
-    C_CARD_BG     = (45, 30, 20)
-    C_ACTIVE_BG   = (60, 45, 25)
-    C_CYAN        = (255, 230, 0)
-    C_GREEN       = (70, 220, 30)
-    C_YELLOW      = (30, 215, 255)
-    C_RED         = (50, 50, 240)
-    C_PURPLE      = (220, 80, 180)
-    C_WHITE       = (255, 255, 255)
-    C_TEXT_DIM    = (180, 180, 180)
+    # 1. TOP HEADER BAR (Chiều cao 48px, góc vuông bo nhẹ 4px)
+    draw_rounded_rect(overlay, (16, 10), (w - 16, 58), UI_OBSIDIAN_BG, -1, 4)
+    draw_rounded_rect(overlay, (16, 10), (w - 16, 58), UI_BORDER_SUBTLE, 1, 4)
     
-    # 1. TOP HEADER BAR
-    draw_rounded_rect(overlay, (20, 12), (w - 20, 68), C_NAVY_BG, -1, 14)
-    draw_rounded_rect(overlay, (20, 12), (w - 20, 68), C_CYAN, 1, 14)
-    
-    # 2. PANEL TRÁI: MENU CỬ CHỈ BÀN TAY
-    p_left_w = 325
-    draw_rounded_rect(overlay, (20, 80), (p_left_w, h - 20), C_NAVY_BG, -1, 16)
-    draw_rounded_rect(overlay, (20, 80), (p_left_w, h - 20), (80, 60, 40), 1, 16)
+    # 2. PANEL TRÁI: DANH MỤC CỬ CHỈ (Chiều rộng 254px, góc vuông bo nhẹ 4px)
+    p_left_w = 264
+    draw_rounded_rect(overlay, (16, 68), (p_left_w, h - 16), UI_PANEL_BG, -1, 4)
+    draw_rounded_rect(overlay, (16, 68), (p_left_w, h - 16), UI_BORDER_SUBTLE, 1, 4)
 
-    # 3. PANEL PHẢI: TRẠNG THÁI THIẾT BỊ
-    p_right_w = 310
-    draw_rounded_rect(overlay, (w - p_right_w, 80), (w - 20, h - 20), C_NAVY_BG, -1, 16)
-    draw_rounded_rect(overlay, (w - p_right_w, 80), (w - 20, h - 20), (80, 60, 40), 1, 16)
+    # 3. PANEL PHẢI: TRẠNG THÁI THIẾT BỊ (Chiều rộng 280px, góc vuông bo nhẹ 4px)
+    p_right_x = w - 296
+    draw_rounded_rect(overlay, (p_right_x, 68), (w - 16, h - 16), UI_PANEL_BG, -1, 4)
+    draw_rounded_rect(overlay, (p_right_x, 68), (w - 16, h - 16), UI_BORDER_SUBTLE, 1, 4)
 
-    img = cv2.addWeighted(overlay, 0.78, img, 0.22, 0)
+    img = cv2.addWeighted(overlay, 0.82, img, 0.18, 0)
 
     # Header Texts
-    draw_vn_text("SMART HOME AI", 38, 24, size=20, color=C_CYAN, bold=True)
-    draw_vn_text("| ĐIỀU KHIỂN THIẾT BỊ BẰNG CỬ CHỈ TAY", 216, 30, size=13, color=C_TEXT_DIM, bold=False)
+    draw_vn_text("SMART HOME AI", 32, 22, size=15, color=UI_WHITE, bold=True)
+    draw_vn_text("| ĐIỀU KHIỂN CỬ CHỈ & KHUÔN MẶT", 188, 26, size=11, color=UI_TEXT_MUTED, bold=False)
     
-    dot_color = C_GREEN if arduino_connected else (50, 160, 240)
-    cv2.circle(img, (485, 40), 5, dot_color, -1, cv2.LINE_AA)
+    dot_color = UI_EMERALD if arduino_connected else UI_AMBER
+    cv2.circle(img, (530, 34), 4, dot_color, -1, cv2.LINE_AA)
     conn_text = f"ARDUINO: {target_port}" if arduino_connected else "ARDUINO: MÔ PHỎNG"
-    draw_vn_text(conn_text, 498, 29, size=13, color=dot_color, bold=True)
+    draw_vn_text(conn_text, 542, 25, size=12, color=dot_color, bold=True)
     
     now_str = datetime.now().strftime("%H:%M:%S")
-    draw_vn_text(f"GIỜ: {now_str}  |  FPS: {current_fps}", 668, 29, size=13, color=C_TEXT_DIM, bold=False)
+    draw_vn_text(f"GIỜ: {now_str}  |  FPS: {current_fps}", 720, 25, size=12, color=UI_TEXT_SUB, bold=False)
 
-    # Nút [ KHÓA NHÀ & QUÉT MẶT ] (Chuyển mượt về Giao diện 1)
-    sx1, sy1 = w - 410, 18
-    sx2, sy2 = w - 180, 62
+    # Nút [ KHÓA NHÀ & QUÉT MẶT ] (Góc vuông bo nhẹ 4px, phong cách tối giản sang trọng)
+    sx1, sy1 = w - 300, 15
+    sx2, sy2 = w - 136, 53
     btn_lock_rect = (sx1, sy1, sx2, sy2)
-    draw_rounded_rect(img, (sx1, sy1), (sx2, sy2), (30, 40, 65), -1, 8)
-    draw_rounded_rect(img, (sx1, sy1), (sx2, sy2), C_CYAN, 1, 8)
-    draw_vn_text("[ KHÓA NHÀ & QUÉT MẶT ]", 0, 0, size=13, color=C_CYAN, bold=True, anchor_rect=(sx1, sy1, sx2, sy2))
+    draw_rounded_rect(img, (sx1, sy1), (sx2, sy2), (26, 36, 24), -1, 4)
+    draw_rounded_rect(img, (sx1, sy1), (sx2, sy2), UI_EMERALD, 1, 4)
+    draw_vn_text("[ KHÓA NHÀ & QUÉT MẶT ]", 0, 0, size=11, color=UI_EMERALD, bold=True, anchor_rect=(sx1, sy1, sx2, sy2))
 
-    # Nút Thoát / Dừng Camera
-    bx1, by1 = w - 165, 18
-    bx2, by2 = w - 35, 62
+    # Nút [X] Thoát (Góc vuông bo nhẹ 4px, Deep Ruby)
+    bx1, by1 = w - 124, 15
+    bx2, by2 = w - 24, 53
     btn_exit_rect = (bx1, by1, bx2, by2)
-    draw_rounded_rect(img, (bx1, by1), (bx2, by2), (40, 30, 180), -1, 8)
-    draw_rounded_rect(img, (bx1, by1), (bx2, by2), C_RED, 1, 8)
-    draw_vn_text("[X] THOÁT", 0, 0, size=14, color=C_WHITE, bold=True, anchor_rect=(bx1, by1, bx2, by2))
+    draw_rounded_rect(img, (bx1, by1), (bx2, by2), (40, 20, 85), -1, 4)
+    draw_rounded_rect(img, (bx1, by1), (bx2, by2), UI_RUBY, 1, 4)
+    draw_vn_text("[X] THOÁT", 0, 0, size=12, color=UI_WHITE, bold=True, anchor_rect=(bx1, by1, bx2, by2))
 
-    # Panel Trái: Danh Mục Cử Chỉ Điều Khiển
-    draw_vn_text("DANH MỤC ĐIỀU KHIỂN", 38, 92, size=15, color=C_WHITE, bold=True)
-    cv2.line(img, (38, 118), (p_left_w - 20, 118), C_CYAN, 1, cv2.LINE_AA)
+    # -------------------------------------------------------------
+    # Panel Trái: Danh Mục Cử Chỉ Điều Khiển (Compact Gesture Strip)
+    # -------------------------------------------------------------
+    draw_vn_text("DANH MỤC CỬ CHỈ", 28, 80, size=13, color=UI_WHITE, bold=True)
+    cv2.line(img, (28, 100), (p_left_w - 14, 100), UI_BORDER_SUBTLE, 1, cv2.LINE_AA)
 
-    card_y = 130
+    card_y = 108
     for item in GESTURE_LIST:
         is_active = (active_gesture == item["key"]) or (item["key"] == "FACE_AI" and face_tag in ["OWNER", "STRANGER"])
         
-        c_x1, c_y1 = 28, card_y
-        c_x2, c_y2 = p_left_w - 12, card_y + 54
+        c_x1, c_y1 = 22, card_y
+        c_x2, c_y2 = p_left_w - 10, card_y + 44
         
-        bg_col = C_ACTIVE_BG if is_active else C_CARD_BG
-        border_col = C_YELLOW if is_active else (70, 50, 35)
-        b_thick = 2 if is_active else 1
+        bg_col = UI_CARD_ACTIVE if is_active else UI_CARD_BG
+        border_col = UI_AMBER if is_active else UI_BORDER_SUBTLE
         
-        draw_rounded_rect(img, (c_x1, c_y1), (c_x2, c_y2), bg_col, -1, 8)
-        draw_rounded_rect(img, (c_x1, c_y1), (c_x2, c_y2), border_col, b_thick, 8)
+        draw_rounded_rect(img, (c_x1, c_y1), (c_x2, c_y2), bg_col, -1, 4)
+        draw_rounded_rect(img, (c_x1, c_y1), (c_x2, c_y2), border_col, 1, 4)
         
-        badge_col = C_YELLOW if is_active else C_CYAN
-        draw_vn_text(item["icon"], c_x1 + 10, c_y1 + 16, size=14, color=badge_col, bold=True)
-        draw_vn_text(item["title"], c_x1 + 64, c_y1 + 8, size=13, color=C_WHITE, bold=True)
-        draw_vn_text(item["desc"], c_x1 + 64, c_y1 + 30, size=12, color=C_TEXT_DIM, bold=False)
-
         if is_active:
-            glow_c = C_GREEN if (item["key"] == "FACE_AI" and face_tag == "OWNER") else C_YELLOW
-            cv2.circle(img, (c_x2 - 16, c_y1 + 27), 5, glow_c, -1, cv2.LINE_AA)
+            # Thanh strip chỉ báo màu ở mép trái (Accent bar 3px)
+            accent_c = UI_EMERALD if (item["key"] == "FACE_AI" and face_tag == "OWNER") else UI_AMBER
+            draw_rounded_rect(img, (c_x1, c_y1), (c_x1 + 3, c_y2), accent_c, -1, 2)
+            # Chấm LED phát sáng góc phải
+            cv2.circle(img, (c_x2 - 12, c_y1 + 22), 3, accent_c, -1, cv2.LINE_AA)
 
-        card_y += 62
+        # Badge phím/cử chỉ vuông vắn góc bo nhẹ 3px
+        badge_col = UI_AMBER if is_active else UI_SKY
+        draw_rounded_rect(img, (c_x1 + 8, c_y1 + 10), (c_x1 + 44, c_y1 + 34), (45, 36, 28), -1, 3)
+        draw_vn_text(item["icon"], 0, 0, size=11, color=badge_col, bold=True, anchor_rect=(c_x1 + 8, c_y1 + 10, c_x1 + 44, c_y1 + 34))
 
-    # Panel Phải: Giám Sát Trạng Thái Thiết Bị
-    draw_vn_text("TRẠNG THÁI THIẾT BỊ", w - p_right_w + 18, 92, size=15, color=C_WHITE, bold=True)
-    cv2.line(img, (w - p_right_w + 18, 118), (w - 38, 118), C_CYAN, 1, cv2.LINE_AA)
+        # Text tên cử chỉ & chức năng
+        draw_vn_text(item["title"], c_x1 + 52, c_y1 + 7, size=11, color=UI_WHITE, bold=True)
+        draw_vn_text(item["desc"], c_x1 + 52, c_y1 + 24, size=10, color=UI_TEXT_MUTED, bold=False)
+
+        card_y += 50
+
+    # Ô Tips nhỏ dưới đáy Panel Trái
+    tip_y1 = h - 68
+    tip_y2 = h - 24
+    draw_rounded_rect(img, (22, tip_y1), (p_left_w - 10, tip_y2), (24, 20, 16), -1, 4)
+    draw_rounded_rect(img, (22, tip_y1), (p_left_w - 10, tip_y2), UI_BORDER_SUBTLE, 1, 4)
+    draw_vn_text("[i] MẸO: Giơ bàn tay thẳng cách cam", 30, tip_y1 + 8, size=10, color=UI_TEXT_SUB, bold=False)
+    draw_vn_text("khoảng 0.5m - 1.5m để nhận diện nhạy nhất.", 30, tip_y1 + 24, size=10, color=UI_TEXT_MUTED, bold=False)
+
+    # -------------------------------------------------------------
+    # Panel Phải: Giám Sát Trạng Thái Thiết Bị (Smart Device Cards)
+    # -------------------------------------------------------------
+    draw_vn_text("TRẠNG THÁI THIẾT BỊ", p_right_x + 14, 80, size=13, color=UI_WHITE, bold=True)
+    cv2.line(img, (p_right_x + 14, 100), (w - 26, 100), UI_BORDER_SUBTLE, 1, cv2.LINE_AA)
 
     devices_ui = [
-        {"name": "ĐÈN CHIẾU SÁNG",      "on": status_dict["Den"] == "ON",    "label": "ĐANG BẬT" if status_dict["Den"] == "ON" else "ĐÃ TẮT",                   "color": C_YELLOW},
-        {"name": "CỬA CHÍNH (SERVO)",   "on": status_dict["Cua"] == "OPEN",  "label": "ĐANG MỞ (90°)" if status_dict["Cua"] == "OPEN" else "ĐÃ ĐÓNG (0°)",       "color": C_GREEN},
-        {"name": "RÈM CỬA THÔNG MINH",  "on": status_dict["Rem"] == "UP",    "label": "ĐÃ KÉO LÊN" if status_dict["Rem"] == "UP" else "ĐÃ HẠ XUỐNG",            "color": C_PURPLE},
-        {"name": "QUẠT LÀM MÁT",        "on": status_dict["Quat"] == "ON",   "label": "ĐANG CHẠY" if status_dict["Quat"] == "ON" else "ĐÃ TẮT",                  "color": C_CYAN},
-        {"name": "TIVI LCD PHÒNG KHÁCH", "on": status_dict["TV"] == "ON",     "label": "NETFLIX BẬT" if status_dict["TV"] == "ON" else "CHẾ ĐỘ NGHỈ",            "color": (240, 160, 40)},
-        {"name": "AN NINH GƯƠNG MẶT",   "on": True,                          "label": "THIÊN: CHỦ NHÀ",                                                           "color": C_GREEN}
+        {"name": "ĐÈN CHIẾU SÁNG",      "pin": "Digital D8",      "on": status_dict["Den"] == "ON",    "label": "ĐANG BẬT" if status_dict["Den"] == "ON" else "ĐÃ TẮT",                   "color": UI_AMBER},
+        {"name": "CỬA CHÍNH",          "pin": "Servo D9",        "on": status_dict["Cua"] == "OPEN",  "label": "MỞ (90°)" if status_dict["Cua"] == "OPEN" else "ĐÓNG (0°)",              "color": UI_EMERALD},
+        {"name": "RÈM CỬA",            "pin": "Servo D10",       "on": status_dict["Rem"] == "UP",    "label": "ĐÃ KÉO" if status_dict["Rem"] == "UP" else "ĐÃ HẠ",                     "color": UI_IRIS},
+        {"name": "QUẠT LÀM MÁT",        "pin": "Relay D11",       "on": status_dict["Quat"] == "ON",   "label": "ĐANG CHẠY" if status_dict["Quat"] == "ON" else "ĐÃ TẮT",                  "color": UI_SKY},
+        {"name": "TIVI PHÒNG KHÁCH",    "pin": "LCD 1602 I2C",   "on": status_dict["TV"] == "ON",     "label": "NETFLIX BẬT" if status_dict["TV"] == "ON" else "CHẾ ĐỘ NGHỈ",            "color": UI_COBALT},
+        {"name": "AN NINH GƯƠNG MẶT",   "pin": "Deep SFace",      "on": True,                          "label": "THIÊN: CHỦ NHÀ",                                                           "color": UI_EMERALD}
     ]
 
-    card_y = 135
+    card_y = 108
     for dev in devices_ui:
         is_on = dev["on"]
-        d_x1, d_y1 = w - p_right_w + 12, card_y
-        d_x2, d_y2 = w - 28, card_y + 70
+        d_x1 = p_right_x + 10
+        d_x2 = w - 24
+        d_y1 = card_y
+        d_y2 = card_y + 56
         
-        bg_card = (55, 40, 25) if is_on else C_CARD_BG
-        border_c = dev["color"] if is_on else (65, 50, 35)
+        bg_card = (45, 34, 24) if is_on else UI_CARD_BG
+        border_c = dev["color"] if is_on else UI_BORDER_SUBTLE
         
-        draw_rounded_rect(img, (d_x1, d_y1), (d_x2, d_y2), bg_card, -1, 10)
-        draw_rounded_rect(img, (d_x1, d_y1), (d_x2, d_y2), border_c, 1, 10)
+        draw_rounded_rect(img, (d_x1, d_y1), (d_x2, d_y2), bg_card, -1, 4)
+        draw_rounded_rect(img, (d_x1, d_y1), (d_x2, d_y2), border_c, 1, 4)
         
-        led_c = dev["color"] if is_on else (80, 70, 60)
-        cv2.circle(img, (d_x1 + 18, d_y1 + 22), 6, led_c, -1, cv2.LINE_AA)
+        # Đèn LED chỉ báo kép (Double glow dot)
         if is_on:
-            cv2.circle(img, (d_x1 + 18, d_y1 + 22), 9, led_c, 1, cv2.LINE_AA)
+            cv2.circle(img, (d_x1 + 16, d_y1 + 20), 7, dev["color"], 1, cv2.LINE_AA)
+            cv2.circle(img, (d_x1 + 16, d_y1 + 20), 4, dev["color"], -1, cv2.LINE_AA)
+        else:
+            cv2.circle(img, (d_x1 + 16, d_y1 + 20), 4, (70, 65, 60), -1, cv2.LINE_AA)
             
-        draw_vn_text(dev["name"], d_x1 + 34, d_y1 + 11, size=13, color=C_WHITE, bold=True)
+        # Tên thiết bị & chân cắm
+        draw_vn_text(dev["name"], d_x1 + 28, d_y1 + 10, size=11, color=UI_WHITE, bold=True)
+        draw_vn_text(dev["pin"], d_x1 + 28, d_y1 + 30, size=10, color=UI_TEXT_MUTED, bold=False)
         
+        # Status Pill bên phải (Vuông bo nhẹ 3px, rộng 104px thoáng đãng)
         badge_text = dev["label"]
-        b_bg = dev["color"] if is_on else (60, 50, 40)
-        b_fg = (0, 0, 0) if is_on and dev["color"] in [C_YELLOW, C_CYAN, C_GREEN] else C_WHITE
+        b_x1 = d_x2 - 104
+        b_y1 = d_y1 + 15
+        b_x2 = d_x2 - 8
+        b_y2 = d_y1 + 41
         
-        b_x1, b_y1 = d_x1 + 16, d_y1 + 38
-        b_x2, b_y2 = d_x2 - 16, d_y1 + 62
-        draw_rounded_rect(img, (b_x1, b_y1), (b_x2, b_y2), b_bg, -1, 6)
-        draw_vn_text(badge_text, 0, 0, size=13, color=b_fg, bold=True, anchor_rect=(b_x1, b_y1, b_x2, b_y2))
+        if is_on:
+            draw_rounded_rect(img, (b_x1, b_y1), (b_x2, b_y2), dev["color"], -1, 3)
+            b_fg = (0, 0, 0) if dev["color"] in [UI_EMERALD, UI_AMBER, UI_SKY] else UI_WHITE
+            draw_vn_text(badge_text, 0, 0, size=10, color=b_fg, bold=True, anchor_rect=(b_x1, b_y1, b_x2, b_y2))
+        else:
+            draw_rounded_rect(img, (b_x1, b_y1), (b_x2, b_y2), (40, 32, 26), -1, 3)
+            draw_rounded_rect(img, (b_x1, b_y1), (b_x2, b_y2), (65, 52, 42), 1, 3)
+            draw_vn_text(badge_text, 0, 0, size=10, color=UI_TEXT_SUB, bold=True, anchor_rect=(b_x1, b_y1, b_x2, b_y2))
 
-        card_y += 79
+        card_y += 64
 
     return img
 
@@ -853,73 +895,75 @@ def render_security_alarm_ui(img, current_fps, detected_faces, conf_score):
     
     # Hiệu ứng viền đỏ nhấp nháy 2.5Hz
     flash = (int(time.time() * 2.5) % 2 == 0)
-    border_c = (0, 0, 255) if flash else (0, 0, 160)
-    cv2.rectangle(img, (6, 6), (w - 6, h - 6), border_c, 8)
+    border_c = UI_RUBY if flash else (50, 15, 120)
+    cv2.rectangle(img, (4, 4), (w - 4, h - 4), border_c, 4)
 
     # 1. TOP HEADER BÁO ĐỘNG ĐỎ
     overlay = img.copy()
-    draw_rounded_rect(overlay, (20, 12), (w - 20, 72), (20, 10, 80), -1, 14)
-    draw_rounded_rect(overlay, (20, 12), (w - 20, 72), (0, 0, 255), 2, 14)
+    draw_rounded_rect(overlay, (16, 10), (w - 16, 58), (28, 12, 70), -1, 4)
+    draw_rounded_rect(overlay, (16, 10), (w - 16, 58), UI_RUBY, 1, 4)
     img = cv2.addWeighted(overlay, 0.85, img, 0.15, 0)
 
     alarm_title = "⚠️ CẢNH BÁO AN NINH CẤP 1: PHÁT HIỆN NGƯỜI LẠ XÂM NHẬP! ⚠️"
-    draw_vn_text(alarm_title, 0, 0, size=18, color=(255, 255, 255), bold=True, anchor_rect=(20, 12, w - 180, 72))
+    draw_vn_text(alarm_title, 0, 0, size=15, color=UI_WHITE, bold=True, anchor_rect=(16, 10, w - 140, 58))
 
     # Nút Thoát
-    ex1, ey1 = w - 165, 18
-    ex2, ey2 = w - 35, 62
+    ex1, ey1 = w - 124, 15
+    ex2, ey2 = w - 24, 53
     btn_exit_rect = (ex1, ey1, ex2, ey2)
-    draw_rounded_rect(img, (ex1, ey1), (ex2, ey2), (40, 20, 140), -1, 8)
-    draw_rounded_rect(img, (ex1, ey1), (ex2, ey2), (0, 0, 255), 1, 8)
-    draw_vn_text("[X] THOÁT", 0, 0, size=14, color=(255, 255, 255), bold=True, anchor_rect=(ex1, ey1, ex2, ey2))
+    draw_rounded_rect(img, (ex1, ey1), (ex2, ey2), (40, 20, 85), -1, 4)
+    draw_rounded_rect(img, (ex1, ey1), (ex2, ey2), UI_RUBY, 1, 4)
+    draw_vn_text("[X] THOÁT", 0, 0, size=12, color=UI_WHITE, bold=True, anchor_rect=(ex1, ey1, ex2, ey2))
 
     # Vẽ khuôn mặt người lạ (nếu có trong khung hình)
     if len(detected_faces) > 0:
         (fx, fy, fw, fh) = detected_faces[0]
-        color_face = (0, 0, 255)
-        cv2.rectangle(img, (fx, fy), (fx + fw, fy + fh), color_face, 4, cv2.LINE_AA)
-        draw_hud_brackets(img, fx - 4, fy - 4, fx + fw + 4, fy + fh + 4, color_face, 30, 4)
+        color_face = UI_RUBY
+        cv2.rectangle(img, (fx, fy), (fx + fw, fy + fh), color_face, 2, cv2.LINE_AA)
+        draw_hud_brackets(img, fx - 4, fy - 4, fx + fw + 4, fy + fh + 4, color_face, 24, 2)
 
         bw_box = fw
-        bh_box = 32
+        bh_box = 28
         by1_box = max(10, fy - bh_box)
-        cv2.rectangle(img, (fx, by1_box), (fx + bw_box, by1_box + bh_box), (0, 0, 200), -1)
-        cv2.rectangle(img, (fx, by1_box), (fx + bw_box, by1_box + bh_box), (0, 0, 255), 1)
-        draw_vn_text(f"ĐỐI TƯỢNG XÂM NHẬP (Khớp: {conf_score})", 0, 0, size=13, color=(255, 255, 255), bold=True, anchor_rect=(fx, by1_box, fx + bw_box, by1_box + bh_box))
+        by2_box = by1_box + bh_box
+        draw_rounded_rect(img, (fx, by1_box), (fx + bw_box, by2_box), (30, 15, 80), -1, 3)
+        draw_rounded_rect(img, (fx, by1_box), (fx + bw_box, by2_box), color_face, 1, 3)
+        draw_vn_text(f"ĐỐI TƯỢNG XÂM NHẬP (Khớp: {conf_score})", 0, 0, size=12, color=UI_WHITE, bold=True, anchor_rect=(fx, by1_box, fx + bw_box, by2_box))
 
-        cv2.rectangle(img, (fx, fy + fh), (fx + bw_box, fy + fh + 26), (20, 15, 60), -1)
-        cv2.rectangle(img, (fx, fy + fh), (fx + bw_box, fy + fh + 26), (0, 0, 255), 1)
-        draw_vn_text("[ HỆ THỐNG ĐANG GHI HÌNH & HÚ CÒI ]", 0, 0, size=12, color=(0, 0, 255), bold=True, anchor_rect=(fx, fy + fh, fx + bw_box, fy + fh + 26))
+        draw_rounded_rect(img, (fx, fy + fh), (fx + bw_box, fy + fh + 24), UI_OBSIDIAN_BG, -1, 3)
+        draw_rounded_rect(img, (fx, fy + fh), (fx + bw_box, fy + fh + 24), color_face, 1, 3)
+        draw_vn_text("[ HỆ THỐNG ĐANG GHI HÌNH & HÚ CÒI ]", 0, 0, size=11, color=color_face, bold=True, anchor_rect=(fx, fy + fh, fx + bw_box, fy + fh + 24))
 
     # Hộp Thông Báo Cảnh Báo An Ninh Khẩn Cấp
-    mw = 860
+    mw = 800
     mx1 = (w - mw) // 2
-    my1 = h - 175
+    my1 = h - 145
     mx2 = mx1 + mw
-    my2 = h - 85
+    my2 = h - 75
 
     overlay2 = img.copy()
-    draw_rounded_rect(overlay2, (mx1, my1), (mx2, my2), (25, 10, 50), -1, 14)
-    draw_rounded_rect(overlay2, (mx1, my1), (mx2, my2), (0, 0, 255), 2, 14)
+    draw_rounded_rect(overlay2, (mx1, my1), (mx2, my2), (28, 12, 60), -1, 4)
+    draw_rounded_rect(overlay2, (mx1, my1), (mx2, my2), UI_RUBY, 1, 4)
     img = cv2.addWeighted(overlay2, 0.85, img, 0.15, 0)
 
-    draw_vn_text("🚨 CÒI HÚ CHỐNG TRỘM ĐANG PHÁT TÍN HIỆU BÁO ĐỘNG TRÊN ARDUINO (D7)!", 0, 0, size=15, color=(0, 0, 255), bold=True, anchor_rect=(mx1, my1 + 6, mx2, my1 + 45))
-    draw_vn_text("🔒 TOÀN BỘ CỬA CHÍNH ĐÃ KHÓA CHẶT (SERVO 0°). VÔ HIỆU HÓA QUYỀN ĐIỀU KHIỂN!", 0, 0, size=14, color=(255, 200, 200), bold=False, anchor_rect=(mx1, my1 + 45, mx2, my2 - 6))
+    draw_vn_text("🚨 CÒI HÚ CHỐNG TRỘM ĐANG PHÁT TÍN HIỆU BÁO ĐỘNG TRÊN ARDUINO (D7)!", 0, 0, size=14, color=UI_RUBY, bold=True, anchor_rect=(mx1, my1 + 6, mx2, my1 + 38))
+    draw_vn_text("🔒 TOÀN BỘ CỬA CHÍNH ĐÃ KHÓA CHẶT (SERVO 0°). VÔ HIỆU HÓA QUYỀN ĐIỀU KHIỂN!", 0, 0, size=12, color=UI_TEXT_SUB, bold=False, anchor_rect=(mx1, my1 + 38, mx2, my2 - 6))
 
     # Nút bấm: [ QUÉT LẠI MẶT ĐỂ TẮT CÒI / XÁC THỰC LẠI ]
-    rw = 520
+    rw = 500
     rx1 = (w - rw) // 2
-    ry1 = h - 70
+    ry1 = h - 65
     rx2 = rx1 + rw
-    ry2 = h - 20
+    ry2 = h - 22
     btn_rescan_rect = (rx1, ry1, rx2, ry2)
     
-    btn_bg = (30, 80, 25) if flash else (20, 60, 20)
-    draw_rounded_rect(img, (rx1, ry1), (rx2, ry2), btn_bg, -1, 10)
-    draw_rounded_rect(img, (rx1, ry1), (rx2, ry2), (70, 220, 30), 2, 10)
-    draw_vn_text("[ QUÉT LẠI MẶT ĐỂ TẮT CÒI (HOẶC NHẤN SPACE) ]", 0, 0, size=14, color=(255, 255, 255), bold=True, anchor_rect=(rx1, ry1, rx2, ry2))
+    btn_bg = (30, 60, 24) if flash else (22, 45, 18)
+    draw_rounded_rect(img, (rx1, ry1), (rx2, ry2), btn_bg, -1, 4)
+    draw_rounded_rect(img, (rx1, ry1), (rx2, ry2), UI_EMERALD, 1, 4)
+    draw_vn_text("[ QUÉT LẠI MẶT ĐỂ TẮT CÒI (HOẶC NHẤN SPACE) ]", 0, 0, size=13, color=UI_WHITE, bold=True, anchor_rect=(rx1, ry1, rx2, ry2))
 
     return img
+
 
 print("San sang! Ban hay mo cua so Camera len nhe...")
 
@@ -1172,7 +1216,7 @@ while cap.isOpened() and not exit_requested:
             for p1_idx, p2_idx in HAND_CONNECTIONS:
                 pt1 = (int(hand_landmarks[p1_idx].x * w), int(hand_landmarks[p1_idx].y * h))
                 pt2 = (int(hand_landmarks[p2_idx].x * w), int(hand_landmarks[p2_idx].y * h))
-                cv2.line(frame, pt1, pt2, (255, 230, 0), 2, cv2.LINE_AA)
+                cv2.line(frame, pt1, pt2, UI_SKY, 2, cv2.LINE_AA)
                 
             # 2. Khớp ngón tay phát sáng 2 lớp
             xs, ys = [], []
@@ -1180,8 +1224,8 @@ while cap.isOpened() and not exit_requested:
                 x, y = int(lm.x * w), int(lm.y * h)
                 xs.append(x)
                 ys.append(y)
-                cv2.circle(frame, (x, y), 5, (255, 200, 0), -1, cv2.LINE_AA)
-                cv2.circle(frame, (x, y), 2, (255, 255, 255), -1, cv2.LINE_AA)
+                cv2.circle(frame, (x, y), 4, UI_SKY, -1, cv2.LINE_AA)
+                cv2.circle(frame, (x, y), 2, UI_WHITE, -1, cv2.LINE_AA)
 
             # 3. Khung bao bàn tay (Corner Brackets)
             pad = 20
@@ -1189,7 +1233,7 @@ while cap.isOpened() and not exit_requested:
             min_y = max(0, min(ys) - pad)
             max_x = min(w, max(xs) + pad)
             max_y = min(h, max(ys) + pad)
-            draw_hud_brackets(frame, min_x, min_y, max_x, max_y, (0, 240, 255), 20, 2)
+            draw_hud_brackets(frame, min_x, min_y, max_x, max_y, UI_SKY, 16, 2)
 
             # 3. Phân loại cử chỉ bằng hình học giải phẫu 21 khớp xương
             anat_gesture = get_anatomical_gesture(hand_landmarks, w, h)
@@ -1222,18 +1266,18 @@ while cap.isOpened() and not exit_requested:
                 # Cử chỉ chữ V: Chấp nhận mọi hướng giơ tay tự nhiên (Mở khi đang đóng, Đóng khi đang mở)
                 is_facing_valid = True
                 if latched_gesture == "Victory":
-                    facing_tag = "[ ĐÃ THỰC THI - THẢ LỎNG/HẠ TAY ĐỂ ĐỔI LỆNH ]"
-                    tag_color = (0, 220, 255)
+                    facing_tag = "[ ĐÃ THỰC THI - THẢ LỎNG ĐỔI LỆNH ]"
+                    tag_color = UI_SKY
                 else:
                     door_intent = "ĐÓNG CỬA" if door_is_open else "MỞ CỬA"
                     facing_tag = f"[ HỢP LỆ: 2 NGÓN {door_intent} ]"
-                    tag_color = (70, 220, 30) # Xanh lá
+                    tag_color = UI_EMERALD
             elif gesture_name in ["Pointing_Up", "Three_Fingers", "Open_Palm", "OK_SIGN"]:
                 if hand_facing in ["PALM", "EDGE"]:
                     is_facing_valid = True
                     if latched_gesture == gesture_name:
-                        facing_tag = "[ ĐÃ THỰC THI - THẢ LỎNG/HẠ TAY ĐỂ ĐỔI LỆNH ]"
-                        tag_color = (0, 220, 255)
+                        facing_tag = "[ ĐÃ THỰC THI - THẢ LỎNG ĐỔI LỆNH ]"
+                        tag_color = UI_SKY
                     else:
                         if gesture_name == "Three_Fingers":
                             rem_is_up = (device_status.get("Rem") == "UP")
@@ -1250,19 +1294,19 @@ while cap.isOpened() and not exit_requested:
                             facing_tag = "[ HỢP LỆ: 1 NGÓN BẬT ĐÈN ]"
                         else:
                             facing_tag = "[ HỢP LỆ: LÒNG BÀN TAY ]"
-                        tag_color = (70, 220, 30) # Xanh lá
+                        tag_color = UI_EMERALD
                 else:
                     is_facing_valid = False
                     facing_tag = "[ TỪ CHỐI: CẦN QUAY LÒNG TAY ]"
-                    tag_color = (0, 100, 255) # Cam đỏ cảnh báo
+                    tag_color = UI_AMBER
             elif gesture_name == "Closed_Fist":
                 is_facing_valid = True
                 if latched_gesture == "Closed_Fist":
                     facing_tag = "[ ĐÃ THỰC THI - ĐÃ TẮT TOÀN BỘ ]"
-                    tag_color = (0, 220, 255)
+                    tag_color = UI_SKY
                 else:
                     facing_tag = "[ HỢP LỆ: NẮM ĐẤM TẮT HẾT ]"
-                    tag_color = (70, 220, 30) # Xanh lá
+                    tag_color = UI_EMERALD
             else:
                 is_facing_valid = False
                 facing_tag = ""
@@ -1273,10 +1317,17 @@ while cap.isOpened() and not exit_requested:
             score_pct = int(score * 100)
             hand_title = f"{hand_vn}: {gesture_vn} ({score_pct}%)"
             
-            badge_y = max(35, min_y - 12)
+            badge_y = max(42, min_y - 12)
+            title_w = len(hand_title) * 8 + 24
+            badge_x1 = max(16, min_x)
+            badge_x2 = min(w - 16, badge_x1 + title_w)
+            badge_y1 = badge_y - 20
+            badge_y2 = badge_y + 4
+            draw_rounded_rect(frame, (badge_x1, badge_y1), (badge_x2, badge_y2), UI_OBSIDIAN_BG, -1, 3)
+            draw_rounded_rect(frame, (badge_x1, badge_y1), (badge_x2, badge_y2), UI_SKY, 1, 3)
+            draw_vn_text(hand_title, badge_x1 + 10, badge_y1 + 4, size=11, color=UI_WHITE, bold=True)
             if facing_tag:
-                draw_vn_text(facing_tag, min_x, badge_y - 22, size=13, color=tag_color, bold=True)
-            draw_vn_text(hand_title, min_x, badge_y, size=15, color=(0, 240, 255), bold=True)
+                draw_vn_text(facing_tag, badge_x1, badge_y1 - 18, size=11, color=tag_color, bold=True)
 
             # Ánh xạ cử chỉ thành lệnh khi thỏa mãn quy ước hướng mặt
             if is_facing_valid:
@@ -1465,17 +1516,20 @@ while cap.isOpened() and not exit_requested:
         fps_time = time.time()
 
     # -------------------------------------------------------------
-    # D. HIỂN THỊ TOAST NOTIFICATION TRÊN CÙNG
+    # D. HIỂN THỊ TOAST NOTIFICATION TRÊN CÙNG (DYNAMIC ACTION ISLAND)
     # -------------------------------------------------------------
-    if toast_message and (time.time() - toast_time < 2.0):
-        t_w = 540
+    if toast_message and (time.time() - toast_time < 2.2):
+        t_w = 460
         tx1 = (w - t_w) // 2
-        ty1 = 80
+        ty1 = 66
         tx2 = tx1 + t_w
-        ty2 = ty1 + 46
-        draw_rounded_rect(frame, (tx1, ty1), (tx2, ty2), (30, 20, 15), -1, 10)
-        draw_rounded_rect(frame, (tx1, ty1), (tx2, ty2), (0, 240, 255), 2, 10)
-        draw_vn_text(toast_message, 0, 0, size=15, color=(0, 240, 255), bold=True, anchor_rect=(tx1, ty1, tx2, ty2))
+        ty2 = ty1 + 38
+        overlay_toast = frame.copy()
+        draw_rounded_rect(overlay_toast, (tx1, ty1), (tx2, ty2), UI_OBSIDIAN_BG, -1, 4)
+        t_border = UI_EMERALD if any(k in toast_message for k in ["MỞ", "BẬT", "KÉO", "CHÀO"]) else UI_AMBER
+        draw_rounded_rect(overlay_toast, (tx1, ty1), (tx2, ty2), t_border, 1, 4)
+        frame = cv2.addWeighted(overlay_toast, 0.88, frame, 0.12, 0)
+        draw_vn_text(toast_message, 0, 0, size=12, color=UI_WHITE, bold=True, anchor_rect=(tx1, ty1, tx2, ty2))
 
     # -------------------------------------------------------------
     # E. RENDER TOÀN BỘ TIẾNG VIỆT CÓ DẤU (SINGLE-PASS PIL OVERLAY)

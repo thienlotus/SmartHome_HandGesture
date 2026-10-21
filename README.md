@@ -115,7 +115,8 @@ SmartHome_HandGesture/
 │   ├── assets/                             # Schematics, UI previews & vector graphics
 │   │   ├── SoDo_DauDay_SmartHome.svg
 │   │   ├── ui_preview_vietnamese.png
-│   │   └── ui_preview_updated.png
+│   │   ├── ui_preview_updated.png
+│   │   └── ui_preview_modern.png
 │   ├── ARCHITECTURE.md                     # Architecture specification & latency metrics
 │   ├── COMMUNICATION_PROTOCOL.md           # UART protocol specification
 │   └── HARDWARE_SPEC.md                    # Pinout mapping, BOM, and electrical considerations
@@ -123,6 +124,7 @@ SmartHome_HandGesture/
 │   └── generate_wiring_diagram.py          # Automated SVG schematic builder
 ├── BAT_CAMERA_AI.bat                       # 1-click Windows launcher for AI camera
 ├── DANG_KY_CHU_NHA.bat                     # 1-click Windows launcher for biometric enrollment
+├── KIEM_TRA_PHAN_CUNG.bat                  # Hardware connection self-test launcher
 ├── LICENSE                                 # MIT License
 ├── README.md                               # Project documentation
 └── requirements.txt                        # Global Python dependency manifest
