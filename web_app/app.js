@@ -250,6 +250,10 @@ function switchScene(sceneNum) {
     elements.scene2.classList.toggle('hidden', sceneNum !== 2);
     elements.scene3.classList.toggle('hidden', sceneNum !== 3);
     
+    if (sceneNum === 2 && state.mediaStream) {
+        elements.webcam2.play().catch(e => console.warn(e));
+    }
+    
     if (sceneNum === 3) {
         document.body.classList.add('theme-emergency');
         sfx.startSiren();
@@ -551,7 +555,12 @@ async function startWebcam() {
         elements.webcam1.srcObject = state.mediaStream;
         elements.webcam2.srcObject = state.mediaStream;
         
-        await Promise.all([elements.webcam1.play(), elements.webcam2.play()]);
+        try {
+            await elements.webcam1.play();
+        } catch (e) {
+            console.warn("Webcam1 play:", e);
+        }
+        elements.webcam2.play().catch(e => console.warn("Webcam2 play:", e));
         
         elements.canvas1.width = elements.webcam1.videoWidth || 1280;
         elements.canvas1.height = elements.webcam1.videoHeight || 720;
@@ -621,6 +630,7 @@ function toggleWebcam() {
     }
 }
 
+elements.btnConnectSerial.addEventListener('click', connectSerial);
 elements.btnToggleCamera.addEventListener('click', toggleWebcam);
 document.querySelectorAll('.btn-trigger-cam').forEach(b => b.addEventListener('click', startWebcam));
 
