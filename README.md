@@ -122,6 +122,10 @@ SmartHome_HandGesture/
 │   └── HARDWARE_SPEC.md                    # Pinout mapping, BOM, and electrical considerations
 ├── tools/                                  # Developer Utilities & Diagram Generators
 │   └── generate_wiring_diagram.py          # Automated SVG schematic builder
+├── web_app/                                # Zero-Install Web Serial & MediaPipe Web Controller
+│   ├── index.html                          # Web Application interface
+│   ├── style.css                           # Glassmorphism dark styling
+│   └── app.js                              # Web Serial & MediaPipe JS controller
 ├── BAT_CAMERA_AI.bat                       # 1-click Windows launcher for AI camera
 ├── DANG_KY_CHU_NHA.bat                     # 1-click Windows launcher for biometric enrollment
 ├── KIEM_TRA_PHAN_CUNG.bat                  # Hardware connection self-test launcher

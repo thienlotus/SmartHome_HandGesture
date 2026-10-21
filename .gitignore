@@ -53,4 +53,5 @@ Desktop.ini
 *.tmp
 ai_module/test_*.jpg
 ai_module/dataset_backup/
-
+# Archives & Upload Packages
+*.zip

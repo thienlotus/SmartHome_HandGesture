@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Home AI Dashboard - Điều Khiển Cử Chỉ & Web Serial</title>
+    <meta name="description" content="Hệ thống điều khiển nhà thông minh Edge AI thời gian thực bằng cử chỉ tay Google MediaPipe và Web Serial API kết nối Arduino Uno trực tiếp trên trình duyệt.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- MediaPipe Hands CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Background Glow Elements -->
+    <div class="ambient-glow glow-cyan"></div>
+    <div class="ambient-glow glow-purple"></div>
+
+    <!-- Main Container -->
+    <div class="dashboard-wrapper">
+        <!-- Header Bar -->
+        <header class="app-header">
+            <div class="brand-group">
+                <div class="brand-logo">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <polyline points="9 22 9 12 15 12 15 22"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="brand-title">SMART HOME AI</h1>
+                    <span class="brand-subtitle">WEB SERIAL & MEDIAPIPE GESTURE CONTROLLER</span>
+                </div>
+            </div>
+
+            <!-- Header Quick Telemetry -->
+            <div class="header-telemetry">
+                <div class="badge status-badge" id="arduinoBadge">
+                    <span class="dot dot-danger" id="arduinoDot"></span>
+                    <span id="arduinoStatusText">ARDUINO: CHƯA KẾT NỐI</span>
+                </div>
+                <div class="badge status-badge" id="cameraBadge">
+                    <span class="dot dot-danger" id="cameraDot"></span>
+                    <span id="cameraStatusText">CAMERA: TẮT</span>
+                </div>
+                <div class="badge status-badge" id="fpsBadge">
+                    <span>FPS: <strong id="fpsCounter">0</strong></span>
+                </div>
+                <div class="badge time-badge" id="clockBadge">
+                    <span id="liveClock">00:00:00</span>
+                </div>
+            </div>
+
+            <!-- Connection Controls -->
+            <div class="header-actions">
+                <button id="btnConnectSerial" class="btn btn-primary" title="Kết nối trực tiếp cáp USB Arduino">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2v10m0 0l-3-3m3 3l3-3"/>
+                        <rect x="5" y="12" width="14" height="10" rx="2"/>
+                    </svg>
+                    <span>KẾT NỐI ARDUINO</span>
+                </button>
+                <button id="btnToggleCamera" class="btn btn-secondary" title="Bật/Tắt Webcam nhận diện bàn tay">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="23 7 16 12 23 17 23 7"/>
+                        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                    </svg>
+                    <span>BẬT CAMERA AI</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Dynamic Action Island Toast Notification -->
+        <div id="toastIsland" class="toast-island hidden">
+            <span class="toast-dot"></span>
+            <span id="toastMessage">SẴN SÀNG ĐIỀU KHIỂN HỆ THỐNG</span>
+        </div>
+
+        <!-- Main Workspace Grid -->
+        <main class="main-grid">
+            <!-- Left Panel: Video Feed & Real-time AI Tracking -->
+            <section class="viewport-section">
+                <div class="viewport-card">
+                    <div class="viewport-header">
+                        <div class="viewport-title-group">
+                            <span class="viewport-mode-tag" id="modeTag">CHẾ ĐỘ CỬ CHỈ TAY</span>
+                            <span class="viewport-sub" id="modeDesc">Nhận diện 21 khớp xương bàn tay thời gian thực</span>
+                        </div>
+                        <div class="viewport-toggles">
+                            <button id="btnSwitchMode" class="btn-sm btn-ghost" title="Chuyển đổi giữa chế độ Cử chỉ tay và Cổng An ninh">
+                                <span>🛡️ CỔNG AN NINH</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Video & Canvas Container -->
+                    <div class="canvas-container" id="canvasContainer">
+                        <video id="webcam" playsinline muted autoplay></video>
+                        <canvas id="outputCanvas"></canvas>
+                        
+                        <!-- Standby Prompt Overlay -->
+                        <div id="cameraStandby" class="camera-standby">
+                            <div class="standby-icon">
+                                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <polygon points="23 7 16 12 23 17 23 7"/>
+                                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                                </svg>
+                            </div>
+                            <h3>CAMERA ĐANG TẮT</h3>
+                            <p>Bấm nút <strong>"BẬT CAMERA AI"</strong> phía trên để bắt đầu điều khiển bằng cử chỉ</p>
+                            <button class="btn btn-primary btn-pulse" id="btnStartCamCenter">BẬT CAMERA NGAY</button>
+                        </div>
+
+                        <!-- Face Gate Mode Overlay (When in security gate state) -->
+                        <div id="gateOverlay" class="gate-overlay hidden">
+                            <div class="gate-laser" id="gateLaser"></div>
+                            <div class="gate-hud-brackets"></div>
+                            <div class="gate-center-box">
+                                <h3 id="gateTitle">CỔNG AN NINH SINH TRẮC HỌC</h3>
+                                <p id="gateSubtitle">Vui lòng bấm nút để quét mặt xác thực vào nhà</p>
+                                <button id="btnTriggerGateScan" class="btn btn-accent btn-lg btn-pulse">
+                                    ⚡ BẬT QUÉT MẶT AN NINH
+                                </button>
+                                <div class="gate-timer hidden" id="gateTimerBox">
+                                    <div class="gate-progress-bar"><div class="gate-progress-fill" id="gateProgressFill"></div></div>
+                                    <span id="gateTimerText">ĐANG XÁC THỰC: 3.0s</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Gesture HUD Overlay Badge -->
+                        <div class="hud-gesture-badge hidden" id="hudGestureBadge">
+                            <span class="gesture-icon" id="hudGestureIcon">👉</span>
+                            <div class="gesture-info">
+                                <span class="gesture-name" id="hudGestureName">1 Ngón trỏ</span>
+                                <span class="gesture-confidence" id="hudGestureScore">Khớp: 98%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cooldown Bar -->
+                    <div class="cooldown-container" title="Thời gian giãn cách giữa 2 lần nhận diện">
+                        <div class="cooldown-bar" id="cooldownBar"></div>
+                    </div>
+                </div>
+
+                <!-- Live Serial Terminal & Logs -->
+                <div class="terminal-card">
+                    <div class="terminal-header">
+                        <div class="terminal-title">
+                            <span class="dot dot-success"></span>
+                            <span>NHẬT KÝ LỆNH ARDUINO SERIAL (UART 9600 BAUD)</span>
+                        </div>
+                        <button class="btn-icon" id="btnClearLogs" title="Xóa log">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="terminal-body" id="serialLogs">
+                        <div class="log-entry log-sys">[HỆ THỐNG] Chào mừng đến với Smart Home Edge AI Web Controller.</div>
+                        <div class="log-entry log-sys">[HỆ THỐNG] Hãy cắm cáp Arduino vào cổng USB và bấm 'KẾT NỐI ARDUINO'.</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Smart Devices Control Grid -->
+            <section class="controls-section">
+                <!-- Section Header -->
+                <div class="section-heading">
+                    <div>
+                        <h2 class="section-title">THIẾT BỊ TRONG NHÀ</h2>
+                        <span class="section-subtitle">Bấm nút trực tiếp hoặc thực hiện cử chỉ tay tương ứng</span>
+                    </div>
+                    <button id="btnAllOff" class="btn btn-danger btn-sm" title="Tắt toàn bộ thiết bị (Nắm đấm)">
+                        🛑 TẮT TẤT CẢ
+                    </button>
+                </div>
+
+                <!-- Appliances Grid -->
+                <div class="devices-grid">
+                    <!-- 1. ĐÈN CHIẾU SÁNG -->
+                    <div class="device-card" id="cardDen">
+                        <div class="device-card-header">
+                            <div class="device-icon-wrap icon-cyan">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 18h6"/>
+                                    <path d="M10 22h4"/>
+                                    <path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z"/>
+                                </svg>
+                            </div>
+                            <span class="device-badge badge-off" id="badgeDen">OFF</span>
+                        </div>
+                        <div class="device-info">
+                            <h3 class="device-name">Đèn Chiếu Sáng</h3>
+                            <span class="device-pin">PIN DIGITAL D8</span>
+                        </div>
+                        <div class="device-gesture-hint">
+                            <span class="hint-tag">👉 1 Ngón trỏ</span>
+                        </div>
+                        <button class="btn btn-card" id="btnToggleDen" data-cmd="A">
+                            BẬT / TẮT ĐÈN
+                        </button>
+                    </div>
+
+                    <!-- 2. CỬA CHÍNH SERVO -->
+                    <div class="device-card" id="cardCua">
+                        <div class="device-card-header">
+                            <div class="device-icon-wrap icon-green">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 21h18"/>
+                                    <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/>
+                                    <circle cx="15" cy="12" r="1"/>
+                                </svg>
+                            </div>
+                            <span class="device-badge badge-off" id="badgeCua">ĐÓNG</span>
+                        </div>
+                        <div class="device-info">
+                            <h3 class="device-name">Cửa Chính (Servo)</h3>
+                            <span class="device-pin">PIN PWM D9 (0° - 90°)</span>
+                        </div>
+                        <div class="device-gesture-hint">
+                            <span class="hint-tag">✌️ 2 Ngón chữ V</span>
+                        </div>
+                        <div class="card-dual-actions">
+                            <button class="btn btn-card" id="btnOpenCua" data-cmd="O">MỞ (90°)</button>
+                            <button class="btn btn-card btn-card-alt" id="btnCloseCua" data-cmd="C">KHÓA (0°)</button>
+                        </div>
+                    </div>
+
+                    <!-- 3. RÈM CỬA SERVO -->
+                    <div class="device-card" id="cardRem">
+                        <div class="device-card-header">
+                            <div class="device-icon-wrap icon-purple">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                    <line x1="3" y1="9" x2="21" y2="9"/>
+                                    <line x1="9" y1="21" x2="9" y2="9"/>
+                                </svg>
+                            </div>
+                            <span class="device-badge badge-off" id="badgeRem">HẠ</span>
+                        </div>
+                        <div class="device-info">
+                            <h3 class="device-name">Rèm Cửa (Servo)</h3>
+                            <span class="device-pin">PIN PWM D10 (0° - 90°)</span>
+                        </div>
+                        <div class="device-gesture-hint">
+                            <span class="hint-tag">🤟 3 Ngón tay</span>
+                        </div>
+                        <div class="card-dual-actions">
+                            <button class="btn btn-card" id="btnOpenRem" data-cmd="U">KÉO LÊN</button>
+                            <button class="btn btn-card btn-card-alt" id="btnCloseRem" data-cmd="D">HẠ XUỐNG</button>
+                        </div>
+                    </div>
+
+                    <!-- 4. QUẠT LÀM MÁT RELAY -->
+                    <div class="device-card" id="cardQuat">
+                        <div class="device-card-header">
+                            <div class="device-icon-wrap icon-cyan">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="3"/>
+                                    <path d="M12 9V3a3 3 0 0 1 3 3v3"/>
+                                    <path d="M15 12h6a3 3 0 0 1-3 3h-3"/>
+                                    <path d="M12 15v6a3 3 0 0 1-3-3v-3"/>
+                                    <path d="M9 12H3a3 3 0 0 1 3-3h3"/>
+                                </svg>
+                            </div>
+                            <span class="device-badge badge-off" id="badgeQuat">OFF</span>
+                        </div>
+                        <div class="device-info">
+                            <h3 class="device-name">Quạt Làm Mát</h3>
+                            <span class="device-pin">PIN RELAY D11</span>
+                        </div>
+                        <div class="device-gesture-hint">
+                            <span class="hint-tag">🖐️ Xòe 5 ngón</span>
+                        </div>
+                        <button class="btn btn-card" id="btnToggleQuat" data-cmd="F">
+                            BẬT / TẮT QUẠT
+                        </button>
+                    </div>
+
+                    <!-- 5. TIVI LCD 1602 I2C -->
+                    <div class="device-card" id="cardTv">
+                        <div class="device-card-header">
+                            <div class="device-icon-wrap icon-amber">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="2" y="7" width="20" height="15" rx="2" ry="2"/>
+                                    <polyline points="17 2 12 7 7 2"/>
+                                </svg>
+                            </div>
+                            <span class="device-badge badge-off" id="badgeTv">OFF</span>
+                        </div>
+                        <div class="device-info">
+                            <h3 class="device-name">Tivi LCD 1602</h3>
+                            <span class="device-pin">I2C BUS (SDA/SCL 0x27)</span>
+                        </div>
+                        <div class="device-gesture-hint">
+                            <span class="hint-tag">👌 Dấu OK</span>
+                        </div>
+                        <button class="btn btn-card" id="btnToggleTv" data-cmd="T">
+                            BẬT / TẮT TIVI
+                        </button>
+                    </div>
+
+                    <!-- 6. CÒI BÁO ĐỘNG BUZZER -->
+                    <div class="device-card" id="cardBaoDong">
+                        <div class="device-card-header">
+                            <div class="device-icon-wrap icon-red">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                                </svg>
+                            </div>
+                            <span class="device-badge badge-off" id="badgeAlarm">BÌNH THƯỜNG</span>
+                        </div>
+                        <div class="device-info">
+                            <h3 class="device-name">Còi Báo Động</h3>
+                            <span class="device-pin">PIN DIGITAL D7</span>
+                        </div>
+                        <div class="device-gesture-hint">
+                            <span class="hint-tag">🚨 Báo động SOS</span>
+                        </div>
+                        <button class="btn btn-card btn-card-danger" id="btnToggleAlarm" data-cmd="S">
+                            HÚ CÒI SOS
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Gesture Guide Cheat Sheet -->
+                <div class="guide-card">
+                    <h3 class="guide-title">QUY ƯỚC CỬ CHỈ BÀN TAY (LÒNG BÀN TAY HƯỚNG VỀ CAM)</h3>
+                    <div class="guide-grid">
+                        <div class="guide-item">
+                            <span class="g-icon">👉</span>
+                            <div><strong>1 Ngón trỏ</strong><span>Bật đèn D8</span></div>
+                        </div>
+                        <div class="guide-item">
+                            <span class="g-icon">✌️</span>
+                            <div><strong>2 Ngón chữ V</strong><span>Mở / Đóng cửa D9</span></div>
+                        </div>
+                        <div class="guide-item">
+                            <span class="g-icon">🤟</span>
+                            <div><strong>3 Ngón tay</strong><span>Kéo rèm D10</span></div>
+                        </div>
+                        <div class="guide-item">
+                            <span class="g-icon">🖐️</span>
+                            <div><strong>Xòe 5 ngón</strong><span>Bật / Tắt quạt D11</span></div>
+                        </div>
+                        <div class="guide-item">
+                            <span class="g-icon">👌</span>
+                            <div><strong>Dấu OK</strong><span>Bật / Tắt Tivi LCD</span></div>
+                        </div>
+                        <div class="guide-item">
+                            <span class="g-icon">✊</span>
+                            <div><strong>Nắm đấm sấp</strong><span>Tắt toàn bộ thiết bị</span></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Web Application Logic Script -->
+    <script src="app.js"></script>
+</body>
+</html>
