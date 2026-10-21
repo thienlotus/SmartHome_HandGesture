@@ -769,7 +769,12 @@ function triggerFaceScanProcess() {
                 syncDeviceUI('cua', false);
                 syncDeviceUI('alarm', true);
                 sendSerialCommand('C', "Khóa Chặt Cửa 0°");
-                sendSerialCommand('S', "Hú Còi Báo Động SOS Chống Trộm");
+                setTimeout(() => {
+                    sendSerialCommand('G', "Cảnh Báo Khách Lạ (3 tiếng bíp Buzzer D7)");
+                    setTimeout(() => {
+                        sendSerialCommand('S', "Hú Còi Báo Động SOS Chống Trộm");
+                    }, 120);
+                }, 100);
                 showToast("TỪ CHỐI TRUY CẬP: KÍCH HOẠT CÒI BÁO ĐỘNG CHỐNG TRỘM!", true);
                 appendLog("CẢNH BÁO: Khung đỏ chiếm ưu thế -> Khóa cửa và hú còi chống trộm.", "err");
                 

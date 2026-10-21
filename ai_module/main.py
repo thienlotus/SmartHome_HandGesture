@@ -1124,9 +1124,29 @@ while cap.isOpened() and not exit_requested:
                 gate_scanning = False
                 switch_state(STATE_HOME_DASHBOARD, frame)
 
+            # Cơ chế phát hiện khách lạ nhanh (Fast-Fail): Rõ ràng là người lạ (độ tương đồng thấp)
+            elif gate_red_frames >= 6 and avg_sim < 0.42 and gate_green_frames == 0:
+                door_is_open = False
+                device_status["Cua"] = "CLOSED"
+                device_status["Security"] = "STRANGER_ALERT"
+                if ser:
+                    try:
+                        ser.write(b'G') # Còi cảnh báo khách lạ 3 tiếng (Buzzer D7)
+                        ser.flush()
+                        time.sleep(0.02)
+                        ser.write(b'S') # Bật báo động SOS liên tục
+                        ser.flush()
+                    except Exception: pass
+                alarm_active = True
+                print(f"[FACE GATE] PHAT HIEN KHÁCH LẠ / NGƯỜI LẠ! (KHOP: {active_conf_score}) KÍCH HOẠT CÒI BÁO ĐỘNG!")
+                toast_message = f"CẢNH BÁO AN NINH: PHÁT HIỆN NGƯỜI LẠ ({active_conf_score})! ĐANG HÚ CÒI BÁO ĐỘNG!"
+                toast_time = cur_t
+                gate_scanning = False
+                switch_state(STATE_SECURITY_ALARM, frame)
+
             # 2. Hết thời gian 3.0s -> ĐƯA RA QUYẾT ĐỊNH
             elif time_rem <= 0.0:
-                if gate_green_frames >= 6 and avg_sim >= 0.50:
+                if gate_green_frames >= 4 and avg_sim >= 0.50:
                     door_is_open = True
                     device_status["Cua"] = "OPEN"
                     device_status["Security"] = "OWNER_VERIFIED"
@@ -1143,26 +1163,29 @@ while cap.isOpened() and not exit_requested:
                     toast_time = cur_t
                     gate_scanning = False
                     switch_state(STATE_HOME_DASHBOARD, frame)
-                elif gate_red_frames >= 15 and avg_sim < 0.45 and gate_red_frames > 2 * gate_green_frames:
+                elif gate_red_frames >= 4 and (gate_red_frames > gate_green_frames or avg_sim < 0.48):
                     door_is_open = False
                     device_status["Cua"] = "CLOSED"
                     device_status["Security"] = "STRANGER_ALERT"
                     if ser:
                         try:
-                            ser.write(b'S')
+                            ser.write(b'G') # Bíp 3 tiếng cảnh báo khách lạ
+                            ser.flush()
+                            time.sleep(0.02)
+                            ser.write(b'S') # Hú còi báo động SOS liên tục
                             ser.flush()
                             time.sleep(0.01)
                             if ser.in_waiting > 0:
                                 ser.read(ser.in_waiting)
                         except Exception: pass
                     alarm_active = True
-                    print(f"[FACE GATE] PHAT HIEN NGUOI LA! (KHOP: {active_conf_score}) KICH HOAT COI BAO DONG.")
+                    print(f"[FACE GATE] PHAT HIEN KHÁCH LẠ! (KHOP: {active_conf_score}) KICH HOAT COI BAO DONG.")
                     toast_message = f"CẢNH BÁO AN NINH: PHÁT HIỆN NGƯỜI LẠ ({active_conf_score})! ĐANG HÚ CÒI!"
                     toast_time = cur_t
                     gate_scanning = False
                     switch_state(STATE_SECURITY_ALARM, frame)
                 else:
-                    # Chưa rõ khuôn mặt hoặc chưa đủ mẫu -> Nhắc người dùng quét lại, tuyệt đối KHÔNG hú còi oan
+                    # Chưa rõ khuôn mặt -> Nhắc người dùng quét lại
                     gate_scanning = False
                     toast_message = "KHÔNG THẤY RÕ MẶT! VUI LÒNG HƯỚNG VỀ CAMERA VÀ QUÉT LẠI"
                     toast_time = cur_t

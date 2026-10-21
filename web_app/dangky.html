@@ -3,40 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng Ký Khuôn Mặt Chủ Nhà Từ Xa - Smart Home AI</title>
-    <meta name="description" content="Trang thu thập dữ liệu khuôn mặt 100 ảnh sinh trắc học chuẩn AI 4 giai đoạn (25-25-25-25) cho khách hàng từ xa.">
-    <!-- Google Fonts -->
+    <title>Đăng Ký Khuôn Mặt - Smart Home AI</title>
+    <meta name="description" content="Trang thu thập dữ liệu khuôn mặt 100 ảnh sinh trắc học chuẩn AI 4 giai đoạn (25-25-25-25).">
+    
+    <!-- Logo thương hiệu Hoa Sen trên thanh Tab (Favicon SVG) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='lotus' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23fb7185'/%3E%3Cstop offset='50%25' stop-color='%23e11d48'/%3E%3Cstop offset='100%25' stop-color='%239d174d'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='30' fill='%23fff1f5' stroke='%23e11d48' stroke-width='2'/%3E%3Cpath d='M32 14 C36 24 44 28 44 38 C44 46 38 50 32 50 C26 50 20 46 20 38 C20 28 28 24 32 14 Z' fill='url(%23lotus)'/%3E%3Cpath d='M32 26 C38 32 48 34 50 42 C51 46 47 50 40 48 C36 44 34 38 32 26 Z' fill='%23f43f5e' opacity='0.85'/%3E%3Cpath d='M32 26 C26 32 16 34 14 42 C13 46 17 50 24 48 C28 44 30 38 32 26 Z' fill='%23f43f5e' opacity='0.85'/%3E%3Ccircle cx='32' cy='40' r='3' fill='%23fef08a'/%3E%3C/svg%3E">
+
+    <!-- Google Fonts: Be Vietnam Pro & Plus Jakarta Sans chuẩn 100% tiếng Việt -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+    
     <!-- JSZip & FileSaver -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
     <style>
         :root {
-            --bg-base: #070a12;
-            --bg-card: rgba(15, 23, 42, 0.9);
-            --border-subtle: rgba(56, 189, 248, 0.2);
-            --color-cyan: #06b6d4;
-            --color-cyan-bright: #22d3ee;
-            --color-emerald: #10b981;
-            --color-amber: #f59e0b;
-            --color-red: #ef4444;
-            --text-primary: #f8fafc;
-            --text-muted: #94a3b8;
+            /* Gam màu sáng: Hồng cánh sen thanh lịch & Hồng đậm quý phái */
+            --bg-page: #fff1f5;
+            --bg-page-gradient: linear-gradient(135deg, #fff5f8 0%, #fdf2f8 50%, #ffe4ec 100%);
+            --bg-card: rgba(255, 255, 255, 0.95);
+            
+            --color-primary: #e11d48;         /* Hồng đậm Ruby */
+            --color-primary-dark: #be185d;    /* Hồng cánh sen đậm */
+            --color-primary-deep: #9d174d;    /* Màu chữ tiêu đề */
+            --color-primary-light: #fff0f5;   /* Hồng cánh sen nhạt */
+            --color-primary-border: #fbcfe8;  /* Viền hồng nhạt */
+            --color-primary-border-bold: #f43f5e;
+            
+            --color-emerald: #059669;
+            --color-emerald-bg: #ecfdf5;
+            --color-emerald-border: #a7f3d0;
+            
+            --text-heading: #831843;
+            --text-body: #334155;
+            --text-muted: #64748b;
+            
             --radius-md: 12px;
-            --radius-lg: 20px;
-            --font-sans: 'Outfit', sans-serif;
+            --radius-lg: 22px;
+            --font-sans: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
+            --shadow-card: 0 20px 45px rgba(225, 29, 72, 0.08), 0 4px 15px rgba(0, 0, 0, 0.03);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            background-color: var(--bg-base);
-            color: var(--text-primary);
+            background: var(--bg-page-gradient);
+            background-color: var(--bg-page);
+            color: var(--text-body);
             font-family: var(--font-sans);
             min-height: 100vh;
-            padding: 16px;
+            padding: 20px 16px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -46,32 +65,47 @@
             width: 100%;
             max-width: 680px;
             background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
+            border: 2px solid var(--color-primary-border);
             border-radius: var(--radius-lg);
-            padding: 24px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(6, 182, 212, 0.15);
+            padding: 28px 24px;
+            box-shadow: var(--shadow-card);
+            backdrop-filter: blur(10px);
         }
 
+        /* Header */
         .header {
             text-align: center;
-            margin-bottom: 18px;
+            margin-bottom: 20px;
+        }
+
+        .header-logo {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 52px;
+            height: 52px;
+            background: #ffe4ec;
+            border: 2px solid var(--color-primary-border-bold);
+            border-radius: 50%;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 12px rgba(225, 29, 72, 0.15);
         }
 
         .header h1 {
-            font-size: 1.5rem;
-            font-weight: 800;
-            background: linear-gradient(90deg, #ffffff, var(--color-cyan-bright));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 4px;
+            font-size: 1.65rem;
+            font-weight: 900;
+            color: var(--text-heading);
+            letter-spacing: -0.01em;
+            margin-bottom: 6px;
         }
 
         .header p {
-            font-size: 0.88rem;
+            font-size: 0.9rem;
             color: var(--text-muted);
+            font-weight: 500;
         }
 
-        /* 4 Step Progress Cards (25 - 25 - 25 - 25) */
+        /* 4 Giai đoạn (25 - 25 - 25 - 25) */
         .stages-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -80,27 +114,28 @@
         }
 
         .stage-pill {
-            background: rgba(2, 6, 23, 0.75);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: #fff8fa;
+            border: 1.5px solid var(--color-primary-border);
             border-radius: var(--radius-md);
-            padding: 8px 6px;
+            padding: 10px 6px;
             text-align: center;
             transition: all 0.25s ease;
         }
 
         .stage-pill .pill-num {
-            display: inline-block;
+            display: block;
             font-size: 0.75rem;
             font-weight: 800;
-            color: var(--text-muted);
+            color: var(--color-primary-dark);
             margin-bottom: 2px;
+            letter-spacing: 0.04em;
         }
 
         .stage-pill .pill-name {
             display: block;
             font-size: 0.72rem;
-            font-weight: 600;
-            color: #cbd5e1;
+            font-weight: 700;
+            color: var(--text-body);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -108,81 +143,91 @@
 
         .stage-pill .pill-count {
             display: block;
-            font-size: 0.68rem;
+            font-size: 0.7rem;
             color: var(--text-muted);
             font-family: var(--font-mono);
+            font-weight: 600;
+            margin-top: 2px;
         }
 
         .stage-pill.active {
-            background: rgba(6, 182, 212, 0.15);
-            border-color: var(--color-cyan-bright);
-            box-shadow: 0 0 15px rgba(6, 182, 212, 0.35);
+            background: #ffe4ec;
+            border-color: var(--color-primary-border-bold);
+            box-shadow: 0 4px 14px rgba(225, 29, 72, 0.2);
+            transform: translateY(-2px);
         }
-        .stage-pill.active .pill-num { color: var(--color-cyan-bright); }
-        .stage-pill.active .pill-name { color: #ffffff; }
+        .stage-pill.active .pill-num { color: var(--color-primary); font-weight: 900; }
+        .stage-pill.active .pill-name { color: var(--text-heading); font-weight: 800; }
+        .stage-pill.active .pill-count { color: var(--color-primary-dark); }
 
         .stage-pill.completed {
-            background: rgba(16, 185, 129, 0.12);
+            background: var(--color-emerald-bg);
             border-color: var(--color-emerald);
         }
         .stage-pill.completed .pill-num { color: var(--color-emerald); }
         .stage-pill.completed .pill-name { color: var(--color-emerald); }
+        .stage-pill.completed .pill-count { color: var(--color-emerald); }
 
         /* Instruction Box */
         .step-guide-box {
-            background: rgba(2, 6, 23, 0.7);
-            border-left: 4px solid var(--color-cyan);
-            border-radius: 0 var(--radius-md) var(--radius-md) 0;
-            padding: 12px 16px;
-            margin-bottom: 14px;
+            background: #fff5f8;
+            border: 1.5px solid var(--color-primary-border);
+            border-left: 5px solid var(--color-primary);
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            margin-bottom: 16px;
         }
 
         .step-title {
-            font-size: 0.92rem;
-            font-weight: 700;
-            color: var(--color-cyan-bright);
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--text-heading);
             margin-bottom: 4px;
         }
 
         .step-desc {
-            font-size: 0.82rem;
-            color: #e2e8f0;
-            line-height: 1.4;
+            font-size: 0.85rem;
+            color: var(--text-body);
+            line-height: 1.5;
+            font-weight: 500;
         }
 
+        /* Name Input */
         .input-group {
             display: flex;
-            gap: 10px;
-            margin-bottom: 14px;
+            margin-bottom: 16px;
         }
 
         .input-group input {
-            flex: 1;
-            padding: 12px 16px;
+            width: 100%;
+            padding: 12px 18px;
             border-radius: var(--radius-md);
-            background: rgba(2, 6, 23, 0.8);
-            border: 1px solid var(--border-subtle);
-            color: #ffffff;
+            background: #ffffff;
+            border: 2px solid var(--color-primary-border);
+            color: var(--text-heading);
             font-family: var(--font-sans);
-            font-size: 0.95rem;
+            font-size: 0.98rem;
+            font-weight: 600;
             outline: none;
+            transition: all 0.2s ease;
         }
 
         .input-group input:focus {
-            border-color: var(--color-cyan);
-            box-shadow: 0 0 12px rgba(6, 182, 212, 0.4);
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 4px rgba(225, 29, 72, 0.12);
         }
 
-        /* Camera Box - Tỉ lệ 16:9 chuẩn widescreen không bị méo/bẹp mặt */
+        /* Camera Box (16:9 widescreen không méo mặt) */
         .camera-box {
             position: relative;
             width: 100%;
             aspect-ratio: 16 / 9;
-            background: #020617;
+            background: #0f172a;
             border-radius: var(--radius-md);
             overflow: hidden;
-            border: 2px solid var(--border-subtle);
-            margin-bottom: 14px;
+            border: 2px solid var(--color-primary-border-bold);
+            margin-bottom: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
         }
 
         video {
@@ -204,26 +249,26 @@
         }
 
         .face-oval {
-            width: 58%;
-            height: 78%;
-            border: 2px dashed rgba(6, 182, 212, 0.6);
+            width: 48%;
+            height: 82%;
+            border: 2.5px dashed var(--color-primary);
             border-radius: 50%;
-            box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+            box-shadow: 0 0 25px rgba(225, 29, 72, 0.4);
             transition: all 0.25s ease;
         }
 
         .face-oval.capturing {
             border-color: var(--color-emerald);
             border-style: solid;
-            box-shadow: 0 0 35px rgba(16, 185, 129, 0.7);
+            box-shadow: 0 0 35px rgba(16, 185, 129, 0.6);
         }
 
-        /* Big Stage Transition & Countdown Overlay */
+        /* Countdown & Transition Overlay */
         .stage-countdown-overlay {
             position: absolute;
             inset: 0;
-            background: rgba(3, 7, 18, 0.88);
-            backdrop-filter: blur(8px);
+            background: rgba(255, 245, 248, 0.94);
+            backdrop-filter: blur(6px);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -231,50 +276,51 @@
             text-align: center;
             padding: 24px;
             z-index: 20;
-            animation: fadeIn 0.25s ease;
+            animation: fadeIn 0.2s ease;
         }
 
         .overlay-badge {
-            background: rgba(245, 158, 11, 0.2);
-            color: var(--color-amber);
-            border: 1px solid var(--color-amber);
-            font-size: 0.78rem;
+            background: #ffe4ec;
+            color: var(--text-heading);
+            border: 1.5px solid var(--color-primary);
+            font-size: 0.8rem;
             font-weight: 800;
-            padding: 4px 12px;
+            padding: 4px 14px;
             border-radius: 999px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             letter-spacing: 0.05em;
         }
 
         .overlay-title {
             font-size: 1.25rem;
-            font-weight: 800;
-            color: #ffffff;
-            margin-bottom: 8px;
+            font-weight: 900;
+            color: var(--text-heading);
+            margin-bottom: 6px;
         }
 
         .overlay-desc {
-            font-size: 0.88rem;
-            color: #94a3b8;
+            font-size: 0.9rem;
+            color: var(--text-body);
             max-width: 440px;
             line-height: 1.5;
-            margin-bottom: 16px;
+            font-weight: 600;
+            margin-bottom: 14px;
         }
 
         .countdown-number {
             font-family: var(--font-mono);
-            font-size: 4rem;
+            font-size: 4.2rem;
             font-weight: 900;
-            color: var(--color-cyan-bright);
-            text-shadow: 0 0 30px rgba(34, 211, 238, 0.8);
+            color: var(--color-primary);
+            text-shadow: 0 4px 18px rgba(225, 29, 72, 0.3);
             line-height: 1;
-            margin-bottom: 16px;
-            animation: pulseNum 1s infinite alternate;
+            margin-bottom: 14px;
+            animation: pulseNumber 1s infinite alternate;
         }
 
-        @keyframes pulseNum {
-            0% { transform: scale(1); opacity: 0.9; }
-            100% { transform: scale(1.1); opacity: 1; }
+        @keyframes pulseNumber {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
         }
 
         @keyframes fadeIn {
@@ -283,108 +329,123 @@
         }
 
         .btn-skip-countdown {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            color: #ffffff;
-            font-size: 0.85rem;
-            font-weight: 600;
-            padding: 8px 18px;
+            background: #ffffff;
+            border: 2px solid var(--color-primary);
+            color: var(--color-primary);
+            font-family: var(--font-sans);
+            font-size: 0.88rem;
+            font-weight: 700;
+            padding: 8px 20px;
             border-radius: var(--radius-md);
             cursor: pointer;
             transition: all 0.2s ease;
+            box-shadow: 0 4px 10px rgba(225, 29, 72, 0.1);
         }
 
         .btn-skip-countdown:hover {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: #ffffff;
+            background: var(--color-primary);
+            color: #ffffff;
         }
 
         /* Progress Area */
         .progress-box {
-            margin-bottom: 14px;
+            margin-bottom: 16px;
         }
 
         .progress-labels {
             display: flex;
             justify-content: space-between;
-            font-size: 0.84rem;
+            font-size: 0.86rem;
             color: var(--text-muted);
+            font-weight: 600;
             margin-bottom: 6px;
+        }
+
+        .progress-labels strong {
+            color: var(--text-heading);
         }
 
         .progress-track {
             width: 100%;
             height: 10px;
-            background: rgba(255, 255, 255, 0.08);
+            background: #ffe4ec;
             border-radius: 5px;
             overflow: hidden;
+            border: 1px solid var(--color-primary-border);
         }
 
         .progress-fill {
             width: 0%;
             height: 100%;
-            background: linear-gradient(90deg, var(--color-cyan), var(--color-emerald));
+            background: linear-gradient(90deg, #f43f5e, #be185d);
             transition: width 0.15s ease-out;
         }
 
-        /* Buttons */
+        /* Buttons (Đã xóa bỏ hoàn toàn icon tia sét) */
         .btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             width: 100%;
-            padding: 14px 20px;
+            padding: 15px 24px;
             border-radius: var(--radius-md);
             font-family: var(--font-sans);
-            font-size: 1rem;
-            font-weight: 700;
+            font-size: 1.05rem;
+            font-weight: 800;
             border: none;
             cursor: pointer;
             transition: all 0.25s ease;
+            letter-spacing: 0.02em;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #0284c7, #06b6d4, #10b981);
+            background: linear-gradient(135deg, #e11d48, #be185d);
             color: #ffffff;
-            box-shadow: 0 6px 20px rgba(6, 182, 212, 0.4);
+            box-shadow: 0 6px 20px rgba(225, 29, 72, 0.35);
         }
 
         .btn-primary:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(6, 182, 212, 0.7);
+            box-shadow: 0 8px 26px rgba(225, 29, 72, 0.5);
+            background: linear-gradient(135deg, #f43f5e, #9d174d);
         }
 
         .btn-primary:disabled {
             opacity: 0.6;
             cursor: not-allowed;
+            transform: none;
         }
 
         .btn-success {
             background: linear-gradient(135deg, #059669, #10b981);
             color: #ffffff;
-            margin-top: 10px;
+            margin-top: 12px;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
         }
 
         /* Success Dialog */
         .success-box {
-            background: rgba(16, 185, 129, 0.15);
-            border: 1px solid var(--color-emerald);
+            background: var(--color-emerald-bg);
+            border: 2px solid var(--color-emerald);
             border-radius: var(--radius-md);
-            padding: 16px;
+            padding: 18px;
             text-align: center;
             margin-top: 16px;
         }
 
         .success-box h3 {
             color: var(--color-emerald);
-            font-size: 1.15rem;
-            margin-bottom: 6px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin-bottom: 8px;
         }
 
         .success-box p {
-            font-size: 0.85rem;
-            color: var(--text-primary);
-            line-height: 1.5;
+            font-size: 0.9rem;
+            color: #064e3b;
+            line-height: 1.6;
+            font-weight: 600;
         }
 
         .hidden { display: none !important; }
@@ -394,8 +455,17 @@
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <h1>ĐĂNG KÝ KHUÔN MẶT CHỦ NHÀ AI</h1>
-            <p>Quy trình chụp 100 ảnh sinh trắc học chuẩn 4 giai đoạn (25 - 25 - 25 - 25)</p>
+            <div class="header-logo">
+                <!-- SVG Logo Hoa Sen Hồng -->
+                <svg width="32" height="32" viewBox="0 0 64 64" fill="none">
+                    <path d="M32 14 C36 24 44 28 44 38 C44 46 38 50 32 50 C26 50 20 46 20 38 C20 28 28 24 32 14 Z" fill="#e11d48"/>
+                    <path d="M32 26 C38 32 48 34 50 42 C51 46 47 50 40 48 C36 44 34 38 32 26 Z" fill="#f43f5e" opacity="0.85"/>
+                    <path d="M32 26 C26 32 16 34 14 42 C13 46 17 50 24 48 C28 44 30 38 32 26 Z" fill="#f43f5e" opacity="0.85"/>
+                    <circle cx="32" cy="40" r="3" fill="#fef08a"/>
+                </svg>
+            </div>
+            <h1>ĐĂNG KÝ KHUÔN MẶT</h1>
+            <p>Hệ thống thu thập dữ liệu sinh trắc học 4 giai đoạn chuẩn AI (25 - 25 - 25 - 25)</p>
         </div>
 
         <!-- 4 Giai đoạn (25 25 25 25) -->
@@ -426,16 +496,16 @@
         <div class="step-guide-box">
             <div class="step-title" id="stepTitle">BƯỚC 1/4: ĐEO KÍNH (NẾU CÓ) - NHÌN THẲNG VÀO CAMERA</div>
             <div class="step-desc" id="stepDesc">
-                Đeo kính (nếu bạn có đeo kính), giữ đầu thẳng tự nhiên và nhìn vào ống kính.
+                Đeo kính (nếu bạn có đeo kính), giữ đầu thẳng tự nhiên và nhìn vào tâm ống kính camera.
             </div>
         </div>
 
         <!-- Name Input -->
         <div class="input-group" id="inputGroup">
-            <input type="text" id="ownerNameInput" placeholder="Nhập tên của bạn (Ví dụ: Hung, Tuan, Khach...)" value="KhachHang">
+            <input type="text" id="ownerNameInput" placeholder="Nhập tên của bạn (Ví dụ: Hung, Tuan, KhachHang...)" value="KhachHang">
         </div>
 
-        <!-- Video Camera Box -->
+        <!-- Video Camera Box (16:9 Widescreen) -->
         <div class="camera-box">
             <video id="webcam" playsinline autoplay muted></video>
             <div class="cam-overlay">
@@ -444,11 +514,11 @@
 
             <!-- Overlay chuyển bước & Đếm ngược 3, 2, 1 -->
             <div class="stage-countdown-overlay hidden" id="stageCountdownOverlay">
-                <span class="overlay-badge" id="overlayBadge">CHUẨN BỊ BƯỚC TIẾP THEO</span>
+                <span class="overlay-badge" id="overlayBadge">GIAI ĐOẠN 1 / 4</span>
                 <div class="overlay-title" id="overlayTitle">CHUẨN BỊ BƯỚC 1</div>
                 <div class="overlay-desc" id="overlayDesc">Hãy ngồi thẳng, nhìn vào ống kính camera</div>
                 <div class="countdown-number" id="countdownBigNumber">3</div>
-                <button class="btn-skip-countdown" id="btnSkipCountdown">BẮT ĐẦU CHỤP NGAY ⏩</button>
+                <button class="btn-skip-countdown" id="btnSkipCountdown">BẮT ĐẦU CHỤP NGAY</button>
             </div>
         </div>
         <canvas id="captureCanvas"></canvas>
@@ -464,20 +534,20 @@
             </div>
         </div>
 
-        <!-- Main Action Button -->
+        <!-- Main Action Button (Đã xóa bỏ icon tia sét) -->
         <button class="btn btn-primary" id="btnStartCapture">
-            ⚡ BẮT ĐẦU THU THẬP 100 ẢNH (4 GIAI ĐOẠN) ⚡
+            BẮT ĐẦU THU THẬP 100 ẢNH (4 GIAI ĐOẠN)
         </button>
 
         <!-- Success Result Box -->
         <div class="success-box hidden" id="successBox">
-            <h3>🎉 ĐÃ THU THẬP ĐỦ 100 ẢNH SINH TRẮC HỌC!</h3>
+            <h3>ĐÃ THU THẬP ĐỦ 100 ẢNH SINH TRẮC HỌC!</h3>
             <p>Trình duyệt đã tự động tải xuống file: <strong id="zipFileName">dataset_khach.zip</strong>.</p>
-            <p style="margin-top: 8px; color: var(--color-cyan-bright);">
-                👉 <strong>Bước tiếp theo:</strong> Bạn vui lòng gửi file <code>.zip</code> này cho kỹ thuật viên qua <strong>Zalo</strong> để nạp vào hệ thống nhận diện mở cửa nhé!
+            <p style="margin-top: 8px; color: var(--color-primary-dark);">
+                Bạn vui lòng gửi file <code>.zip</code> này cho kỹ thuật viên qua <strong>Zalo</strong> để nạp vào hệ thống nhận diện mở cửa nhé!
             </p>
             <button class="btn btn-success" id="btnDownloadAgain">
-                📥 BẤM ĐỂ TẢI LẠI FILE ZIP NẾU CHƯA TẢI ĐƯỢC
+                BẤM ĐỂ TẢI LẠI FILE ZIP NẾU CHƯA TẢI ĐƯỢC
             </button>
         </div>
     </div>
@@ -526,10 +596,10 @@
                 id: 1,
                 target: 25,
                 title: "BƯỚC 1/4: ĐEO KÍNH (NẾU CÓ) - NHÌN THẲNG",
-                desc: "Đeo kính (nếu bạn có đeo kính), giữ đầu thẳng tự nhiên và nhìn vào ống kính.",
+                desc: "Đeo kính (nếu bạn có đeo kính), giữ đầu thẳng tự nhiên và nhìn vào camera.",
                 prepTitle: "CHUẨN BỊ BƯỚC 1: NHÌN THẲNG",
-                prepDesc: "Đeo kính nếu có, ngồi thẳng và nhìn vào camera.",
-                voice: "Bước một: Nhìn thẳng vào camera"
+                prepDesc: "Đeo kính nếu có, ngồi thẳng và nhìn vào ống kính camera.",
+                voiceText: "Bước một, nhìn thẳng"
             },
             {
                 id: 2,
@@ -538,7 +608,7 @@
                 desc: "Từ từ nghiêng nhẹ mặt sang trái rồi sang phải để AI chụp các góc cạnh khuôn mặt.",
                 prepTitle: "CHUẨN BỊ BƯỚC 2: NGHIÊNG ĐẦU",
                 prepDesc: "Giữ nguyên kính, từ từ nghiêng nhẹ đầu sang trái rồi sang phải.",
-                voice: "Bước hai: Nghiêng nhẹ đầu sang trái và phải"
+                voiceText: "Bước hai, nghiêng nhẹ đầu"
             },
             {
                 id: 3,
@@ -546,8 +616,8 @@
                 title: "BƯỚC 3/4: THÁO KÍNH RA - NHÌN THẲNG",
                 desc: "Hãy tháo kính ra (nếu không có kính hãy ngước cằm nhẹ lên), nhìn thẳng vào camera.",
                 prepTitle: "CHUẨN BỊ BƯỚC 3: THÁO KÍNH RA",
-                prepDesc: "Hãy tháo kính ra, nhìn thẳng vào camera để AI nhận diện khi không đeo kính.",
-                voice: "Bước ba: Hãy tháo kính ra và nhìn thẳng"
+                prepDesc: "Hãy tháo kính ra, nhìn thẳng vào camera để AI nhận diện khi không có kính.",
+                voiceText: "Bước ba, hãy tháo kính ra"
             },
             {
                 id: 4,
@@ -556,7 +626,7 @@
                 desc: "Không đeo kính, nghiêng nhẹ đầu và cười tự nhiên để AI ghi nhớ cơ mặt khi giao tiếp.",
                 prepTitle: "CHUẨN BỊ BƯỚC 4: NGHIÊNG ĐẦU VÀ CƯỜI",
                 prepDesc: "Nghiêng nhẹ đầu và cười tự nhiên.",
-                voice: "Bước bốn: Nghiêng nhẹ đầu và cười tự nhiên"
+                voiceText: "Bước bốn, cười tự nhiên"
             }
         ];
 
@@ -565,38 +635,71 @@
         let finalZipName = "dataset_chu_nha.zip";
         let skipCountdownResolve = null;
 
-        // Sound synthesizer
-        function playBeep(freq = 880, dur = 0.05) {
+        // Âm thanh chuông thông minh đa âm sắc (Chime Melody Synthesizer)
+        function playChimeTone(frequency, duration, delay = 0, type = 'sine') {
             try {
                 const AudioCtx = window.AudioContext || window.webkitAudioContext;
                 const actx = new AudioCtx();
                 const osc = actx.createOscillator();
                 const gain = actx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(freq, actx.currentTime);
-                gain.gain.setValueAtTime(0.08, actx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + dur);
+
+                osc.type = type;
+                osc.frequency.setValueAtTime(frequency, actx.currentTime + delay);
+
+                gain.gain.setValueAtTime(0, actx.currentTime + delay);
+                gain.gain.linearRampToValueAtTime(0.12, actx.currentTime + delay + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + delay + duration);
+
                 osc.connect(gain);
                 gain.connect(actx.destination);
-                osc.start();
-                osc.stop(actx.currentTime + dur);
+
+                osc.start(actx.currentTime + delay);
+                osc.stop(actx.currentTime + delay + duration);
             } catch(e) {}
         }
 
-        // Voice prompt (nếu trình duyệt hỗ trợ)
+        // Chuông báo đổi bước sang trọng (Đô - Mi - Sol)
+        function playStageChime() {
+            playChimeTone(523.25, 0.25, 0.00); // C5
+            playChimeTone(659.25, 0.25, 0.12); // E5
+            playChimeTone(783.99, 0.40, 0.24); // G5
+        }
+
+        // Tiếng bíp đếm nhịp nhẹ nhàng
+        function playBeep(freq = 660, dur = 0.06) {
+            playChimeTone(freq, dur, 0, 'sine');
+        }
+
+        // Giọng đọc hướng dẫn: CHỈ ĐỌC KHI CÓ GIỌNG TIẾNG VIỆT THẬT SỰ (tránh phát âm sai tiếng Anh)
         function speakPrompt(text) {
             try {
-                if ('speechSynthesis' in window) {
+                if (!('speechSynthesis' in window)) return;
+                const voices = window.speechSynthesis.getVoices();
+                // Tìm giọng nói có mã tiếng Việt (vi, vi-VN)
+                const viVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('vi'));
+                
+                if (viVoice) {
                     window.speechSynthesis.cancel();
                     const utter = new SpeechSynthesisUtterance(text);
+                    utter.voice = viVoice;
                     utter.lang = 'vi-VN';
                     utter.rate = 1.0;
                     window.speechSynthesis.speak(utter);
+                } else {
+                    // Nếu máy tính/trình duyệt không cài tiếng Việt, phát chuông báo du dương thay vì đọc sai tiếng Anh
+                    playStageChime();
                 }
             } catch(e) {}
         }
 
-        // Camera init
+        // Đảm bảo tải danh sách voice sẵn sàng
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = () => {
+                window.speechSynthesis.getVoices();
+            };
+        }
+
+        // Khởi tạo Camera
         async function initCamera() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
@@ -605,15 +708,14 @@
                 });
                 video.srcObject = stream;
             } catch (err) {
-                alert("Vui lòng cho phép quyền truy cập Camera trên trình duyệt!");
+                alert("Vui lòng cho phép quyền truy cập Camera trên trình duyệt để chụp ảnh!");
             }
         }
         window.addEventListener('DOMContentLoaded', initCamera);
 
-        // Sleep helper
         const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 
-        // Show Countdown Overlay before starting a stage
+        // Hiện Overlay đếm ngược chuyển giai đoạn
         async function runStageCountdown(stage) {
             stageCountdownOverlay.classList.remove('hidden');
             overlayBadge.textContent = `GIAI ĐOẠN ${stage.id} / 4`;
@@ -622,7 +724,7 @@
             stepTitle.textContent = stage.title;
             stepDesc.textContent = stage.desc;
 
-            // Highlight active pill
+            // Đổi màu Pill trạng thái
             pills.forEach((p, idx) => {
                 if (idx === stage.id - 1) {
                     p.className = "stage-pill active";
@@ -633,11 +735,12 @@
                 }
             });
 
-            speakPrompt(stage.voice);
+            // Chuông báo hoặc đọc hướng dẫn chuẩn tiếng Việt
+            playStageChime();
+            speakPrompt(stage.voiceText);
 
             let secondsLeft = 3;
             countdownBigNumber.textContent = secondsLeft;
-            playBeep(440, 0.08);
 
             return new Promise((resolve) => {
                 skipCountdownResolve = resolve;
@@ -646,7 +749,7 @@
                     secondsLeft--;
                     if (secondsLeft > 0) {
                         countdownBigNumber.textContent = secondsLeft;
-                        playBeep(440, 0.08);
+                        playBeep(520, 0.08);
                     } else {
                         clearInterval(timer);
                         playBeep(880, 0.15);
@@ -679,7 +782,7 @@
             const zip = new JSZip();
             const folder = zip.folder(name);
 
-            // Chuẩn hóa độ phân giải 16:9 (640x360) chuẩn tỉ lệ của AI Deep Learning (main.py)
+            // Chuẩn hóa kích thước 16:9 (640x360) đồng bộ 100% với AI Desktop main.py
             const targetW = 640;
             const targetH = 360;
             canvas.width = targetW;
@@ -687,13 +790,13 @@
 
             let totalCount = 0;
             const totalTarget = 100;
-            const captureIntervalMs = 220; // 220ms mỗi ảnh -> 25 ảnh = ~5.5 giây (đủ thời gian đổi góc mặt)
+            const captureIntervalMs = 220; // 220ms mỗi ảnh -> 25 ảnh = ~5.5 giây
 
-            // Duyệt qua 4 giai đoạn chuẩn (25 - 25 - 25 - 25)
+            // Lần lượt qua 4 giai đoạn chuẩn (25 - 25 - 25 - 25)
             for (let stageIdx = 0; stageIdx < STAGES.length; stageIdx++) {
                 const stage = STAGES[stageIdx];
 
-                // 1. TẠM DỪNG: Hiện đếm ngược 3 giây cho người dùng chuẩn bị tư thế
+                // 1. TẠM DỪNG: Đếm ngược 3 giây cho người dùng chuẩn bị tư thế
                 await runStageCountdown(stage);
 
                 // 2. CHỤP 25 ẢNH CHO GIAI ĐOẠN NÀY
@@ -702,7 +805,7 @@
                     totalCount++;
                     stageShotCount++;
 
-                    // Tính toán crop tâm chuẩn 16:9 chống bẹp/méo mặt dù camera tỉ lệ nào
+                    // Tính toán crop tâm 16:9 chống bẹp/méo mặt dù camera tỉ lệ nào
                     const vw = video.videoWidth || 1280;
                     const vh = video.videoHeight || 720;
                     const videoAspect = vw / vh;
@@ -717,20 +820,20 @@
                         sy = (vh - sh) / 2;
                     }
 
-                    // Capture frame không bị méo tỉ lệ
+                    // Chụp khung hình chuẩn tỉ lệ không méo
                     ctx.save();
                     ctx.translate(canvas.width, 0);
                     ctx.scale(-1, 1);
                     ctx.drawImage(video, sx, sy, sw, sh, 0, 0, targetW, targetH);
                     ctx.restore();
 
-                    // Convert to JPEG
+                    // Lưu JPEG chất lượng cao
                     const dataUrl = canvas.toDataURL('image/jpeg', 0.90);
                     const base64Data = dataUrl.split(',')[1];
                     const filename = `${name}_${String(totalCount).padStart(3, '0')}.jpg`;
                     folder.file(filename, base64Data, { base64: true });
 
-                    // Update UI Progress
+                    // Cập nhật UI
                     const progressPct = Math.round((totalCount / totalTarget) * 100);
                     progressFill.style.width = `${progressPct}%`;
                     counterText.textContent = `${totalCount} / ${totalTarget} ảnh (${progressPct}%)`;
@@ -746,17 +849,19 @@
 
                 pills[stageIdx].className = "stage-pill completed";
                 pillCounts[stageIdx].textContent = `25/25 ✓`;
-                playBeep(587, 0.1);
+                playStageChime();
             }
 
-            // HOÀN THÀNH TOÀN BỘ 100 ẢNH
+            // HOÀN TẤT 100 ẢNH
             isRunning = false;
             faceOval.classList.remove('capturing');
             progressText.textContent = "Đang đóng gói file ZIP...";
 
-            playBeep(523, 0.1);
-            setTimeout(() => playBeep(659, 0.1), 100);
-            setTimeout(() => playBeep(1046, 0.25), 200);
+            // Chuông hoàn tất vui tươi
+            playChimeTone(523.25, 0.15, 0.0);
+            playChimeTone(659.25, 0.15, 0.1);
+            playChimeTone(783.99, 0.15, 0.2);
+            playChimeTone(1046.50, 0.35, 0.3);
 
             zip.generateAsync({ type: "blob" }).then((content) => {
                 generatedZipBlob = content;
@@ -766,7 +871,7 @@
                 zipFileNameLabel.textContent = finalZipName;
                 successBox.classList.remove('hidden');
                 btnStartCapture.disabled = false;
-                btnStartCapture.textContent = "🔄 CHỤP LẠI NẾU MUỐN";
+                btnStartCapture.textContent = "CHỤP LẠI NẾU MUỐN";
             });
         });
 
