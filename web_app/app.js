@@ -183,6 +183,11 @@ class SoundFX {
         setTimeout(() => this.tone(1046.50, 0.22), 260); // C6
     }
     
+    error() {
+        this.tone(220, 0.15, 'sawtooth', 0.12);
+        setTimeout(() => this.tone(165, 0.25, 'sawtooth', 0.12), 120);
+    }
+    
     startSiren() {
         this.stopSiren();
         let high = false;
@@ -685,6 +690,105 @@ window.addEventListener('keydown', (e) => {
     }
 });
 
+// --------------------------------------------------------------------
+// THUẬT TOÁN PHÂN TÍCH KHUÔN MẶT & PHÁT HIỆN CHE CAMERA
+// --------------------------------------------------------------------
+let offscreenFaceCanvas = null;
+let offscreenFaceCtx = null;
+
+function checkFacePresenceInCamera(videoElement) {
+    if (!videoElement || videoElement.readyState < 2 || !videoElement.videoWidth) {
+        return { hasFace: false, isCovered: true, reason: 'Chưa có khung hình camera' };
+    }
+    
+    const W = 160;
+    const H = 120;
+    if (!offscreenFaceCanvas) {
+        offscreenFaceCanvas = document.createElement('canvas');
+        offscreenFaceCanvas.width = W;
+        offscreenFaceCanvas.height = H;
+        offscreenFaceCtx = offscreenFaceCanvas.getContext('2d', { willReadFrequently: true });
+    }
+    
+    offscreenFaceCtx.drawImage(videoElement, 0, 0, W, H);
+    const imgData = offscreenFaceCtx.getImageData(0, 0, W, H);
+    const d = imgData.data;
+    const totalPixels = W * H;
+    
+    // 1. Phân tích độ sáng Grayscale và sắc tố màu da người
+    const gray = new Float32Array(totalPixels);
+    let totalLum = 0;
+    let skinPixels = 0;
+    
+    for (let i = 0, p = 0; i < d.length; i += 4, p++) {
+        const r = d[i];
+        const g = d[i+1];
+        const b = d[i+2];
+        const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+        gray[p] = lum;
+        totalLum += lum;
+        
+        // Nhận diện vùng da người (Human Skin Tone Rule: R > G > B và tương phản R-G)
+        if (r > 60 && g > 35 && b > 20 && r > g && r > b && (r - g) > 10 && (r - b) > 12) {
+            skinPixels++;
+        }
+    }
+    
+    const avgLum = totalLum / totalPixels;
+    const skinRatio = skinPixels / totalPixels;
+    
+    // 2. Tính Laplacian Edge Gradient Energy (Độ sắc nét chi tiết ngũ quan mắt, mũi, miệng, chân mày)
+    // - Khi camera bị áp tay, ngón tay che sát ống kính, tờ giấy, nắp che:
+    //   Ống kính bị mất nét hoàn toàn (out-of-focus blur). Điểm ảnh chỉ là mảng chuyển sắc mờ mịt.
+    //   -> Laplacian Energy cực thấp (< 5.0).
+    // - Khi có khuôn mặt người thật đứng trước camera (0.5m - 2m):
+    //   Có nét viền mắt, đồng tử, sống mũi, khóe miệng, mái tóc, viền cằm...
+    //   -> Laplacian Energy cao (> 8.0 - 25.0).
+    let edgeSum = 0;
+    let edgeCount = 0;
+    for (let y = 1; y < H - 1; y++) {
+        const row = y * W;
+        const rowAbove = (y - 1) * W;
+        const rowBelow = (y + 1) * W;
+        for (let x = 1; x < W - 1; x++) {
+            const center = gray[row + x];
+            const lap = Math.abs(4 * center - gray[rowAbove + x] - gray[rowBelow + x] - gray[row + x - 1] - gray[row + x + 1]);
+            edgeSum += lap;
+            edgeCount++;
+        }
+    }
+    const laplacianEnergy = edgeSum / edgeCount;
+    
+    // 3. Tính độ lệch chuẩn tương phản (Standard Deviation)
+    let varianceSum = 0;
+    for (let p = 0; p < totalPixels; p++) {
+        const diff = gray[p] - avgLum;
+        varianceSum += diff * diff;
+    }
+    const stdDev = Math.sqrt(varianceSum / totalPixels);
+    
+    // 4. CÁC TÌNH HUỐNG CAMERA BỊ CHE / KHÔNG CÓ NGƯỜI:
+    // a. Bị che tối hoặc dán băng keo đen (avgLum < 28)
+    const isDarkCovered = avgLum < 28;
+    // b. Bàn tay / ngón tay áp sát vào mắt cam: chiếm trọn khung hình (skinRatio > 0.60) nhưng mất nét nhòe nhoẹt (laplacianEnergy < 7.0)
+    const isHandPressed = (skinRatio > 0.60) || (skinRatio > 0.40 && laplacianEnergy < 6.0);
+    // c. Che bằng đồ vật mờ / vải / giấy / nắp che: không có viền chi tiết (laplacianEnergy < 5.0)
+    const isBlurCovered = laplacianEnergy < 5.0;
+    // d. Màn hình phẳng lì không có ngũ quan (stdDev < 13.0)
+    const isFlatSurface = stdDev < 13.0;
+    
+    const isCovered = isDarkCovered || isHandPressed || isBlurCovered || isFlatSurface;
+    
+    // 5. ĐIỀU KIỆN ĐỂ TÍNH LÀ CÓ KHUÔN MẶT HỢP LỆ:
+    // - Tuyệt đối không bị che
+    // - Có đường nét chi tiết ngũ quan sắc nét (laplacianEnergy >= 7.5)
+    // - Độ tương phản tự nhiên của khuôn mặt và phông nền (stdDev >= 18.0)
+    // - Tỷ lệ diện tích da mặt hợp lý của người đứng trước cam (từ 5% đến 55% diện tích khung hình)
+    const hasFace = !isCovered && (laplacianEnergy >= 7.5) && (stdDev >= 18.0) && (skinRatio >= 0.05 && skinRatio <= 0.55);
+    
+    return { hasFace, isCovered, avgLum, laplacianEnergy, stdDev, skinRatio };
+}
+
 function triggerFaceScanProcess() {
     if (state.isScanningFace) return;
     state.isScanningFace = true;
@@ -696,10 +800,13 @@ function triggerFaceScanProcess() {
     elements.cntGreen.textContent = '0';
     elements.cntRed.textContent = '0';
     
+    let validFaceFrames = 0;
+    let coveredFrames = 0;
+    
     elements.faceBracketBox.classList.remove('is-owner', 'is-guest');
-    elements.faceBracketBox.classList.add(isIntruder ? 'is-guest' : 'is-owner');
-    elements.faceHudLabel.textContent = isIntruder ? 'CẢNH BÁO: NGƯỜI LẠ !' : 'CHỦ NHÀ (KHỚP: 98.6%)';
-    elements.assessmentText.textContent = 'ĐANG PHÂN TÍCH KHUÔN MẶT SINH TRẮC HỌC...';
+    elements.faceHudLabel.textContent = 'ĐANG TÌM KIẾM KHUÔN MẶT...';
+    elements.assessmentText.textContent = 'HỆ THỐNG ĐANG QUÉT KHUNG HÌNH CAMERA...';
+    elements.assessmentText.style.color = "var(--text-heading)";
     
     appendLog(`Bắt đầu quy trình quét mặt 5s xác thực danh tính...`, "tx");
     showToast("ĐANG QUÉT MẶT XÁC THỰC DANH TÍNH...");
@@ -716,20 +823,41 @@ function triggerFaceScanProcess() {
         elements.scanProgressFill.style.width = `${progress * 100}%`;
         elements.scanTimerLabel.textContent = `${rem.toFixed(1)}s (${Math.round(progress * 100)}%)`;
         
-        // Accumulate green vs red sample frames
-        if (!isIntruder) {
-            state.greenCnt += 1;
-            elements.cntGreen.textContent = state.greenCnt;
-            if (state.greenCnt >= 4) {
-                elements.assessmentText.textContent = "DỰ KIẾN: CHỦ NHÀ (MỞ CỬA)";
-                elements.assessmentText.style.color = "var(--color-emerald)";
-            }
+        // KIỂM TRA THỰC TẾ: Camera có bị che hoặc có khuôn mặt hay không
+        const check = checkFacePresenceInCamera(elements.webcam1);
+        
+        if (!check.hasFace || check.isCovered) {
+            coveredFrames++;
+            elements.faceBracketBox.classList.remove('is-owner', 'is-guest');
+            elements.faceBracketBox.classList.add('is-warning');
+            elements.faceHudLabel.textContent = "CẢNH BÁO: KHÔNG THẤY MẶT (CAMERA BỊ CHE) !";
+            elements.assessmentText.textContent = "KHÔNG PHÁT HIỆN KHUÔN MẶT - VUI LÒNG BỎ TAY CHE VÀ ĐỨNG TRƯỚC CAMERA";
+            elements.assessmentText.style.color = "var(--color-amber)";
         } else {
-            state.redCnt += 1;
-            elements.cntRed.textContent = state.redCnt;
-            if (state.redCnt >= 4) {
-                elements.assessmentText.textContent = "DỰ KIẾN: NGƯỜI LẠ (BÁO ĐỘNG)";
-                elements.assessmentText.style.color = "var(--color-red)";
+            validFaceFrames++;
+            elements.faceBracketBox.classList.remove('is-warning');
+            
+            // Có khuôn mặt người thật sự trước camera
+            if (!isIntruder) {
+                state.greenCnt += 1;
+                elements.cntGreen.textContent = state.greenCnt;
+                elements.faceBracketBox.classList.add('is-owner');
+                elements.faceBracketBox.classList.remove('is-guest');
+                elements.faceHudLabel.textContent = "CHỦ NHÀ (KHỚP: 98.6%)";
+                if (state.greenCnt >= 4) {
+                    elements.assessmentText.textContent = "DỰ KIẾN: CHỦ NHÀ HỢP LỆ (MỞ CỬA)";
+                    elements.assessmentText.style.color = "var(--color-emerald)";
+                }
+            } else {
+                state.redCnt += 1;
+                elements.cntRed.textContent = state.redCnt;
+                elements.faceBracketBox.classList.add('is-guest');
+                elements.faceBracketBox.classList.remove('is-owner');
+                elements.faceHudLabel.textContent = "CẢNH BÁO: NGƯỜI LẠ !";
+                if (state.redCnt >= 4) {
+                    elements.assessmentText.textContent = "DỰ KIẾN: NGƯỜI LẠ BẤT THƯỜNG (BÁO ĐỘNG)";
+                    elements.assessmentText.style.color = "var(--color-red)";
+                }
             }
         }
         
@@ -742,6 +870,22 @@ function triggerFaceScanProcess() {
             state.isScanningFace = false;
             elements.btnStartFaceScan.disabled = false;
             
+            // 1. TÌNH HUỐNG CAMERA BỊ CHE HOẶC KHÔNG CÓ KHUÔN MẶT -> TUYỆT ĐỐI KHÔNG MỞ CỬA!
+            if (validFaceFrames < 15 || coveredFrames >= validFaceFrames) {
+                elements.faceBracketBox.classList.remove('is-owner', 'is-guest');
+                elements.faceHudLabel.textContent = "TỪ CHỐI: CAMERA BỊ CHE / KHÔNG CÓ MẶT !";
+                elements.assessmentText.textContent = "KẾT LUẬN: CAMERA BỊ CHE HOẶC KHÔNG THẤY MẶT -> CỬA VẪN KHÓA (0°)";
+                elements.assessmentText.style.color = "var(--color-red)";
+                
+                sfx.error();
+                syncDeviceUI('cua', false);
+                sendSerialCommand('C', "Khóa Chặt Cửa 0° (Không Thấy Mặt)");
+                showToast("CẢNH BÁO: CAMERA BỊ CHE HOẶC KHÔNG CÓ KHUÔN MẶT! TỪ CHỐI MỞ CỬA", true);
+                appendLog("TỪ CHỐI TRUY CẬP: Camera bị che chắn hoặc không có khuôn mặt trước ống kính.", "err");
+                return;
+            }
+            
+            // 2. CÓ KHUÔN MẶT THẬT -> XÁC THỰC DANH TÍNH
             if (!isIntruder) {
                 // CHỦ NHÀ: Khung xanh nhiều hơn -> Mở cửa -> Chuyển Scene 2
                 elements.faceHudLabel.textContent = "XÁC THỰC THÀNH CÔNG: CHỦ NHÀ !";

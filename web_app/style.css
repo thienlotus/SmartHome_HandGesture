@@ -572,6 +572,16 @@ canvas {
     color: var(--color-red);
 }
 
+.face-bracket-box.is-warning .hud-bracket {
+    border-color: #d97706;
+}
+
+.face-bracket-box.is-warning .face-hud-label {
+    background: #fffbeb;
+    border-color: #d97706;
+    color: #b45309;
+}
+
 /* Control Bar */
 .gate-control-bar {
     margin: 18px 0 14px;
