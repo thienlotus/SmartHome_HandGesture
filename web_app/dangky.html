@@ -173,11 +173,11 @@
             box-shadow: 0 0 12px rgba(6, 182, 212, 0.4);
         }
 
-        /* Camera Box */
+        /* Camera Box - Tỉ lệ 16:9 chuẩn widescreen không bị méo/bẹp mặt */
         .camera-box {
             position: relative;
             width: 100%;
-            aspect-ratio: 4 / 3;
+            aspect-ratio: 16 / 9;
             background: #020617;
             border-radius: var(--radius-md);
             overflow: hidden;
@@ -679,8 +679,11 @@
             const zip = new JSZip();
             const folder = zip.folder(name);
 
-            canvas.width = 640;
-            canvas.height = 480;
+            // Chuẩn hóa độ phân giải 16:9 (640x360) chuẩn tỉ lệ của AI Deep Learning (main.py)
+            const targetW = 640;
+            const targetH = 360;
+            canvas.width = targetW;
+            canvas.height = targetH;
 
             let totalCount = 0;
             const totalTarget = 100;
@@ -699,15 +702,30 @@
                     totalCount++;
                     stageShotCount++;
 
-                    // Capture frame
+                    // Tính toán crop tâm chuẩn 16:9 chống bẹp/méo mặt dù camera tỉ lệ nào
+                    const vw = video.videoWidth || 1280;
+                    const vh = video.videoHeight || 720;
+                    const videoAspect = vw / vh;
+                    const targetAspect = targetW / targetH; // 16:9
+
+                    let sx = 0, sy = 0, sw = vw, sh = vh;
+                    if (videoAspect > targetAspect) {
+                        sw = vh * targetAspect;
+                        sx = (vw - sw) / 2;
+                    } else if (videoAspect < targetAspect) {
+                        sh = vw / targetAspect;
+                        sy = (vh - sh) / 2;
+                    }
+
+                    // Capture frame không bị méo tỉ lệ
                     ctx.save();
                     ctx.translate(canvas.width, 0);
                     ctx.scale(-1, 1);
-                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, targetW, targetH);
                     ctx.restore();
 
                     // Convert to JPEG
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.90);
                     const base64Data = dataUrl.split(',')[1];
                     const filename = `${name}_${String(totalCount).padStart(3, '0')}.jpg`;
                     folder.file(filename, base64Data, { base64: true });
