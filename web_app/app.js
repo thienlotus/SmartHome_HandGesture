@@ -1,7 +1,7 @@
 /**
  * ====================================================================
- * SMART HOME AI - 3-SCENE WEB SERIAL & MEDIAPIPE GESTURE CONTROLLER
- * Workflow: Scene 1 (Face ID Gate) -> Scene 2 (Hand Gestures) | Scene 3 (Alarm)
+ * SMART HOME AI - WEB SERIAL & 3-SCENE PERCEPTION CONTROLLER
+ * Architecture: 100% Client-Side ES6 + MediaPipe Hands + Web Serial API
  * ====================================================================
  */
 
@@ -9,9 +9,9 @@
 // 1. STATE MANAGEMENT
 // --------------------------------------------------------------------
 const state = {
-    currentScene: 1, // 1: Face Gate | 2: Hand Gestures | 3: Alarm
+    currentScene: 1, // 1: Cổng An Ninh Face ID | 2: Cử Chỉ Tay | 3: Cảnh Báo Đỏ
     
-    // Hardware Serial State
+    // Serial Hardware
     port: null,
     reader: null,
     writer: null,
@@ -28,7 +28,7 @@ const state = {
     fps: 0,
     lastFpsTime: Date.now(),
     
-    // Devices State (Arduino Pins)
+    // Devices State (Reflecting Arduino Uno Pins)
     devices: {
         den: false,      // D8
         cua: false,      // D9 (0° / 90°)
@@ -38,18 +38,20 @@ const state = {
         alarm: false     // D7 Buzzer
     },
     
-    // Gesture Cooldown (1500ms)
+    // Temporal Gesture Debouncing (1500ms)
     lastGestureName: null,
     lastGestureTime: 0,
     cooldownDuration: 1500,
     
-    // Face Scanning Timer
+    // Face Gate Scanning Progress
     isScanningFace: false,
-    scanTimer: null
+    scanTimer: null,
+    greenCnt: 0,
+    redCnt: 0
 };
 
 // --------------------------------------------------------------------
-// 2. DOM ELEMENT REFERENCES
+// 2. DOM REFERENCES
 // --------------------------------------------------------------------
 const elements = {
     // Top Bar
@@ -66,33 +68,33 @@ const elements = {
     fpsCounter: document.getElementById('fpsCounter'),
     liveClock: document.getElementById('liveClock'),
     
-    // Navigation Tabs
-    tabScene1: document.getElementById('tabScene1'),
-    tabScene2: document.getElementById('tabScene2'),
-    tabScene3: document.getElementById('tabScene3'),
-    scene1Container: document.getElementById('scene1Container'),
-    scene2Container: document.getElementById('scene2Container'),
-    scene3Container: document.getElementById('scene3Container'),
+    // Scenes
+    scene1: document.getElementById('scene1'),
+    scene2: document.getElementById('scene2'),
+    scene3: document.getElementById('scene3'),
     
     // Scene 1: Face Gate Elements
     webcam1: document.getElementById('webcam1'),
     canvas1: document.getElementById('canvas1'),
-    standbyScene1: document.getElementById('standbyScene1'),
-    gateStatePill: document.getElementById('gateStatePill'),
-    faceTargetBox: document.getElementById('faceTargetBox'),
-    faceTargetTag: document.getElementById('faceTargetTag'),
-    gateScanningLabel: document.getElementById('gateScanningLabel'),
-    gateTimerCounter: document.getElementById('gateTimerCounter'),
-    gateProgressFill: document.getElementById('gateProgressFill'),
-    btnScanOwner: document.getElementById('btnScanOwner'),
-    btnScanGuest: document.getElementById('btnScanGuest'),
-    btnQuickToScene2: document.getElementById('btnQuickToScene2'),
+    standby1: document.getElementById('standby1'),
+    chkSimulateIntruder: document.getElementById('chkSimulateIntruder'),
+    scannerOverlay: document.getElementById('scannerOverlay'),
+    laserBeam: document.getElementById('laserBeam'),
+    faceBracketBox: document.getElementById('faceBracketBox'),
+    faceHudLabel: document.getElementById('faceHudLabel'),
+    btnStartFaceScan: document.getElementById('btnStartFaceScan'),
+    scanProgressLabel: document.getElementById('scanProgressLabel'),
+    scanTimerLabel: document.getElementById('scanTimerLabel'),
+    scanProgressFill: document.getElementById('scanProgressFill'),
+    cntGreen: document.getElementById('cntGreen'),
+    cntRed: document.getElementById('cntRed'),
+    assessmentText: document.getElementById('assessmentText'),
     
     // Scene 2: Hand Gesture Elements
     webcam2: document.getElementById('webcam2'),
     canvas2: document.getElementById('canvas2'),
-    standbyScene2: document.getElementById('standbyScene2'),
-    btnBackToGate: document.getElementById('btnBackToGate'),
+    standby2: document.getElementById('standby2'),
+    btnLockToGate: document.getElementById('btnLockToGate'),
     hudGestureBadge: document.getElementById('hudGestureBadge'),
     hudGestureIcon: document.getElementById('hudGestureIcon'),
     hudGestureName: document.getElementById('hudGestureName'),
@@ -102,7 +104,7 @@ const elements = {
     btnClearLogs: document.getElementById('btnClearLogs'),
     btnAllOff: document.getElementById('btnAllOff'),
     
-    // Devices Cards & Badges
+    // Devices Cards
     cardDen: document.getElementById('cardDen'),
     badgeDen: document.getElementById('badgeDen'),
     btnToggleDen: document.getElementById('btnToggleDen'),
@@ -170,22 +172,22 @@ class SoundFX {
         } catch (e) {}
     }
     
-    scanBeep() {
-        this.tone(1200, 0.04, 'sine', 0.05);
+    scanTick() {
+        this.tone(1400, 0.03, 'sine', 0.04);
     }
     
-    successChime() {
+    success() {
         this.tone(523.25, 0.08); // C5
         setTimeout(() => this.tone(659.25, 0.08), 80); // E5
-        setTimeout(() => this.tone(783.99, 0.15), 160); // G5
-        setTimeout(() => this.tone(1046.50, 0.25), 260); // C6
+        setTimeout(() => this.tone(783.99, 0.12), 160); // G5
+        setTimeout(() => this.tone(1046.50, 0.22), 260); // C6
     }
     
     startSiren() {
         this.stopSiren();
         let high = false;
         this.alarmInterval = setInterval(() => {
-            this.tone(high ? 960 : 640, 0.16, 'sawtooth', 0.15);
+            this.tone(high ? 980 : 680, 0.16, 'sawtooth', 0.14);
             high = !high;
         }, 180);
     }
@@ -239,22 +241,15 @@ elements.btnClearLogs.addEventListener('click', () => {
 });
 
 // --------------------------------------------------------------------
-// 5. 3-SCENE NAVIGATION & WORKFLOW TRANSITIONS
+// 5. 3-SCENE WORKFLOW SWITCHER
 // --------------------------------------------------------------------
 function switchScene(sceneNum) {
     state.currentScene = sceneNum;
     
-    // Update Tabs
-    elements.tabScene1.classList.toggle('is-active', sceneNum === 1);
-    elements.tabScene2.classList.toggle('is-active', sceneNum === 2);
-    elements.tabScene3.classList.toggle('is-active', sceneNum === 3);
+    elements.scene1.classList.toggle('hidden', sceneNum !== 1);
+    elements.scene2.classList.toggle('hidden', sceneNum !== 2);
+    elements.scene3.classList.toggle('hidden', sceneNum !== 3);
     
-    // Toggle Containers
-    elements.scene1Container.classList.toggle('hidden', sceneNum !== 1);
-    elements.scene2Container.classList.toggle('hidden', sceneNum !== 2);
-    elements.scene3Container.classList.toggle('hidden', sceneNum !== 3);
-    
-    // Emergency theme for Scene 3
     if (sceneNum === 3) {
         document.body.classList.add('theme-emergency');
         sfx.startSiren();
@@ -266,25 +261,49 @@ function switchScene(sceneNum) {
     appendLog(`Chuyển sang Giao diện ${sceneNum}.`, 'sys');
 }
 
-elements.tabScene1.addEventListener('click', () => switchScene(1));
-elements.tabScene2.addEventListener('click', () => switchScene(2));
-elements.tabScene3.addEventListener('click', () => switchScene(3));
+elements.btnLockToGate.addEventListener('click', () => {
+    syncDeviceUI('cua', false);
+    sendSerialCommand('C', "Khóa Cửa 0° & Về Cổng An Ninh");
+    showToast("CỬA: ĐÃ KHÓA CHẶT (0°). QUAY VỀ CỔNG AN NINH");
+    switchScene(1);
+});
 
-elements.btnBackToGate.addEventListener('click', () => switchScene(1));
-elements.btnQuickToScene2.addEventListener('click', () => switchScene(2));
+elements.btnCancelAlarm.addEventListener('click', () => {
+    syncDeviceUI('alarm', false);
+    sendSerialCommand('C', "Tắt Còi & Trở Về Cổng An Ninh");
+    showToast("ĐÃ TẮT CÒI BÁO ĐỘNG. QUAY VỀ CỔNG AN NINH");
+    switchScene(1);
+});
+
+elements.btnOverrideOwner.addEventListener('click', () => {
+    syncDeviceUI('alarm', false);
+    syncDeviceUI('cua', true);
+    sendSerialCommand('O', "Xác Nhận Chủ Nhà -> Mở Cửa 90°");
+    showToast("XÁC NHẬN CHỦ NHÀ! ĐÃ MỞ CỬA (90°)");
+    sfx.success();
+    switchScene(2);
+});
 
 // --------------------------------------------------------------------
 // 6. WEB SERIAL API (UART 9600 BAUD)
 // --------------------------------------------------------------------
 async function connectSerial() {
+    appendLog("Đang kiểm tra kết nối Web Serial API...", "sys");
+    
+    // Check HTTPS Security Context
     if (!('serial' in navigator)) {
-        alert("Trình duyệt này không hỗ trợ Web Serial API!\nVui lòng sử dụng Google Chrome hoặc Microsoft Edge trên máy tính.");
+        const errorMsg = "Web Serial API yêu cầu kết nối bảo mật HTTPS!\nVui lòng truy cập qua đường link: https://smarthome.greenfood.asia";
+        alert(errorMsg);
+        appendLog(errorMsg, "err");
+        if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+            location.replace('https:' + location.href.substring(5));
+        }
         return;
     }
     
     try {
         if (state.isSerialConnected && state.port) {
-            appendLog("Đang đóng cổng Serial...", "sys");
+            appendLog("Đang ngắt kết nối cổng Serial...", "sys");
             if (state.reader) { await state.reader.cancel(); state.reader = null; }
             if (state.writer) { await state.writer.close(); state.writer = null; }
             await state.port.close();
@@ -295,21 +314,29 @@ async function connectSerial() {
             return;
         }
         
-        appendLog("Đang yêu cầu chọn cổng kết nối USB Arduino...", "sys");
+        appendLog("Vui lòng chọn cổng USB Arduino Uno trong cửa sổ hiện lên trên trình duyệt...", "tx");
+        showToast("CHỌN CỔNG COM USB CỦA ARDUINO TRÊN TRÌNH DUYỆT");
+        
+        // Request Port - Prompts Native Browser Modal
         state.port = await navigator.serial.requestPort();
         await state.port.open({ baudRate: 9600 });
         
         updateSerialUI(true);
-        appendLog("ĐÃ KẾT NỐI ARDUINO UNO (9600 BAUD, 8N1).", "rx");
-        showToast("ĐÃ KẾT NỐI THÀNH CÔNG ARDUINO UNO!");
-        sfx.successChime();
+        appendLog("ĐÃ KẾT NỐI ARDUINO UNO THÀNH CÔNG (9600 BAUD).", "rx");
+        showToast("ĐÃ KẾT NỐI ARDUINO THÀNH CÔNG!");
+        sfx.success();
         
-        // Start Reading Incoming Data
+        // Read incoming serial packets
         readSerialLoop();
         
     } catch (err) {
-        console.warn("Serial connection error:", err);
-        appendLog(`Lỗi kết nối Serial: ${err.message}`, "err");
+        if (err.name === 'NotFoundError') {
+            appendLog("Người dùng đã hủy chọn cổng kết nối.", "sys");
+        } else {
+            console.error("Serial error:", err);
+            appendLog(`Lỗi Serial: ${err.message}`, "err");
+            alert(`Lỗi cổng kết nối Serial: ${err.message}\nHãy đảm bảo không có phần mềm khác (như Arduino IDE Serial Monitor) đang chiếm cổng COM này!`);
+        }
         updateSerialUI(false);
     }
 }
@@ -327,7 +354,7 @@ async function sendSerialCommand(cmdChar, description) {
     appendLog(`LỆNH GỬI -> '${cmdChar}' (${description})`, "tx");
     
     if (!state.isSerialConnected || !state.port || !state.port.writable) {
-        appendLog("Chưa kết nối Arduino qua cổng USB (Mô phỏng lệnh).", "sys");
+        appendLog("Arduino chưa kết nối cáp USB (Mô phỏng phản hồi).", "sys");
         return;
     }
     
@@ -337,7 +364,7 @@ async function sendSerialCommand(cmdChar, description) {
         await writer.write(encoder.encode(cmdChar));
         writer.releaseLock();
     } catch (err) {
-        console.error("Write serial error:", err);
+        console.error("Serial write error:", err);
         appendLog(`Lỗi gửi Serial: ${err.message}`, "err");
     }
 }
@@ -365,7 +392,7 @@ async function readSerialLoop() {
                 }
             }
         } catch (err) {
-            console.warn("Serial read loop terminated:", err);
+            console.warn("Serial read loop closed:", err);
         } finally {
             reader.releaseLock();
         }
@@ -394,7 +421,7 @@ function parseArduinoFeedback(msg) {
 }
 
 // --------------------------------------------------------------------
-// 7. DEVICE UI SYNC & INTERACTIVE CLICK HANDLERS
+// 7. DEVICE UI REFLECTION
 // --------------------------------------------------------------------
 function syncDeviceUI(devKey, isActive) {
     state.devices[devKey] = isActive;
@@ -456,7 +483,7 @@ elements.btnToggleRem.addEventListener('click', () => {
     const next = !state.devices.rem;
     syncDeviceUI('rem', next);
     sendSerialCommand(next ? 'U' : 'B', next ? "Kéo Rèm Lên" : "Hạ Rèm");
-    showToast(`RÈM CỬA: ${next ? 'ĐÃ KÉO LÊN' : 'ĐÃ TẮT'}`);
+    showToast(`RÈM CỬA: ${next ? 'ĐÃ KÉO LÊN' : 'ĐÃ HẠ'}`);
 });
 
 elements.btnToggleQuat.addEventListener('click', () => {
@@ -476,7 +503,7 @@ elements.btnToggleTv.addEventListener('click', () => {
 elements.btnToggleAlarm.addEventListener('click', () => {
     const next = !state.devices.alarm;
     syncDeviceUI('alarm', next);
-    sendSerialCommand(next ? 'S' : 'C', next ? "Còi Báo Động SOS" : "Tắt Còi");
+    sendSerialCommand(next ? 'S' : 'C', next ? "Báo Động SOS" : "Tắt Còi");
     if (next) switchScene(3);
 });
 
@@ -487,33 +514,16 @@ elements.btnAllOff.addEventListener('click', () => {
     syncDeviceUI('quat', false);
     syncDeviceUI('tv', false);
     syncDeviceUI('alarm', false);
-    sendSerialCommand('B', "Nắm Đấm -> Tắt Tất Cả Thiết Bị");
+    sendSerialCommand('B', "Nắm Đấm -> Tắt Toàn Bộ");
     showToast("ĐÃ TẮT TOÀN BỘ THIẾT BỊ TRONG NHÀ");
 });
 
-// Scene 3 Actions
-elements.btnCancelAlarm.addEventListener('click', () => {
-    syncDeviceUI('alarm', false);
-    sendSerialCommand('C', "Tắt Còi & Trở Về Cổng An Ninh");
-    showToast("ĐÃ HỦY BÁO ĐỘNG SOS!");
-    switchScene(1);
-});
-
-elements.btnOverrideOwner.addEventListener('click', () => {
-    syncDeviceUI('alarm', false);
-    syncDeviceUI('cua', true);
-    sendSerialCommand('O', "Xác Minh Chủ Nhà -> Mở Cửa");
-    showToast("XÁC NHẬN CHỦ NHÀ HƯNG! ĐÃ MỞ CỬA 90°");
-    sfx.successChime();
-    switchScene(2);
-});
-
 // --------------------------------------------------------------------
-// 8. CAMERA LIFECYCLE (DIRECT getUserMedia - NO HANGING)
+// 8. CAMERA LIFECYCLE (DIRECT getUserMedia - FAST & BULLETPROOF)
 // --------------------------------------------------------------------
 async function startWebcam() {
     try {
-        appendLog("Đang yêu cầu quyền truy cập Webcam...", "sys");
+        appendLog("Đang khởi tạo Camera AI...", "sys");
         
         // Initialize MediaPipe Hands instance once
         if (!state.hands && typeof Hands !== 'undefined') {
@@ -529,7 +539,6 @@ async function startWebcam() {
             state.hands.onResults(onHandResults);
         }
         
-        // Native getUserMedia stream
         state.mediaStream = await navigator.mediaDevices.getUserMedia({
             video: {
                 width: { ideal: 1280 },
@@ -539,37 +548,34 @@ async function startWebcam() {
             audio: false
         });
         
-        // Attach to both video elements for Scene 1 & Scene 2
         elements.webcam1.srcObject = state.mediaStream;
         elements.webcam2.srcObject = state.mediaStream;
         
         await Promise.all([elements.webcam1.play(), elements.webcam2.play()]);
         
-        // Match canvas sizes
         elements.canvas1.width = elements.webcam1.videoWidth || 1280;
         elements.canvas1.height = elements.webcam1.videoHeight || 720;
         elements.canvas2.width = elements.webcam2.videoWidth || 1280;
         elements.canvas2.height = elements.webcam2.videoHeight || 720;
         
         state.isCameraRunning = true;
-        elements.standbyScene1.classList.add('hidden');
-        elements.standbyScene2.classList.add('hidden');
+        elements.standby1.classList.add('hidden');
+        elements.standby2.classList.add('hidden');
         
         elements.cameraDot.className = 'dot dot-success';
         elements.cameraStatusText.textContent = 'CAMERA: ĐANG HOẠT ĐỘNG';
         elements.btnCameraText.textContent = 'TẮT CAMERA';
         elements.btnToggleCamera.classList.replace('btn-secondary', 'btn-danger');
         
-        appendLog("Webcam đã bật thành công và sẵn sàng xử lý AI.", "rx");
-        showToast("CAMERA AI ĐÃ SẴN SÀNG!");
+        appendLog("Camera AI đã bật và truyền luồng video thời gian thực.", "rx");
+        showToast("CAMERA AI ĐÃ BẬT!");
         sfx.tone(880, 0.1);
         
-        // Start continuous processing loop
         requestAnimationFrame(renderLoop);
         
     } catch (err) {
         console.error("Camera error:", err);
-        alert(`Không thể mở Camera: ${err.message}\nVui lòng cho phép quyền truy cập webcam trên trình duyệt!`);
+        alert(`Không thể truy cập Camera: ${err.message}\nVui lòng cho phép quyền Camera trên trình duyệt!`);
         appendLog(`Lỗi mở Camera: ${err.message}`, "err");
     }
 }
@@ -590,8 +596,8 @@ function stopWebcam() {
     elements.webcam1.srcObject = null;
     elements.webcam2.srcObject = null;
     
-    elements.standbyScene1.classList.remove('hidden');
-    elements.standbyScene2.classList.remove('hidden');
+    elements.standby1.classList.remove('hidden');
+    elements.standby2.classList.remove('hidden');
     elements.hudGestureBadge.classList.add('hidden');
     
     elements.cameraDot.className = 'dot dot-danger';
@@ -603,7 +609,7 @@ function stopWebcam() {
     ctx1.clearRect(0, 0, elements.canvas1.width, elements.canvas1.height);
     ctx2.clearRect(0, 0, elements.canvas2.width, elements.canvas2.height);
     
-    appendLog("Đã tắt Camera AI.", "sys");
+    appendLog("Đã tắt camera AI.", "sys");
     showToast("ĐÃ TẮT CAMERA");
 }
 
@@ -616,19 +622,16 @@ function toggleWebcam() {
 }
 
 elements.btnToggleCamera.addEventListener('click', toggleWebcam);
-document.querySelectorAll('.btn-open-cam').forEach(btn => {
-    btn.addEventListener('click', startWebcam);
-});
+document.querySelectorAll('.btn-trigger-cam').forEach(b => b.addEventListener('click', startWebcam));
 
 // --------------------------------------------------------------------
-// 9. CONTINUOUS AI PERCEPTION LOOP (NO FREEZES)
+// 9. CONTINUOUS AI LOOP
 // --------------------------------------------------------------------
-let isSendingFrame = false;
+let isFrameBusy = false;
 
 async function renderLoop() {
     if (!state.isCameraRunning) return;
     
-    // FPS measurement
     state.frameCount++;
     const now = Date.now();
     if (now - state.lastFpsTime >= 1000) {
@@ -638,16 +641,15 @@ async function renderLoop() {
         elements.fpsCounter.textContent = state.fps;
     }
     
-    if (!isSendingFrame) {
-        if (state.currentScene === 2 && state.hands && elements.webcam2.readyState >= 2) {
-            isSendingFrame = true;
-            try {
-                await state.hands.send({ image: elements.webcam2 });
-            } catch (e) {
-                console.warn("Hands send error:", e);
-            } finally {
-                isSendingFrame = false;
-            }
+    // In Scene 2: Send frame to MediaPipe Hands
+    if (state.currentScene === 2 && state.hands && !isFrameBusy && elements.webcam2.readyState >= 2) {
+        isFrameBusy = true;
+        try {
+            await state.hands.send({ image: elements.webcam2 });
+        } catch (e) {
+            console.warn("Hands error:", e);
+        } finally {
+            isFrameBusy = false;
         }
     }
     
@@ -655,100 +657,122 @@ async function renderLoop() {
 }
 
 // --------------------------------------------------------------------
-// 10. SCENE 1: BIOMETRIC FACE GATE WORKFLOW
+// 10. SCENE 1: BIOMETRIC FACE GATE WORKFLOW (CHUẨN 1:1 BẢN DEMO)
 // --------------------------------------------------------------------
-function startFaceScan(isOwner) {
+elements.btnStartFaceScan.addEventListener('click', () => {
     if (!state.isCameraRunning) {
-        startWebcam().then(() => runScanSequence(isOwner));
+        startWebcam().then(() => triggerFaceScanProcess());
     } else {
-        runScanSequence(isOwner);
+        triggerFaceScanProcess();
     }
-}
+});
 
-function runScanSequence(isOwner) {
+// Space key listener
+window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && state.currentScene === 1) {
+        e.preventDefault();
+        elements.btnStartFaceScan.click();
+    }
+});
+
+function triggerFaceScanProcess() {
     if (state.isScanningFace) return;
     state.isScanningFace = true;
+    elements.btnStartFaceScan.disabled = true;
     
-    elements.btnScanOwner.disabled = true;
-    elements.btnScanGuest.disabled = true;
+    const isIntruder = elements.chkSimulateIntruder.checked;
+    state.greenCnt = 0;
+    state.redCnt = 0;
+    elements.cntGreen.textContent = '0';
+    elements.cntRed.textContent = '0';
     
-    elements.faceTargetBox.classList.remove('is-owner', 'is-guest');
-    elements.faceTargetBox.classList.add(isOwner ? 'is-owner' : 'is-guest');
-    elements.faceTargetTag.textContent = `ĐANG QUÉT: ${isOwner ? 'CHỦ NHÀ HƯNG' : 'NGƯỜI LẠ (KHÁCH)'}`;
-    elements.gateStatePill.className = `hud-pill ${isOwner ? 'hud-pill-green' : 'hud-pill-red'}`;
-    elements.gateStatePill.textContent = 'ĐANG PHÂN TÍCH KHUÔN MẶT...';
+    elements.faceBracketBox.classList.remove('is-owner', 'is-guest');
+    elements.faceBracketBox.classList.add(isIntruder ? 'is-guest' : 'is-owner');
+    elements.faceHudLabel.textContent = isIntruder ? 'CẢNH BÁO: NGƯỜI LẠ !' : 'CHỦ NHÀ (KHỚP: 98.6%)';
+    elements.assessmentText.textContent = 'ĐANG PHÂN TÍCH KHUÔN MẶT SINH TRẮC HỌC...';
     
-    appendLog(`Bắt đầu quy trình quét nhận diện khuôn mặt (${isOwner ? 'Chủ nhà' : 'Khách'})...`, "tx");
-    showToast(`ĐANG QUÉT MẶT: ${isOwner ? 'CHỦ NHÀ HƯNG' : 'NGƯỜI LẠ'}...`);
+    appendLog(`Bắt đầu quy trình quét mặt 5s xác thực danh tính...`, "tx");
+    showToast("ĐANG QUÉT MẶT XÁC THỰC DANH TÍNH...");
     
     let duration = 5.0; // 5 seconds
     let elapsed = 0;
-    const step = 100; // ms
+    const interval = 100; // ms
     
     state.scanTimer = setInterval(() => {
-        elapsed += (step / 1000);
-        const remaining = Math.max(0, duration - elapsed);
+        elapsed += (interval / 1000);
+        const rem = Math.max(0, duration - elapsed);
         const progress = Math.min(1.0, elapsed / duration);
         
-        elements.gateProgressFill.style.width = `${progress * 100}%`;
-        elements.gateTimerCounter.textContent = `${remaining.toFixed(1)}s`;
+        elements.scanProgressFill.style.width = `${progress * 100}%`;
+        elements.scanTimerLabel.textContent = `${rem.toFixed(1)}s (${Math.round(progress * 100)}%)`;
         
-        // Scan beeps
-        if (Math.round(elapsed * 10) % 5 === 0) {
-            sfx.scanBeep();
+        // Accumulate green vs red sample frames
+        if (!isIntruder) {
+            state.greenCnt += 1;
+            elements.cntGreen.textContent = state.greenCnt;
+            if (state.greenCnt >= 4) {
+                elements.assessmentText.textContent = "DỰ KIẾN: CHỦ NHÀ (MỞ CỬA)";
+                elements.assessmentText.style.color = "var(--color-emerald)";
+            }
+        } else {
+            state.redCnt += 1;
+            elements.cntRed.textContent = state.redCnt;
+            if (state.redCnt >= 4) {
+                elements.assessmentText.textContent = "DỰ KIẾN: NGƯỜI LẠ (BÁO ĐỘNG)";
+                elements.assessmentText.style.color = "var(--color-red)";
+            }
+        }
+        
+        if (Math.round(elapsed * 10) % 4 === 0) {
+            sfx.scanTick();
         }
         
         if (elapsed >= duration) {
             clearInterval(state.scanTimer);
             state.isScanningFace = false;
-            elements.btnScanOwner.disabled = false;
-            elements.btnScanGuest.disabled = false;
+            elements.btnStartFaceScan.disabled = false;
             
-            if (isOwner) {
-                // SUCCESS: Owner Hung
-                elements.gateStatePill.className = 'hud-pill hud-pill-green';
-                elements.gateStatePill.textContent = 'XÁC THỰC THÀNH CÔNG: CHỦ NHÀ';
-                elements.faceTargetTag.textContent = 'KHỚP 99.2%: CHÀO MỪNG CHỦ NHÀ HƯNG!';
+            if (!isIntruder) {
+                // CHỦ NHÀ: Khung xanh nhiều hơn -> Mở cửa -> Chuyển Scene 2
+                elements.faceHudLabel.textContent = "XÁC THỰC THÀNH CÔNG: CHỦ NHÀ !";
+                elements.assessmentText.textContent = "KẾT LUẬN: CHỦ NHÀ HỢP LỆ -> ĐÃ MỞ CỬA (90°)";
+                elements.assessmentText.style.color = "var(--color-emerald)";
                 
-                sfx.successChime();
+                sfx.success();
                 syncDeviceUI('cua', true);
-                sendSerialCommand('O', "Xác Thực Chủ Nhà Hưng Thành Công -> Mở Cửa (90°)");
-                showToast("CHÀO MỪNG CHỦ NHÀ HƯNG! ĐÃ MỞ CỬA (90°)");
+                sendSerialCommand('O', "Xác Thực Chủ Nhà Thành Công -> Mở Cửa 90°");
+                showToast("XÁC THỰC THÀNH CÔNG: CHÀO MỪNG CHỦ NHÀ! ĐÃ MỞ CỬA (90°)");
                 appendLog("XÁC THỰC THÀNH CÔNG: Khung xanh chiếm ưu thế -> Cho phép vào nhà.", "rx");
                 
-                // Transition smoothly to Scene 2 (Hand Gestures) after 1.8s
+                // Chuyển cảnh mượt mà sang Giao diện 2 sau 1.6s
                 setTimeout(() => {
                     switchScene(2);
                     showToast("BÂY GIỜ BẠN CÓ THỂ ĐIỀU KHIỂN CÁC THIẾT BỊ BẰNG CỬ CHỈ TAY!");
-                }, 1800);
+                }, 1600);
                 
             } else {
-                // FAILED: Guest / Intruder
-                elements.gateStatePill.className = 'hud-pill hud-pill-red';
-                elements.gateStatePill.textContent = 'TỪ CHỐI TRUY CẬP: NGƯỜI LẠ';
-                elements.faceTargetTag.textContent = 'CẢNH BÁO: KHUÔN MẶT KHÔNG HỢP LỆ!';
+                // NGƯỜI LẠ: Khung đỏ nhiều hơn -> Khóa cửa -> Cảnh báo đỏ
+                elements.faceHudLabel.textContent = "TỪ CHỐI TRUY CẬP: NGƯỜI LẠ !";
+                elements.assessmentText.textContent = "KẾT LUẬN: ĐỐI TƯỢNG BẤT THƯỜNG -> KHÓA CỬA & BÁO ĐỘNG";
+                elements.assessmentText.style.color = "var(--color-red)";
                 
                 syncDeviceUI('cua', false);
                 syncDeviceUI('alarm', true);
-                sendSerialCommand('C', "Khóa Cửa 0°");
+                sendSerialCommand('C', "Khóa Chặt Cửa 0°");
                 sendSerialCommand('S', "Hú Còi Báo Động SOS Chống Trộm");
                 showToast("TỪ CHỐI TRUY CẬP: KÍCH HOẠT CÒI BÁO ĐỘNG CHỐNG TRỘM!", true);
                 appendLog("CẢNH BÁO: Khung đỏ chiếm ưu thế -> Khóa cửa và hú còi chống trộm.", "err");
                 
-                // Transition to Scene 3 (Alarm) after 1.5s
                 setTimeout(() => {
                     switchScene(3);
-                }, 1500);
+                }, 1400);
             }
         }
-    }, step);
+    }, interval);
 }
 
-elements.btnScanOwner.addEventListener('click', () => startFaceScan(true));
-elements.btnScanGuest.addEventListener('click', () => startFaceScan(false));
-
 // --------------------------------------------------------------------
-// 11. SCENE 2: ANATOMICAL HAND GESTURE CLASSIFIER (GOOGLE MEDIAPIPE)
+// 11. SCENE 2: ANATOMICAL HAND GESTURE CLASSIFIER
 // --------------------------------------------------------------------
 function onHandResults(results) {
     ctx2.save();
@@ -764,7 +788,7 @@ function onHandResults(results) {
     if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
         const landmarks = results.multiHandLandmarks[0];
         
-        // 1. Draw 21-point skeleton
+        // 1. Draw 21-point Skeleton
         drawHandSkeleton(landmarks);
         
         // 2. Classify Gesture
@@ -776,7 +800,7 @@ function onHandResults(results) {
             elements.hudGestureName.textContent = gesture.title;
             elements.hudGestureScore.textContent = "Khớp: 98%";
             
-            // Check Debounce Cooldown
+            // Check Debounce Cooldown (1500ms)
             const elapsed = now - state.lastGestureTime;
             const progress = Math.min(1.0, elapsed / state.cooldownDuration);
             elements.cooldownBar.style.width = `${progress * 100}%`;
@@ -846,28 +870,28 @@ function classifyHandGesture(lm) {
     
     const count = (isIndexExtended ? 1 : 0) + (isMiddleExtended ? 1 : 0) + (isRingExtended ? 1 : 0) + (isPinkyExtended ? 1 : 0);
     
-    // 1. Closed Fist (Nắm đấm -> Tắt tất cả)
+    // 1. Closed Fist (Nắm đấm -> Tắt toàn bộ thiết bị)
     if (count === 0 && !isThumbExtended) {
         return { name: 'Closed_Fist', title: 'Nắm đấm (Tắt tất cả)', icon: '✊' };
     }
     
-    // 2. OK Sign (Ngón trỏ chạm ngón cái + 3 ngón kia duỗi)
+    // 2. OK Sign (Ngón cái chạm ngón trỏ + ngón giữa duỗi)
     const thumbIndexDist = Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y);
     if (thumbIndexDist < palm * 0.35 && isMiddleExtended && isRingExtended) {
         return { name: 'OK_SIGN', title: 'Dấu OK (Bật/Tắt Tivi)', icon: '👌' };
     }
     
-    // 3. 1 Finger (Pointing Up -> Bật/Tắt Đèn)
+    // 3. 1 Finger (1 ngón trỏ -> Bật/Tắt Đèn)
     if (isIndexExtended && !isMiddleExtended && !isRingExtended && !isPinkyExtended) {
         return { name: 'Pointing_Up', title: '1 Ngón trỏ (Bật Đèn)', icon: '👉' };
     }
     
-    // 4. 2 Fingers (Victory -> Mở/Đóng Cửa)
+    // 4. 2 Fingers (2 ngón chữ V -> Mở/Đóng Cửa)
     if (isIndexExtended && isMiddleExtended && !isRingExtended && !isPinkyExtended) {
-        return { name: 'Victory', title: '2 Ngón chữ V (Mở Cửa)', icon: '✌️' };
+        return { name: 'Victory', title: '2 Ngón chữ V (Mở/Đóng Cửa)', icon: '✌️' };
     }
     
-    // 5. 3 Fingers (Kéo Rèm Lên)
+    // 5. 3 Fingers (3 ngón tay -> Kéo Rèm Lên)
     if (isIndexExtended && isMiddleExtended && isRingExtended && !isPinkyExtended) {
         return { name: 'Three_Fingers', title: '3 Ngón tay (Kéo Rèm Lên)', icon: '🤟' };
     }
@@ -881,7 +905,7 @@ function classifyHandGesture(lm) {
 }
 
 function executeGestureAction(gesture) {
-    sfx.tone(700, 0.08);
+    sfx.tone(720, 0.08);
     
     switch (gesture.name) {
         case 'Pointing_Up':
@@ -932,4 +956,4 @@ function executeGestureAction(gesture) {
     }
 }
 
-appendLog("Khởi tạo xong bộ điều khiển Smart Home 3 giao diện.", "sys");
+appendLog("Hệ thống Web Controller đã sẵn sàng.", "sys");

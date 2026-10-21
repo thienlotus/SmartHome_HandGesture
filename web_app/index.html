@@ -3,8 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Home AI Dashboard - Quét Mặt Face ID & Điều Khiển Cử Chỉ Tay</title>
-    <meta name="description" content="Hệ thống điều khiển nhà thông minh AI 3 giao diện: Cổng nhận diện khuôn mặt Chủ/Khách, Bảng điều khiển cử chỉ tay MediaPipe và Cảnh báo đỏ chống trộm qua Web Serial Arduino.">
+    <title>Smart Home AI Dashboard - Quét Mặt Face ID & Điều Khiển Cử Chỉ</title>
+    <meta name="description" content="Hệ thống điều khiển nhà thông minh AI: Cổng quét mặt an ninh Chủ nhà / Khách và Bảng điều khiển cử chỉ tay MediaPipe qua Web Serial Arduino Uno.">
+    <!-- Enforce HTTPS for Web Serial and Camera -->
+    <script>
+        if (location.protocol === 'http:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+            location.replace('https:' + location.href.substring(5));
+        }
+    </script>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,7 +21,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="theme-default">
-    <!-- Background Ambient Glow -->
+    <!-- Ambient Background Glows -->
     <div class="ambient-glow glow-cyan"></div>
     <div class="ambient-glow glow-purple"></div>
 
@@ -25,9 +31,9 @@
         <span id="toastMessage">Thông báo hệ thống</span>
     </div>
 
-    <!-- Main Dashboard Container -->
+    <!-- Main Container -->
     <div class="dashboard-wrapper">
-        <!-- Top Application Header -->
+        <!-- Header Bar -->
         <header class="app-header">
             <div class="brand-group">
                 <div class="brand-logo">
@@ -42,7 +48,7 @@
                 </div>
             </div>
 
-            <!-- Header Quick Telemetry -->
+            <!-- Telemetry Badges -->
             <div class="header-telemetry">
                 <div class="badge status-badge" id="arduinoBadge">
                     <span class="dot dot-danger" id="arduinoDot"></span>
@@ -60,7 +66,7 @@
                 </div>
             </div>
 
-            <!-- Primary Header Actions -->
+            <!-- Action Buttons -->
             <div class="header-actions">
                 <button id="btnConnectSerial" class="btn btn-primary" title="Kết nối trực tiếp cáp USB Arduino">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -79,158 +85,119 @@
             </div>
         </header>
 
-        <!-- 3-STAGE WORKFLOW NAVIGATION BAR -->
-        <nav class="scene-nav-bar">
-            <div class="nav-title-label">QUY TRÌNH HỆ THỐNG:</div>
-            <div class="scene-tabs">
-                <button class="scene-tab is-active" id="tabScene1" data-scene="1">
-                    <span class="tab-step">1</span>
-                    <span class="tab-label">🛡️ CỔNG QUÉT MẶT (CHỦ / KHÁCH)</span>
-                </button>
-                <button class="scene-tab" id="tabScene2" data-scene="2">
-                    <span class="tab-step">2</span>
-                    <span class="tab-label">👋 ĐIỀU KHIỂN CỬ CHỈ TAY</span>
-                </button>
-                <button class="scene-tab scene-tab-danger" id="tabScene3" data-scene="3">
-                    <span class="tab-step">3</span>
-                    <span class="tab-label">🚨 CẢNH BÁO ĐỎ (ALARM)</span>
-                </button>
-            </div>
-        </nav>
-
         <!-- ========================================================= -->
-        <!-- SCENE 1: GIAO DIỆN 1 - QUÉT KHUÔN MẶT BẢO MẬT CỔNG VÀO     -->
+        <!-- GIAO DIỆN 1: CỔNG AN NINH SINH TRẮC HỌC (CHUẨN BẢN DEMO)   -->
         <!-- ========================================================= -->
-        <section class="scene-container" id="scene1Container">
-            <div class="scene1-layout">
-                <!-- Video Viewport Card -->
+        <section class="scene-view" id="scene1">
+            <div class="gate-hero-container">
                 <div class="viewport-card">
                     <div class="viewport-header">
                         <div class="viewport-title-group">
                             <span class="viewport-mode-tag">GIAO DIỆN 1: CỔNG AN NINH SINH TRẮC HỌC</span>
-                            <span class="viewport-sub">Quét khuôn mặt xác thực Chủ nhà (Hưng) hoặc Người lạ (Khách)</span>
+                            <span class="viewport-sub">Đứng trước camera và bấm nút để quét nhận diện khuôn mặt xác thực vào nhà</span>
                         </div>
-                        <span class="hud-pill hud-pill-cyan" id="gateStatePill">SẴN SÀNG QUÉT MẶT</span>
+                        <div class="gate-header-tools">
+                            <label class="toggle-switch-label" title="Bật khi muốn thử tình huống người lạ đột nhập">
+                                <input type="checkbox" id="chkSimulateIntruder">
+                                <span>Thử nghiệm Người lạ</span>
+                            </label>
+                        </div>
                     </div>
 
-                    <!-- Video & Canvas Viewport -->
-                    <div class="canvas-container">
+                    <!-- Video Viewport -->
+                    <div class="canvas-container" id="container1">
                         <video id="webcam1" playsinline muted autoplay></video>
                         <canvas id="canvas1"></canvas>
 
                         <!-- Standby Overlay -->
-                        <div id="standbyScene1" class="camera-standby">
+                        <div id="standby1" class="camera-standby">
                             <div class="standby-icon">
                                 <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                     <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9"/>
                                 </svg>
                             </div>
                             <h3>CAMERA CHƯA BẬT</h3>
-                            <p>Bấm nút <strong>"BẬT CAMERA AI"</strong> phía trên để bắt đầu quy trình quét mặt</p>
-                            <button class="btn btn-primary btn-pulse btn-open-cam">BẬT CAMERA NGAY</button>
+                            <p>Bấm nút <strong>"BẬT CAMERA AI"</strong> phía trên để bắt đầu quy trình nhận diện</p>
+                            <button class="btn btn-primary btn-pulse btn-trigger-cam">BẬT CAMERA NGAY</button>
                         </div>
 
-                        <!-- Face Scanning HUD Overlay -->
-                        <div class="gate-hud-overlay" id="gateHudOverlay">
-                            <div class="laser-scanner" id="laserScanner"></div>
-                            <div class="face-target-box" id="faceTargetBox">
-                                <div class="corner-bracket top-left"></div>
-                                <div class="corner-bracket top-right"></div>
-                                <div class="corner-bracket bottom-left"></div>
-                                <div class="corner-bracket bottom-right"></div>
-                                <div class="face-target-tag" id="faceTargetTag">CHỜ QUÉT KHUÔN MẶT</div>
+                        <!-- Face Scanner Overlay -->
+                        <div class="scanner-overlay" id="scannerOverlay">
+                            <div class="laser-beam" id="laserBeam"></div>
+                            <div class="face-bracket-box" id="faceBracketBox">
+                                <div class="hud-bracket b-tl"></div>
+                                <div class="hud-bracket b-tr"></div>
+                                <div class="hud-bracket b-bl"></div>
+                                <div class="hud-bracket b-br"></div>
+                                <div class="face-hud-label" id="faceHudLabel">VUI LÒNG ĐỨNG THẲNG TRƯỚC CAMERA</div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Scanning Progress Bar -->
-                    <div class="gate-scan-status-box" id="gateScanStatusBox">
-                        <div class="gate-status-text-row">
-                            <span id="gateScanningLabel">Bấm một trong 2 nút bên phải để quét khuôn mặt:</span>
-                            <strong id="gateTimerCounter">5.0s</strong>
-                        </div>
-                        <div class="gate-progress-track">
-                            <div class="gate-progress-bar-fill" id="gateProgressFill"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right Action Panel for Scene 1 -->
-                <div class="gate-actions-card">
-                    <h3 class="gate-panel-title">LỰA CHỌN QUÉT KHUÔN MẶT</h3>
-                    <p class="gate-panel-desc">Quy trình tự động quét mặt 5s: so sánh độ khớp để phân loại Chủ nhà hoặc Người lạ:</p>
-
-                    <div class="gate-demo-buttons">
-                        <!-- Option A: Chủ nhà Hưng -->
-                        <div class="gate-card-option option-owner">
-                            <div class="option-header">
-                                <span class="badge-role role-owner">CHỦ NHÀ (HƯNG)</span>
-                                <span class="badge-conf">Dataset: 100 ảnh</span>
-                            </div>
-                            <p class="option-desc">Khung xanh lá xuất hiện nhiều hơn -&gt; Xác thực thành công -&gt; Mở cửa 90° ('O') -&gt; Chuyển cảnh mượt qua <strong>Giao diện 2 (Cử chỉ tay)</strong>.</p>
-                            <button class="btn btn-success btn-lg btn-block" id="btnScanOwner">
-                                🟢 BẮT ĐẦU QUÉT: CHỦ NHÀ HƯNG
-                            </button>
-                        </div>
-
-                        <!-- Option B: Người lạ / Khách -->
-                        <div class="gate-card-option option-guest">
-                            <div class="option-header">
-                                <span class="badge-role role-guest">NGƯỜI LẠ / KHÁCH</span>
-                                <span class="badge-conf">Chưa đăng ký</span>
-                            </div>
-                            <p class="option-desc">Khung đỏ xuất hiện nhiều hơn -&gt; Từ chối truy cập -&gt; Khóa cửa ('C') -&gt; Chuyển cảnh ngay sang <strong>Giao diện 3 (Báo động đỏ)</strong> và hú còi chống trộm ('S').</p>
-                            <button class="btn btn-danger btn-lg btn-block" id="btnScanGuest">
-                                🔴 BẮT ĐẦU QUÉT: NGƯỜI LẠ (KHÁCH)
-                            </button>
-                        </div>
+                    <!-- NÚT BẬT QUÉT MẶT CHÍNH (ĐÚNG Y HỆT BẢN DEMO) -->
+                    <div class="gate-control-bar">
+                        <button class="btn btn-accent btn-xl btn-pulse btn-block" id="btnStartFaceScan">
+                            ⚡ BẬT QUÉT MẶT AN NINH (HOẶC NHẤN SPACE) ⚡
+                        </button>
                     </div>
 
-                    <!-- Quick Bypass -->
-                    <div class="gate-bypass-box">
-                        <span>Chuyển thẳng sang:</span>
-                        <button class="btn-link" id="btnQuickToScene2">👉 Bảng điều khiển cử chỉ tay</button>
+                    <!-- BẢNG PHÂN TÍCH ĐÁY (ĐẾM NGƯỢC 5S & MẪU XANH/ĐỎ CHUẨN DEMO) -->
+                    <div class="gate-metrics-panel" id="gateMetricsPanel">
+                        <div class="progress-row">
+                            <span id="scanProgressLabel">TIẾN TRÌNH QUÉT MẶT:</span>
+                            <strong id="scanTimerLabel">5.0s (0%)</strong>
+                        </div>
+                        <div class="scan-progress-bar">
+                            <div class="scan-progress-fill" id="scanProgressFill"></div>
+                        </div>
+
+                        <div class="stats-cards-row">
+                            <div class="stat-badge badge-owner">
+                                <span class="stat-dot dot-success"></span>
+                                <span>CHỦ NHÀ (KHUNG XANH): <strong id="cntGreen">0</strong></span>
+                            </div>
+                            <div class="stat-badge badge-guest">
+                                <span class="stat-dot dot-danger"></span>
+                                <span>NGƯỜI LẠ (KHUNG ĐỎ): <strong id="cntRed">0</strong></span>
+                            </div>
+                            <div class="stat-badge badge-assessment">
+                                <span id="assessmentText">QUY TRÌNH: BẤM QUÉT MẶT -&gt; CHỦ NHÀ MỞ CỬA, NGƯỜI LẠ BÁO ĐỘNG</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- ========================================================= -->
-        <!-- SCENE 2: GIAO DIỆN 2 - BẢNG ĐIỀU KHIỂN CỬ CHỈ TAY          -->
+        <!-- GIAO DIỆN 2: ĐIỀU KHIỂN CỬ CHỈ TAY THỜI GIAN THỰC          -->
         <!-- ========================================================= -->
-        <section class="scene-container hidden" id="scene2Container">
+        <section class="scene-view hidden" id="scene2">
             <div class="main-grid">
-                <!-- Left: Video Feed & MediaPipe Hand Tracking -->
+                <!-- Left: Hand Tracking Camera Feed -->
                 <div class="viewport-card">
                     <div class="viewport-header">
                         <div class="viewport-title-group">
                             <span class="viewport-mode-tag">GIAO DIỆN 2: ĐIỀU KHIỂN CỬ CHỈ TAY THỜI GIAN THỰC</span>
                             <span class="viewport-sub">Google MediaPipe Hands - 21 khớp xương bàn tay 3D</span>
                         </div>
-                        <button class="btn-sm btn-ghost" id="btnBackToGate">
-                            <span>🛡️ VỀ CỔNG AN NINH</span>
+                        <button class="btn-sm btn-ghost" id="btnLockToGate">
+                            <span>🔒 KHÓA CỬA & VỀ CỔNG AN NINH</span>
                         </button>
                     </div>
 
-                    <!-- Video & Canvas Viewport -->
-                    <div class="canvas-container">
+                    <!-- Canvas Viewport -->
+                    <div class="canvas-container" id="container2">
                         <video id="webcam2" playsinline muted autoplay></video>
                         <canvas id="canvas2"></canvas>
 
-                        <!-- Standby Prompt Overlay -->
-                        <div id="standbyScene2" class="camera-standby">
-                            <div class="standby-icon">
-                                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                    <polygon points="23 7 16 12 23 17 23 7"/>
-                                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-                                </svg>
-                            </div>
+                        <!-- Standby Overlay -->
+                        <div id="standby2" class="camera-standby">
                             <h3>CAMERA CHƯA BẬT</h3>
-                            <p>Bấm nút <strong>"BẬT CAMERA AI"</strong> phía trên để nhận diện cử chỉ tay</p>
-                            <button class="btn btn-primary btn-pulse btn-open-cam">BẬT CAMERA NGAY</button>
+                            <button class="btn btn-primary btn-pulse btn-trigger-cam">BẬT CAMERA NGAY</button>
                         </div>
 
-                        <!-- Gesture HUD Badge -->
+                        <!-- Gesture Floating Badge -->
                         <div class="hud-gesture-badge hidden" id="hudGestureBadge">
                             <span class="gesture-icon" id="hudGestureIcon">👉</span>
                             <div class="gesture-info">
@@ -241,16 +208,16 @@
                     </div>
 
                     <!-- Cooldown Bar -->
-                    <div class="cooldown-container" title="Thời gian giãn cách giữa 2 lần nhận diện">
+                    <div class="cooldown-container" title="Thời gian giãn cách giữa 2 lần nhận diện cử chỉ">
                         <div class="cooldown-bar" id="cooldownBar"></div>
                     </div>
 
-                    <!-- Live Serial Terminal & Logs -->
+                    <!-- Serial Log Console -->
                     <div class="terminal-card">
                         <div class="terminal-header">
                             <div class="terminal-title">
                                 <span class="dot dot-success"></span>
-                                <span>NHẬT KÝ LỆNH SERIAL ARDUINO (UART 9600 BAUD)</span>
+                                <span>NHẬT KÝ LỆNH ARDUINO (UART 9600 BAUD)</span>
                             </div>
                             <button class="btn-icon" id="btnClearLogs" title="Xóa log">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -261,24 +228,23 @@
                         </div>
                         <div class="terminal-body" id="serialLogs">
                             <div class="log-entry log-sys">[HỆ THỐNG] Chào mừng đến với Smart Home Edge AI Web Controller.</div>
-                            <div class="log-entry log-sys">[HỆ THỐNG] Đã nạp thành công bộ nhận diện 21 khớp xương bàn tay.</div>
+                            <div class="log-entry log-sys">[HỆ THỐNG] Đã nạp thành công 6 cử chỉ điều khiển thiết bị thông minh.</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Right: Smart Devices Control Grid -->
+                <!-- Right: Devices Grid -->
                 <div class="controls-section">
                     <div class="section-heading">
                         <div>
                             <h2 class="section-title">THIẾT BỊ TRONG NHÀ</h2>
-                            <span class="section-subtitle">Điều khiển bằng cử chỉ tay hoặc bấm nút trực tiếp</span>
+                            <span class="section-subtitle">Điều khiển bằng cử chỉ tay hoặc bấm trực tiếp</span>
                         </div>
                         <button id="btnAllOff" class="btn btn-danger btn-sm" title="Nắm đấm để tắt tất cả">
                             🛑 TẮT TẤT CẢ (NẮM ĐẤM)
                         </button>
                     </div>
 
-                    <!-- Appliances Grid -->
                     <div class="devices-grid">
                         <!-- 1. ĐÈN CHIẾU SÁNG -->
                         <div class="device-card" id="cardDen">
@@ -412,34 +378,16 @@
                         </div>
                     </div>
 
-                    <!-- Gesture Summary Cheat Sheet -->
+                    <!-- Guide Card -->
                     <div class="guide-card">
-                        <div class="guide-title">BẢNG TỔNG HỢP HÌNH THÁI CỬ CHỈ TAY:</div>
+                        <div class="guide-title">BẢNG HÌNH THÁI CỬ CHỈ TAY:</div>
                         <div class="guide-grid">
-                            <div class="guide-item">
-                                <span class="g-icon">👉</span>
-                                <div><strong>1 Ngón trỏ</strong><span>Bật/Tắt Đèn (A/B)</span></div>
-                            </div>
-                            <div class="guide-item">
-                                <span class="g-icon">✌️</span>
-                                <div><strong>2 Ngón chữ V</strong><span>Mở/Đóng Cửa (O/C)</span></div>
-                            </div>
-                            <div class="guide-item">
-                                <span class="g-icon">🤟</span>
-                                <div><strong>3 Ngón tay</strong><span>Kéo Rèm Lên (U)</span></div>
-                            </div>
-                            <div class="guide-item">
-                                <span class="g-icon">🖐️</span>
-                                <div><strong>Xòe 5 ngón</strong><span>Bật/Tắt Quạt (F)</span></div>
-                            </div>
-                            <div class="guide-item">
-                                <span class="g-icon">👌</span>
-                                <div><strong>Dấu OK</strong><span>Bật/Tắt Tivi LCD (T)</span></div>
-                            </div>
-                            <div class="guide-item">
-                                <span class="g-icon">✊</span>
-                                <div><strong>Nắm đấm</strong><span>Tắt tất cả thiết bị (B)</span></div>
-                            </div>
+                            <div class="guide-item"><span class="g-icon">👉</span><div><strong>1 Ngón trỏ</strong><span>Bật/Tắt Đèn (A/B)</span></div></div>
+                            <div class="guide-item"><span class="g-icon">✌️</span><div><strong>2 Ngón chữ V</strong><span>Mở/Đóng Cửa (O/C)</span></div></div>
+                            <div class="guide-item"><span class="g-icon">🤟</span><div><strong>3 Ngón tay</strong><span>Kéo Rèm Lên (U)</span></div></div>
+                            <div class="guide-item"><span class="g-icon">🖐️</span><div><strong>Xòe 5 ngón</strong><span>Bật/Tắt Quạt (F)</span></div></div>
+                            <div class="guide-item"><span class="g-icon">👌</span><div><strong>Dấu OK</strong><span>Bật/Tắt Tivi LCD (T)</span></div></div>
+                            <div class="guide-item"><span class="g-icon">✊</span><div><strong>Nắm đấm</strong><span>Tắt tất cả thiết bị (B)</span></div></div>
                         </div>
                     </div>
                 </div>
@@ -447,19 +395,19 @@
         </section>
 
         <!-- ========================================================= -->
-        <!-- SCENE 3: GIAO DIỆN 3 - CẢNH BÁO ĐỎ CHỐNG TRỘM KHẨN CẤP     -->
+        <!-- GIAO DIỆN 3: CẢNH BÁO ĐỎ BÁO ĐỘNG SOS (CHUẨN BẢN DEMO)     -->
         <!-- ========================================================= -->
-        <section class="scene-container hidden" id="scene3Container">
+        <section class="scene-view hidden" id="scene3">
             <div class="alarm-view-card">
                 <div class="alarm-pulsing-banner">
                     <div class="siren-light"></div>
-                    <h2 class="alarm-big-title">🚨 CẢNH BÁO AN NINH: PHÁT HIỆN NGƯỜI LẠ! 🚨</h2>
-                    <p class="alarm-subtitle">Khuôn mặt không khớp dữ liệu sinh trắc học chủ nhà Hưng. Còi chống trộm đã được kích hoạt!</p>
+                    <h2 class="alarm-big-title">🚨 CẢNH BÁO AN NINH: PHÁT HIỆN NGƯỜI LẠ ! 🚨</h2>
+                    <p class="alarm-subtitle">Khuôn mặt không khớp dữ liệu sinh trắc học chủ nhà. Cửa đã bị khóa chặt và còi chống trộm đang hú vang!</p>
                 </div>
 
                 <div class="alarm-status-grid">
                     <div class="alarm-stat-item">
-                        <span class="stat-label">TRẠNG THÁI KHÓA CỬA</span>
+                        <span class="stat-label">TRẠNG THÁI CỬA CHÍNH</span>
                         <strong class="stat-val val-locked">KHÓA CHẶT (0°)</strong>
                     </div>
                     <div class="alarm-stat-item">
@@ -467,8 +415,8 @@
                         <strong class="stat-val val-danger">ĐANG HÚ CÒI SOS (LỆNH 'S')</strong>
                     </div>
                     <div class="alarm-stat-item">
-                        <span class="stat-label">HỆ THỐNG GHI HÌNH</span>
-                        <strong class="stat-val val-active">LƯU TRỮ ĐÁM MÂY</strong>
+                        <span class="stat-label">CAMERA AN NINH</span>
+                        <strong class="stat-val val-active">GHI HÌNH ĐỐI TƯỢNG</strong>
                     </div>
                 </div>
 
@@ -477,7 +425,7 @@
                         🛑 TẮT CÒI & TRỞ VỀ CỔNG AN NINH
                     </button>
                     <button class="btn btn-secondary btn-xl" id="btnOverrideOwner">
-                        🔓 XÁC MINH LẠI: TÔI LÀ CHỦ NHÀ
+                        🔓 XÁC MINH: TÔI LÀ CHỦ NHÀ (MỞ CỬA)
                     </button>
                 </div>
             </div>
