@@ -77,12 +77,12 @@ const elements = {
     webcam1: document.getElementById('webcam1'),
     canvas1: document.getElementById('canvas1'),
     standby1: document.getElementById('standby1'),
-    chkSimulateIntruder: document.getElementById('chkSimulateIntruder'),
     scannerOverlay: document.getElementById('scannerOverlay'),
     laserBeam: document.getElementById('laserBeam'),
     faceBracketBox: document.getElementById('faceBracketBox'),
     faceHudLabel: document.getElementById('faceHudLabel'),
-    btnStartFaceScan: document.getElementById('btnStartFaceScan'),
+    btnScanOwner: document.getElementById('btnScanOwner'),
+    btnScanGuest: document.getElementById('btnScanGuest'),
     scanProgressLabel: document.getElementById('scanProgressLabel'),
     scanTimerLabel: document.getElementById('scanTimerLabel'),
     scanProgressFill: document.getElementById('scanProgressFill'),
@@ -672,21 +672,33 @@ async function renderLoop() {
 }
 
 // --------------------------------------------------------------------
-// 10. SCENE 1: BIOMETRIC FACE GATE WORKFLOW (CHUẨN 1:1 BẢN DEMO)
+// 10. SCENE 1: BIOMETRIC FACE GATE WORKFLOW (CHUẨN BẢN DEMO)
 // --------------------------------------------------------------------
-elements.btnStartFaceScan.addEventListener('click', () => {
-    if (!state.isCameraRunning) {
-        startWebcam().then(() => triggerFaceScanProcess());
-    } else {
-        triggerFaceScanProcess();
-    }
-});
+if (elements.btnScanOwner) {
+    elements.btnScanOwner.addEventListener('click', () => {
+        if (!state.isCameraRunning) {
+            startWebcam().then(() => triggerFaceScanProcess(false));
+        } else {
+            triggerFaceScanProcess(false);
+        }
+    });
+}
 
-// Space key listener
+if (elements.btnScanGuest) {
+    elements.btnScanGuest.addEventListener('click', () => {
+        if (!state.isCameraRunning) {
+            startWebcam().then(() => triggerFaceScanProcess(true));
+        } else {
+            triggerFaceScanProcess(true);
+        }
+    });
+}
+
+// Space key listener: Mặc định quét Chủ nhà
 window.addEventListener('keydown', (e) => {
     if (e.code === 'Space' && state.currentScene === 1) {
         e.preventDefault();
-        elements.btnStartFaceScan.click();
+        if (elements.btnScanOwner) elements.btnScanOwner.click();
     }
 });
 
@@ -789,12 +801,12 @@ function checkFacePresenceInCamera(videoElement) {
     return { hasFace, isCovered, avgLum, laplacianEnergy, stdDev, skinRatio };
 }
 
-function triggerFaceScanProcess() {
+function triggerFaceScanProcess(isIntruder = false) {
     if (state.isScanningFace) return;
     state.isScanningFace = true;
-    elements.btnStartFaceScan.disabled = true;
+    if (elements.btnScanOwner) elements.btnScanOwner.disabled = true;
+    if (elements.btnScanGuest) elements.btnScanGuest.disabled = true;
     
-    const isIntruder = elements.chkSimulateIntruder.checked;
     state.greenCnt = 0;
     state.redCnt = 0;
     elements.cntGreen.textContent = '0';
@@ -803,13 +815,13 @@ function triggerFaceScanProcess() {
     let validFaceFrames = 0;
     let coveredFrames = 0;
     
-    elements.faceBracketBox.classList.remove('is-owner', 'is-guest');
-    elements.faceHudLabel.textContent = 'ĐANG TÌM KIẾM KHUÔN MẶT...';
-    elements.assessmentText.textContent = 'HỆ THỐNG ĐANG QUÉT KHUNG HÌNH CAMERA...';
+    elements.faceBracketBox.classList.remove('is-owner', 'is-guest', 'is-warning');
+    elements.faceHudLabel.textContent = isIntruder ? 'ĐANG QUÉT PHÁT HIỆN ĐỐI TƯỢNG...' : 'ĐANG QUÉT XÁC THỰC CHỦ NHÀ...';
+    elements.assessmentText.textContent = isIntruder ? 'HỆ THỐNG ĐANG QUÉT PHÂN TÍCH ĐỐI TƯỢNG LẠ...' : 'HỆ THỐNG ĐANG QUÉT XÁC THỰC KHUÔN MẶT CHỦ NHÀ...';
     elements.assessmentText.style.color = "var(--text-heading)";
     
-    appendLog(`Bắt đầu quy trình quét mặt 5s xác thực danh tính...`, "tx");
-    showToast("ĐANG QUÉT MẶT XÁC THỰC DANH TÍNH...");
+    appendLog(`Bắt đầu quy trình quét mặt 5s [${isIntruder ? 'KỊCH BẢN: NGƯỜI LẠ' : 'KỊCH BẢN: CHỦ NHÀ'}]...`, "tx");
+    showToast(isIntruder ? "ĐANG QUÉT MẶT: KIỂM TRA ĐỐI TƯỢNG LẠ..." : "ĐANG QUÉT MẶT: XÁC THỰC CHỦ NHÀ...");
     
     let duration = 5.0; // 5 seconds
     let elapsed = 0;
@@ -868,7 +880,8 @@ function triggerFaceScanProcess() {
         if (elapsed >= duration) {
             clearInterval(state.scanTimer);
             state.isScanningFace = false;
-            elements.btnStartFaceScan.disabled = false;
+            if (elements.btnScanOwner) elements.btnScanOwner.disabled = false;
+            if (elements.btnScanGuest) elements.btnScanGuest.disabled = false;
             
             // 1. TÌNH HUỐNG CAMERA BỊ CHE HOẶC KHÔNG CÓ KHUÔN MẶT -> TUYỆT ĐỐI KHÔNG MỞ CỬA!
             if (validFaceFrames < 15 || coveredFrames >= validFaceFrames) {

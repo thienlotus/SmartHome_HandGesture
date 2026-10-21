@@ -582,9 +582,79 @@ canvas {
     color: #b45309;
 }
 
-/* Control Bar */
+/* Control Bar - 2 Action Buttons */
 .gate-control-bar {
     margin: 18px 0 14px;
+}
+
+.gate-demo-actions {
+    display: flex;
+    gap: 16px;
+}
+
+.btn-scan-owner {
+    flex: 1;
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    color: #ffffff;
+    border: 2px solid #34d399;
+    box-shadow: 0 8px 22px rgba(16, 185, 129, 0.32);
+    font-weight: 800;
+    font-size: 0.92rem;
+    letter-spacing: 0.2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 16px 20px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.btn-scan-owner:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(16, 185, 129, 0.45);
+    background: linear-gradient(135deg, #047857 0%, #059669 100%);
+}
+
+.btn-scan-guest {
+    flex: 1;
+    background: linear-gradient(135deg, #e11d48 0%, #be185d 100%);
+    color: #ffffff;
+    border: 2px solid #fb7185;
+    box-shadow: 0 8px 22px rgba(225, 29, 72, 0.32);
+    font-weight: 800;
+    font-size: 0.92rem;
+    letter-spacing: 0.2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 16px 20px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.btn-scan-guest:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(225, 29, 72, 0.45);
+    background: linear-gradient(135deg, #be185d 0%, #9d174d 100%);
+}
+
+.btn-scan-owner:disabled,
+.btn-scan-guest:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+@media (max-width: 768px) {
+    .gate-demo-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
 }
 
 /* Gate Metrics Panel */

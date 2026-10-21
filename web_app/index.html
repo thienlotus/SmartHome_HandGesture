@@ -111,10 +111,7 @@
                             <span class="viewport-sub">Đứng trước camera và bấm nút để quét nhận diện khuôn mặt xác thực vào nhà</span>
                         </div>
                         <div class="gate-header-tools">
-                            <label class="toggle-switch-label" title="Bật khi muốn thử tình huống người lạ đột nhập">
-                                <input type="checkbox" id="chkSimulateIntruder">
-                                <span>Thử nghiệm Người lạ</span>
-                            </label>
+                            <span class="badge-tag-demo" style="background: #fff0f5; color: var(--color-primary-dark); border: 1.5px solid var(--border-bold); font-size: 0.75rem; font-weight: 800; padding: 4px 10px; border-radius: 8px;">CHUẨN BẢN DEMO AI</span>
                         </div>
                     </div>
 
@@ -148,10 +145,22 @@
                         </div>
                     </div>
 
-                    <!-- NÚT BẬT QUÉT MẶT CHÍNH (ĐÃ XÓA ICON TIA SÉT) -->
-                    <div class="gate-control-bar">
-                        <button class="btn btn-accent btn-xl btn-pulse btn-block" id="btnStartFaceScan">
-                            BẬT QUÉT MẶT AN NINH (HOẶC NHẤN SPACE)
+                    <!-- HAI NÚT QUÉT MẶT DEMO CHUẨN: CHỦ NHÀ & NGƯỜI LẠ (ĐÚNG NHƯ BẢN DEMO) -->
+                    <div class="gate-control-bar gate-demo-actions">
+                        <button class="btn btn-scan-owner btn-xl" id="btnScanOwner" title="Quét mặt xác thực Chủ nhà hợp lệ (Mở cửa 90° & Vào nhà)">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                <polyline points="22 4 12 14.01 9 11.01"/>
+                            </svg>
+                            <span>🟢 QUÉT XÁC THỰC: CHỦ NHÀ (MỞ CỬA 90°)</span>
+                        </button>
+                        <button class="btn btn-scan-guest btn-xl" id="btnScanGuest" title="Quét phát hiện Người lạ / Khách lạ (Khóa cửa 0° & Hú còi SOS)">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                <line x1="12" y1="9" x2="12" y2="13"/>
+                                <line x1="12" y1="17" x2="12.01" y2="17"/>
+                            </svg>
+                            <span>🔴 QUÉT PHÁT HIỆN: NGƯỜI LẠ (BÁO ĐỘNG SOS)</span>
                         </button>
                     </div>
 
