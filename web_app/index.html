@@ -20,7 +20,7 @@
     <!-- MediaPipe Hands CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=20261022_5050">
 </head>
 <body class="theme-default">
     <!-- Ambient Background Glows -->
@@ -248,9 +248,9 @@
         <!-- GIAO DIỆN 2: ĐIỀU KHIỂN CỬ CHỈ TAY (CHIA ĐÔI 50/50 CAMERA & LỆNH) -->
         <!-- ========================================================= -->
         <section class="scene-view hidden" id="scene2">
-            <div class="main-grid">
-                <!-- Cột Trái: Camera Feed Bàn Tay & Nhật Ký -->
-                <div class="viewport-card">
+            <div class="main-grid" style="display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 20px !important; align-items: start !important; width: 100% !important;">
+                <!-- Cột Trái (50%): Camera Feed Bàn Tay & Nhật Ký -->
+                <div class="viewport-card" style="min-width: 0 !important; width: 100% !important; background: #ffffff; border: 2px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 18px; box-shadow: var(--shadow-glass);">
                     <div class="viewport-header">
                         <div class="viewport-title-group">
                             <span class="viewport-mode-tag">CAMERA NHẬN DIỆN BÀN TAY</span>
@@ -308,8 +308,8 @@
                     </div>
                 </div>
 
-                <!-- Cột Phải: Các Lệnh Điều Khiển Thiết Bị & Bảng Cử Chỉ -->
-                <div class="controls-section">
+                <!-- Cột Phải (50%): Các Lệnh Điều Khiển Thiết Bị & Bảng Cử Chỉ -->
+                <div class="controls-section" style="min-width: 0 !important; width: 100% !important; background: #ffffff; border: 2px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 18px; box-shadow: var(--shadow-glass);">
                     <div class="section-heading">
                         <div>
                             <h2 class="section-title">THIẾT BỊ TRONG NHÀ</h2>
@@ -324,7 +324,7 @@
                         </button>
                     </div>
 
-                    <div class="devices-grid">
+                    <div class="devices-grid" style="display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 12px !important;">
                         <!-- 1. ĐÈN CHIẾU SÁNG -->
                         <div class="device-card" id="cardDen">
                             <div class="device-card-header">
