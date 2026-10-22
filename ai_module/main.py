@@ -633,7 +633,13 @@ def render_face_gate_ui(img, current_fps, is_scanning, time_rem, total_time, gre
         (fx, fy, fw, fh) = detected_faces[0]
         color_face = UI_EMERALD if is_owner else UI_RUBY
         banner_bg = (24, 60, 20) if is_owner else (30, 15, 80)
-        banner_title = f"CHỦ NHÀ: {owner_name} (Khớp: {conf_score})" if is_owner else f"CẢNH BÁO: NGƯỜI LẠ ! (Khớp: {conf_score})"
+        if is_owner:
+            if owner_name in ["CHỦ NHÀ", "CHU_NHA", "KHACHHANG"]:
+                banner_title = f"CHỦ NHÀ (KHỚP: {conf_score})"
+            else:
+                banner_title = f"CHỦ NHÀ: {owner_name} (KHỚP: {conf_score})"
+        else:
+            banner_title = f"CẢNH BÁO: NGƯỜI LẠ ! (KHỚP: {conf_score})"
         sub_tag = "[ ĐANG TÍCH LŨY MẪU HỢP LỆ ]" if is_owner else "[ ĐỐI TƯỢNG BẤT THƯỜNG ]"
 
         cv2.rectangle(img, (fx, fy), (fx + fw, fy + fh), color_face, 2, cv2.LINE_AA)
@@ -1054,6 +1060,15 @@ while cap.isOpened() and not exit_requested:
 
         # 2. XÁC THỰC SINH TRẮC HỌC ĐỘC BẢN 128 CHIỀU KHI BẬT QUÉT MẶT
         if gate_scanning:
+            if len(detected_faces_data) == 0:
+                # Kiểm tra chống gian lận: Che camera bằng tay, nắp che hoặc tối đen
+                gray_chk = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                lum_val = float(np.mean(gray_chk))
+                lap_val = float(cv2.Laplacian(gray_chk, cv2.CV_64F).var())
+                if lum_val < 25.0 or lap_val < 10.0:
+                    toast_message = "CẢNH BÁO: CAMERA BỊ CHE KHUẤT / KHÔNG THẤY MẶT!"
+                    toast_time = cur_t
+
             for ((fx, fy, fw, fh), rf_1280) in detected_faces_data:
                 is_owner = False
                 matched_name = ""
@@ -1089,7 +1104,10 @@ while cap.isOpened() and not exit_requested:
                         # >= 0.52: Chủ nhà thực sự (loại bỏ 100% người lạ < 0.40, nhận diện trơn tru không giật lag)
                         if avg_sim >= 0.52 and matched_name:
                             is_owner = True
-                            detected_owner_name = matched_name.upper()
+                            if matched_name.lower() in ["chu_nha", "khachhang"]:
+                                detected_owner_name = "CHỦ NHÀ"
+                            else:
+                                detected_owner_name = matched_name.upper()
                         else:
                             is_owner = False
                     except Exception as e:

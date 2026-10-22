@@ -81,6 +81,7 @@ const elements = {
     laserBeam: document.getElementById('laserBeam'),
     faceBracketBox: document.getElementById('faceBracketBox'),
     faceHudLabel: document.getElementById('faceHudLabel'),
+    btnStartFaceScan: document.getElementById('btnStartFaceScan'),
     btnScanOwner: document.getElementById('btnScanOwner'),
     btnScanGuest: document.getElementById('btnScanGuest'),
     scanProgressLabel: document.getElementById('scanProgressLabel'),
@@ -706,6 +707,17 @@ async function renderLoop() {
 // --------------------------------------------------------------------
 // 10. SCENE 1: BIOMETRIC FACE GATE WORKFLOW (CHUẨN BẢN DEMO)
 // --------------------------------------------------------------------
+if (elements.btnStartFaceScan) {
+    elements.btnStartFaceScan.addEventListener('click', (e) => {
+        const isIntruder = e.shiftKey || e.altKey;
+        if (!state.isCameraRunning) {
+            startWebcam().then(() => triggerFaceScanProcess(isIntruder));
+        } else {
+            triggerFaceScanProcess(isIntruder);
+        }
+    });
+}
+
 if (elements.btnScanOwner) {
     elements.btnScanOwner.addEventListener('click', () => {
         if (!state.isCameraRunning) {
@@ -726,11 +738,20 @@ if (elements.btnScanGuest) {
     });
 }
 
-// Space key listener: Mặc định quét Chủ nhà
+// Phím Space: Kích hoạt BẬT QUÉT MẶT AN NINH (Chuẩn theo bản demo ban đầu)
 window.addEventListener('keydown', (e) => {
     if (e.code === 'Space' && state.currentScene === 1) {
         e.preventDefault();
-        if (elements.btnScanOwner) elements.btnScanOwner.click();
+        const isIntruder = e.shiftKey || e.altKey;
+        if (elements.btnStartFaceScan) {
+            if (!state.isCameraRunning) {
+                startWebcam().then(() => triggerFaceScanProcess(isIntruder));
+            } else {
+                triggerFaceScanProcess(isIntruder);
+            }
+        } else if (elements.btnScanOwner) {
+            elements.btnScanOwner.click();
+        }
     }
 });
 
@@ -836,6 +857,7 @@ function checkFacePresenceInCamera(videoElement) {
 function triggerFaceScanProcess(isIntruder = false) {
     if (state.isScanningFace) return;
     state.isScanningFace = true;
+    if (elements.btnStartFaceScan) elements.btnStartFaceScan.disabled = true;
     if (elements.btnScanOwner) elements.btnScanOwner.disabled = true;
     if (elements.btnScanGuest) elements.btnScanGuest.disabled = true;
     
@@ -912,6 +934,7 @@ function triggerFaceScanProcess(isIntruder = false) {
         if (elapsed >= duration) {
             clearInterval(state.scanTimer);
             state.isScanningFace = false;
+            if (elements.btnStartFaceScan) elements.btnStartFaceScan.disabled = false;
             if (elements.btnScanOwner) elements.btnScanOwner.disabled = false;
             if (elements.btnScanGuest) elements.btnScanGuest.disabled = false;
             
