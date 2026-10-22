@@ -349,21 +349,84 @@ body.theme-emergency {
     box-shadow: 0 0 10px var(--color-primary);
 }
 
-/* ====================================================================
-   SCENE 1: GIAO DIỆN CỔNG AN NINH
-   ==================================================================== */
-.gate-hero-container {
-    max-width: 1080px;
-    margin: 0 auto;
+/* Navigation Scene Tab Bar (Floating Segmented Control) */
+.scene-nav-pills {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 18px 0 24px;
+    padding: 6px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(14px);
+    border: 2px solid var(--border-subtle);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-glass);
 }
 
-.viewport-card {
+.scene-tab-btn {
+    flex: 1;
+    max-width: 320px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 18px;
+    border-radius: var(--radius-lg);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.scene-tab-btn .tab-icon {
+    font-size: 1.1rem;
+}
+
+.scene-tab-btn:hover:not(.active) {
+    color: var(--text-heading);
+    background: #fff0f5;
+}
+
+.scene-tab-btn.active {
+    background: linear-gradient(135deg, #e11d48 0%, #be185d 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(225, 29, 72, 0.3);
+}
+
+/* ====================================================================
+   SCENE 1: GIAO DIỆN CỔNG AN NINH (BENTO GRID 2 CỘT)
+   ==================================================================== */
+.bento-gate-grid {
+    display: grid;
+    grid-template-columns: 1.48fr 0.92fr;
+    gap: 22px;
+    align-items: start;
+}
+
+@media (max-width: 1060px) {
+    .bento-gate-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.bento-card {
     background: var(--bg-card);
     backdrop-filter: blur(16px);
     border: 2px solid var(--border-subtle);
     border-radius: var(--radius-lg);
-    padding: 20px;
+    padding: 22px;
     box-shadow: var(--shadow-glass);
+}
+
+.bento-side-column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .viewport-header {
@@ -389,23 +452,15 @@ body.theme-emergency {
     font-weight: 500;
 }
 
-.toggle-switch-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--text-heading);
-    cursor: pointer;
-    background: #fff5f8;
-    padding: 6px 12px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border-subtle);
-}
-
-.toggle-switch-label input {
-    cursor: pointer;
-    accent-color: var(--color-primary);
+.badge-tag-demo {
+    background: #fff0f5;
+    color: var(--color-primary-dark);
+    border: 1.5px solid var(--border-bold);
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 8px;
+    letter-spacing: 0.04em;
 }
 
 /* 16:9 Canvas Viewport */
@@ -657,23 +712,108 @@ canvas {
     }
 }
 
-/* Gate Metrics Panel */
-.gate-metrics-panel {
-    background: #fff5f8;
-    border: 1.5px solid var(--border-subtle);
-    border-radius: var(--radius-md);
-    padding: 14px 18px;
-}
-
-.progress-row {
+/* ====================================================================
+   BENTO SIDE WIDGETS (TELEMETRY & SECURITY PANEL)
+   ==================================================================== */
+.widget-header {
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    font-size: 0.88rem;
-    color: var(--text-heading);
-    font-weight: 700;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
 }
 
+.widget-title {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--text-heading);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.widget-timer {
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: var(--color-primary);
+    font-family: var(--font-mono);
+}
+
+.widget-badge {
+    padding: 3px 10px;
+    border-radius: var(--radius-xl);
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.badge-locked {
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fca5a5;
+}
+
+.badge-unlocked {
+    background: #ecfdf5;
+    color: #059669;
+    border: 1px solid #6ee7b7;
+}
+
+.widget-dot-live {
+    width: 8px;
+    height: 8px;
+    background: var(--color-emerald);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--color-emerald);
+    animation: livePulse 2s infinite ease-in-out;
+}
+
+@keyframes livePulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+/* Door Visual Display */
+.door-visual-display {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 8px 0;
+}
+
+.door-icon-circle {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: #ffe4ec;
+    border: 2px solid #fbcfe8;
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 4px 15px rgba(225, 29, 72, 0.12);
+}
+
+.door-icon-circle.is-open {
+    background: #ecfdf5;
+    border-color: #a7f3d0;
+    color: var(--color-emerald);
+    transform: rotate(20deg);
+    box-shadow: 0 4px 15px rgba(5, 150, 105, 0.2);
+}
+
+.door-status-text h4 {
+    font-size: 1.05rem;
+    font-weight: 900;
+    color: var(--text-heading);
+    margin-bottom: 2px;
+}
+
+.door-status-text p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* Metrics Counters */
 .scan-progress-bar {
     width: 100%;
     height: 8px;
@@ -691,43 +831,106 @@ canvas {
     transition: width 0.1s linear;
 }
 
-.stats-cards-row {
+.metrics-counters {
     display: grid;
-    grid-template-columns: 1fr 1fr 1.5fr;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.metric-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    background: #fff8fa;
+    border: 1.5px solid var(--border-subtle);
+}
+
+.metric-green { border-color: rgba(5, 150, 105, 0.25); }
+.metric-red { border-color: rgba(225, 29, 72, 0.25); }
+
+.m-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.m-label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.m-val {
+    font-size: 1.15rem;
+    font-weight: 900;
+    color: var(--text-heading);
+    font-family: var(--font-mono);
+}
+
+.metric-green .m-val { color: var(--color-emerald); }
+.metric-red .m-val { color: var(--color-red); }
+
+.assessment-box {
+    background: #fff5f8;
+    border: 1.5px solid var(--border-subtle);
+    border-left: 4px solid var(--color-primary);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+}
+
+.assessment-label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--color-primary-dark);
+    margin-bottom: 2px;
+    letter-spacing: 0.04em;
+}
+
+.assessment-content {
+    font-size: 0.82rem;
+    color: var(--text-body);
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+/* Telemetry Grid */
+.telemetry-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 10px;
 }
 
-@media (max-width: 800px) {
-    .stats-cards-row {
-        grid-template-columns: 1fr;
-    }
-}
-
-.stat-badge {
-    padding: 10px 14px;
+.tele-item {
+    background: #fff8fa;
+    border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md);
-    font-size: 0.8rem;
-    font-weight: 700;
+    padding: 9px 12px;
     display: flex;
-    align-items: center;
-    gap: 8px;
-    background: #ffffff;
-    border: 1.5px solid var(--border-subtle);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+    flex-direction: column;
+    gap: 2px;
 }
 
-.badge-owner {
-    border-color: rgba(5, 150, 105, 0.4);
-    color: var(--color-emerald);
+.tele-icon {
+    font-size: 0.95rem;
 }
 
-.badge-guest {
-    border-color: rgba(225, 29, 72, 0.4);
-    color: var(--color-red);
+.tele-name {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 600;
 }
 
-.badge-assessment {
+.tele-val {
+    font-size: 0.85rem;
+    font-weight: 800;
     color: var(--text-heading);
+}
+
+.text-success { color: var(--color-emerald) !important; }
+.text-emerald { color: #059669 !important; }
     justify-content: center;
     text-align: center;
     font-weight: 700;

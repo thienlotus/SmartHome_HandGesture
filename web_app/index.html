@@ -99,19 +99,36 @@
             </div>
         </header>
 
+        <!-- Navigation Scene Tab Bar (Floating Segmented Control) -->
+        <nav class="scene-nav-pills" id="sceneNavPills">
+            <button class="scene-tab-btn active" id="tabScene1" data-scene="1">
+                <span class="tab-icon">🛡️</span>
+                <span class="tab-text">GIAO DIỆN 1: CỔNG AN NINH FACE ID</span>
+            </button>
+            <button class="scene-tab-btn" id="tabScene2" data-scene="2">
+                <span class="tab-icon">🖐️</span>
+                <span class="tab-text">GIAO DIỆN 2: CỬ CHỈ TAY & THIẾT BỊ</span>
+            </button>
+            <button class="scene-tab-btn" id="tabScene3" data-scene="3">
+                <span class="tab-icon">🚨</span>
+                <span class="tab-text">GIAO DIỆN 3: BÁO ĐỘNG SOS</span>
+            </button>
+        </nav>
+
         <!-- ========================================================= -->
-        <!-- GIAO DIỆN 1: CỔNG AN NINH SINH TRẮC HỌC (CHUẨN BẢN DEMO)   -->
+        <!-- GIAO DIỆN 1: CỔNG AN NINH SINH TRẮC HỌC (BENTO GRID)      -->
         <!-- ========================================================= -->
         <section class="scene-view" id="scene1">
-            <div class="gate-hero-container">
-                <div class="viewport-card">
+            <div class="bento-gate-grid">
+                <!-- Main Column (Left): Camera Viewport & Dual Action Buttons -->
+                <div class="bento-card bento-camera-card">
                     <div class="viewport-header">
                         <div class="viewport-title-group">
-                            <span class="viewport-mode-tag">GIAO DIỆN 1: CỔNG AN NINH SINH TRẮC HỌC</span>
-                            <span class="viewport-sub">Đứng trước camera và bấm nút để quét nhận diện khuôn mặt xác thực vào nhà</span>
+                            <span class="viewport-mode-tag">CỔNG NHẬN DIỆN SINH TRẮC HỌC</span>
+                            <span class="viewport-sub">Hệ thống quét khuôn mặt 5s: Nhận diện Chủ nhà hoặc Kẻ lạ</span>
                         </div>
                         <div class="gate-header-tools">
-                            <span class="badge-tag-demo" style="background: #fff0f5; color: var(--color-primary-dark); border: 1.5px solid var(--border-bold); font-size: 0.75rem; font-weight: 800; padding: 4px 10px; border-radius: 8px;">CHUẨN BẢN DEMO AI</span>
+                            <span class="badge-tag-demo">CHUẨN BẢN DEMO AI</span>
                         </div>
                     </div>
 
@@ -145,7 +162,7 @@
                         </div>
                     </div>
 
-                    <!-- HAI NÚT QUÉT MẶT DEMO CHUẨN: CHỦ NHÀ & NGƯỜI LẠ (ĐÚNG NHƯ BẢN DEMO) -->
+                    <!-- HAI NÚT QUÉT MẶT DEMO CHUẨN: CHỦ NHÀ & NGƯỜI LẠ -->
                     <div class="gate-control-bar gate-demo-actions">
                         <button class="btn btn-scan-owner btn-xl" id="btnScanOwner" title="Quét mặt xác thực Chủ nhà hợp lệ (Mở cửa 90° & Vào nhà)">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -163,28 +180,87 @@
                             <span>🔴 QUÉT PHÁT HIỆN: NGƯỜI LẠ (BÁO ĐỘNG SOS)</span>
                         </button>
                     </div>
+                </div>
 
-                    <!-- BẢNG PHÂN TÍCH ĐÁY (ĐẾM NGƯỢC 5S & MẪU XANH/ĐỎ CHUẨN DEMO) -->
-                    <div class="gate-metrics-panel" id="gateMetricsPanel">
-                        <div class="progress-row">
-                            <span id="scanProgressLabel">TIẾN TRÌNH QUÉT MẶT:</span>
-                            <strong id="scanTimerLabel">5.0s (0%)</strong>
+                <!-- Side Column (Right): Bento Telemetry & Status Widgets -->
+                <div class="bento-side-column">
+                    <!-- Widget 1: Trạng thái Khóa Cửa -->
+                    <div class="bento-card bento-widget-security">
+                        <div class="widget-header">
+                            <span class="widget-title">TRẠNG THÁI CỬA CHÍNH</span>
+                            <span class="widget-badge badge-locked" id="gateLockStatusBadge">KHÓA 0°</span>
+                        </div>
+                        <div class="door-visual-display">
+                            <div class="door-icon-circle" id="doorVisualCircle">
+                                <svg class="door-svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 21h18"/><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/>
+                                    <circle cx="15" cy="12" r="1.5" fill="currentColor"/>
+                                </svg>
+                            </div>
+                            <div class="door-status-text">
+                                <h4 id="doorAngleText">GÓC SERVO: 0°</h4>
+                                <p id="doorSubText">Chưa xác thực danh tính</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Widget 2: Phân Tích Tiến Trình Quét -->
+                    <div class="bento-card bento-widget-metrics">
+                        <div class="widget-header">
+                            <span class="widget-title">TIẾN TRÌNH QUÉT SINH TRẮC</span>
+                            <strong class="widget-timer" id="scanTimerLabel">5.0s (0%)</strong>
                         </div>
                         <div class="scan-progress-bar">
                             <div class="scan-progress-fill" id="scanProgressFill"></div>
                         </div>
+                        <div class="metrics-counters">
+                            <div class="metric-item metric-green">
+                                <span class="m-dot dot-success"></span>
+                                <div class="m-info">
+                                    <span class="m-label">Khung Chủ Nhà</span>
+                                    <strong class="m-val" id="cntGreen">0</strong>
+                                </div>
+                            </div>
+                            <div class="metric-item metric-red">
+                                <span class="m-dot dot-danger"></span>
+                                <div class="m-info">
+                                    <span class="m-label">Khung Người Lạ</span>
+                                    <strong class="m-val" id="cntRed">0</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="assessment-box">
+                            <span class="assessment-label">ĐÁNH GIÁ AI:</span>
+                            <p class="assessment-content" id="assessmentText">Bấm một trong hai nút bên cạnh để bắt đầu quy trình quét</p>
+                        </div>
+                    </div>
 
-                        <div class="stats-cards-row">
-                            <div class="stat-badge badge-owner">
-                                <span class="stat-dot dot-success"></span>
-                                <span>CHỦ NHÀ (KHUNG XANH): <strong id="cntGreen">0</strong></span>
+                    <!-- Widget 3: Thông Số Phần Cứng & Môi Trường -->
+                    <div class="bento-card bento-widget-telemetry">
+                        <div class="widget-header">
+                            <span class="widget-title">GIÁM SÁT HỆ THỐNG</span>
+                            <span class="widget-dot-live"></span>
+                        </div>
+                        <div class="telemetry-grid">
+                            <div class="tele-item">
+                                <span class="tele-icon">🔌</span>
+                                <span class="tele-name">Vi điều khiển</span>
+                                <strong class="tele-val" id="teleArduinoPort">Arduino Uno</strong>
                             </div>
-                            <div class="stat-badge badge-guest">
-                                <span class="stat-dot dot-danger"></span>
-                                <span>NGƯỜI LẠ (KHUNG ĐỎ): <strong id="cntRed">0</strong></span>
+                            <div class="tele-item">
+                                <span class="tele-icon">🛡️</span>
+                                <span class="tele-name">Cơ chế an ninh</span>
+                                <strong class="tele-val text-success">Kép (Dual)</strong>
                             </div>
-                            <div class="stat-badge badge-assessment">
-                                <span id="assessmentText">QUY TRÌNH: BẤM QUÉT MẶT -&gt; CHỦ NHÀ MỞ CỬA, NGƯỜI LẠ BÁO ĐỘNG</span>
+                            <div class="tele-item">
+                                <span class="tele-icon">👁️</span>
+                                <span class="tele-name">Chống che Cam</span>
+                                <strong class="tele-val text-emerald">Laplacian ON</strong>
+                            </div>
+                            <div class="tele-item">
+                                <span class="tele-icon">📡</span>
+                                <span class="tele-name">Tần số baud</span>
+                                <strong class="tele-val">9600 bps</strong>
                             </div>
                         </div>
                     </div>

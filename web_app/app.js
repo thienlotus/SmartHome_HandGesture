@@ -255,6 +255,11 @@ function switchScene(sceneNum) {
     elements.scene2.classList.toggle('hidden', sceneNum !== 2);
     elements.scene3.classList.toggle('hidden', sceneNum !== 3);
     
+    // Đồng bộ trạng thái active của thanh Navigation Tab
+    document.querySelectorAll('.scene-tab-btn').forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.scene) === sceneNum);
+    });
+    
     if (sceneNum === 2 && state.mediaStream) {
         elements.webcam2.play().catch(e => console.warn(e));
     }
@@ -269,6 +274,14 @@ function switchScene(sceneNum) {
     
     appendLog(`Chuyển sang Giao diện ${sceneNum}.`, 'sys');
 }
+
+// Bắt sự kiện chuyển tab trực tiếp từ thanh Top Navigation
+document.querySelectorAll('.scene-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const sc = parseInt(btn.dataset.scene);
+        if (sc) switchScene(sc);
+    });
+});
 
 elements.btnLockToGate.addEventListener('click', () => {
     syncDeviceUI('cua', false);
@@ -445,6 +458,25 @@ function syncDeviceUI(devKey, isActive) {
             elements.cardCua.classList.toggle('is-active', isActive);
             elements.badgeCua.className = `device-badge ${isActive ? 'badge-on' : 'badge-off'}`;
             elements.badgeCua.textContent = isActive ? 'MỞ (90°)' : 'ĐÓNG (0°)';
+            
+            // Đồng bộ Widget An ninh Cửa ở Bento Grid Cổng 1
+            const gateLockBadge = document.getElementById('gateLockStatusBadge');
+            const doorVisualCircle = document.getElementById('doorVisualCircle');
+            const doorAngleText = document.getElementById('doorAngleText');
+            const doorSubText = document.getElementById('doorSubText');
+            if (gateLockBadge) {
+                gateLockBadge.textContent = isActive ? 'ĐÃ MỞ 90°' : 'KHÓA 0°';
+                gateLockBadge.className = `widget-badge ${isActive ? 'badge-unlocked' : 'badge-locked'}`;
+            }
+            if (doorVisualCircle) {
+                doorVisualCircle.classList.toggle('is-open', isActive);
+            }
+            if (doorAngleText) {
+                doorAngleText.textContent = isActive ? 'GÓC SERVO: 90° (MỞ)' : 'GÓC SERVO: 0° (KHÓA)';
+            }
+            if (doorSubText) {
+                doorSubText.textContent = isActive ? 'Xác thực Chủ Nhà hợp lệ' : 'Cửa đang chốt an toàn';
+            }
             break;
         case 'rem':
             elements.cardRem.classList.toggle('is-active', isActive);

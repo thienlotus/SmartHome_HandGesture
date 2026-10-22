@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng Ký Khuôn Mặt - Smart Home AI</title>
-    <meta name="description" content="Trang thu thập dữ liệu khuôn mặt 100 ảnh sinh trắc học chuẩn AI 4 giai đoạn (25-25-25-25).">
+    <meta name="description" content="Trang thu thập dữ liệu khuôn mặt 100 ảnh sinh trắc học chuẩn AI 4 giai đoạn (25-25-25-25) giao diện Bento Grid cao cấp.">
     
     <!-- Logo thương hiệu Hoa Sen trên thanh Tab (Favicon SVG) -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='lotus' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23fb7185'/%3E%3Cstop offset='50%25' stop-color='%23e11d48'/%3E%3Cstop offset='100%25' stop-color='%239d174d'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='30' fill='%23fff1f5' stroke='%23e11d48' stroke-width='2'/%3E%3Cpath d='M32 14 C36 24 44 28 44 38 C44 46 38 50 32 50 C26 50 20 46 20 38 C20 28 28 24 32 14 Z' fill='url(%23lotus)'/%3E%3Cpath d='M32 26 C38 32 48 34 50 42 C51 46 47 50 40 48 C36 44 34 38 32 26 Z' fill='%23f43f5e' opacity='0.85'/%3E%3Cpath d='M32 26 C26 32 16 34 14 42 C13 46 17 50 24 48 C28 44 30 38 32 26 Z' fill='%23f43f5e' opacity='0.85'/%3E%3Ccircle cx='32' cy='40' r='3' fill='%23fef08a'/%3E%3C/svg%3E">
 
-    <!-- Google Fonts: Be Vietnam Pro & Plus Jakarta Sans chuẩn 100% tiếng Việt -->
+    <!-- Google Fonts: Be Vietnam Pro & JetBrains Mono chuẩn 100% tiếng Việt -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
@@ -20,14 +20,15 @@
 
     <style>
         :root {
-            /* Gam màu sáng: Hồng cánh sen thanh lịch & Hồng đậm quý phái */
+            /* Gam màu sáng: Hồng cánh sen thanh lịch & Hồng đậm quý phái (Bento Grid Style) */
             --bg-page: #fff1f5;
             --bg-page-gradient: linear-gradient(135deg, #fff5f8 0%, #fdf2f8 50%, #ffe4ec 100%);
-            --bg-card: rgba(255, 255, 255, 0.95);
+            --bg-card: rgba(255, 255, 255, 0.94);
+            --bg-card-sub: #fff8fa;
             
             --color-primary: #e11d48;         /* Hồng đậm Ruby */
             --color-primary-dark: #be185d;    /* Hồng cánh sen đậm */
-            --color-primary-deep: #9d174d;    /* Màu chữ tiêu đề */
+            --color-primary-deep: #831843;    /* Màu chữ tiêu đề */
             --color-primary-light: #fff0f5;   /* Hồng cánh sen nhạt */
             --color-primary-border: #fbcfe8;  /* Viền hồng nhạt */
             --color-primary-border-bold: #f43f5e;
@@ -40,11 +41,13 @@
             --text-body: #334155;
             --text-muted: #64748b;
             
-            --radius-md: 12px;
+            --radius-sm: 8px;
+            --radius-md: 14px;
             --radius-lg: 22px;
             --font-sans: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
-            --shadow-card: 0 20px 45px rgba(225, 29, 72, 0.08), 0 4px 15px rgba(0, 0, 0, 0.03);
+            --shadow-bento: 0 10px 30px rgba(225, 29, 72, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+            --shadow-hover: 0 16px 40px rgba(225, 29, 72, 0.16);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -55,85 +58,197 @@
             color: var(--text-body);
             font-family: var(--font-sans);
             min-height: 100vh;
-            padding: 20px 16px;
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Top Navigation Bar */
+        .top-nav {
+            width: 100%;
+            max-width: 1140px;
             display: flex;
             align-items: center;
-            justify-content: center;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 680px;
-            background: var(--bg-card);
-            border: 2px solid var(--color-primary-border);
-            border-radius: var(--radius-lg);
-            padding: 28px 24px;
-            box-shadow: var(--shadow-card);
-            backdrop-filter: blur(10px);
-        }
-
-        /* Header */
-        .header {
-            text-align: center;
+            justify-content: space-between;
             margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
         }
 
-        .header-logo {
+        .nav-back-link {
             display: inline-flex;
             align-items: center;
-            justify-content: center;
-            width: 52px;
-            height: 52px;
+            gap: 8px;
+            padding: 10px 18px;
+            background: #ffffff;
+            border: 1.5px solid var(--color-primary-border);
+            border-radius: 999px;
+            color: var(--color-primary-dark);
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 700;
+            transition: all 0.25s ease;
+            box-shadow: 0 2px 8px rgba(225, 29, 72, 0.06);
+        }
+
+        .nav-back-link:hover {
             background: #ffe4ec;
-            border: 2px solid var(--color-primary-border-bold);
-            border-radius: 50%;
-            margin-bottom: 10px;
+            border-color: var(--color-primary-border-bold);
+            color: var(--color-primary);
+            transform: translateX(-3px);
             box-shadow: 0 4px 12px rgba(225, 29, 72, 0.15);
         }
 
-        .header h1 {
+        .nav-badge-live {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: #ffe4ec;
+            border: 1.5px solid var(--color-primary-border);
+            border-radius: 999px;
+            color: var(--text-heading);
+            font-size: 0.8rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+        }
+
+        .nav-badge-live .live-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--color-primary);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--color-primary);
+            animation: pulseDot 1.5s infinite;
+        }
+
+        @keyframes pulseDot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
+        }
+
+        /* Container Bento chính */
+        .bento-station-wrapper {
+            width: 100%;
+            max-width: 1140px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Bento Header Card */
+        .bento-header-card {
+            background: var(--bg-card);
+            border: 2px solid var(--color-primary-border);
+            border-radius: var(--radius-lg);
+            padding: 24px 28px;
+            box-shadow: var(--shadow-bento);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .header-logo-circle {
+            width: 58px;
+            height: 58px;
+            background: #ffe4ec;
+            border: 2px solid var(--color-primary-border-bold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 4px 14px rgba(225, 29, 72, 0.2);
+        }
+
+        .header-texts h1 {
             font-size: 1.65rem;
             font-weight: 900;
             color: var(--text-heading);
             letter-spacing: -0.01em;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
 
-        .header p {
-            font-size: 0.9rem;
+        .header-texts p {
+            font-size: 0.92rem;
             color: var(--text-muted);
             font-weight: 500;
         }
 
-        /* 4 Giai đoạn (25 - 25 - 25 - 25) */
-        .stages-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-
-        .stage-pill {
-            background: #fff8fa;
+        .header-stat-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: #fff0f5;
             border: 1.5px solid var(--color-primary-border);
             border-radius: var(--radius-md);
-            padding: 10px 6px;
-            text-align: center;
-            transition: all 0.25s ease;
         }
 
-        .stage-pill .pill-num {
-            display: block;
-            font-size: 0.75rem;
+        .header-stat-pill .stat-label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .header-stat-pill .stat-number {
+            font-size: 1.1rem;
+            font-family: var(--font-mono);
+            font-weight: 900;
+            color: var(--color-primary);
+        }
+
+        /* Bento Row: 4 Giai Đoạn (25 - 25 - 25 - 25) */
+        .bento-stages-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+        }
+
+        .bento-stage-card {
+            background: var(--bg-card);
+            border: 2px solid var(--color-primary-border);
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            box-shadow: var(--shadow-bento);
+        }
+
+        .bento-stage-card .card-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .bento-stage-card .stage-tag {
+            font-size: 0.72rem;
             font-weight: 800;
             color: var(--color-primary-dark);
-            margin-bottom: 2px;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
         }
 
-        .stage-pill .pill-name {
-            display: block;
-            font-size: 0.72rem;
+        .bento-stage-card .stage-icon {
+            font-size: 1.15rem;
+        }
+
+        .bento-stage-card .stage-title {
+            font-size: 0.88rem;
             font-weight: 700;
             color: var(--text-body);
             white-space: nowrap;
@@ -141,84 +256,89 @@
             text-overflow: ellipsis;
         }
 
-        .stage-pill .pill-count {
-            display: block;
-            font-size: 0.7rem;
-            color: var(--text-muted);
+        .bento-stage-card .stage-progress-text {
             font-family: var(--font-mono);
-            font-weight: 600;
-            margin-top: 2px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text-muted);
         }
 
-        .stage-pill.active {
-            background: #ffe4ec;
-            border-color: var(--color-primary-border-bold);
-            box-shadow: 0 4px 14px rgba(225, 29, 72, 0.2);
-            transform: translateY(-2px);
-        }
-        .stage-pill.active .pill-num { color: var(--color-primary); font-weight: 900; }
-        .stage-pill.active .pill-name { color: var(--text-heading); font-weight: 800; }
-        .stage-pill.active .pill-count { color: var(--color-primary-dark); }
-
-        .stage-pill.completed {
-            background: var(--color-emerald-bg);
-            border-color: var(--color-emerald);
-        }
-        .stage-pill.completed .pill-num { color: var(--color-emerald); }
-        .stage-pill.completed .pill-name { color: var(--color-emerald); }
-        .stage-pill.completed .pill-count { color: var(--color-emerald); }
-
-        /* Instruction Box */
-        .step-guide-box {
-            background: #fff5f8;
-            border: 1.5px solid var(--color-primary-border);
-            border-left: 5px solid var(--color-primary);
-            border-radius: var(--radius-md);
-            padding: 14px 16px;
-            margin-bottom: 16px;
-        }
-
-        .step-title {
-            font-size: 0.95rem;
-            font-weight: 800;
-            color: var(--text-heading);
-            margin-bottom: 4px;
-        }
-
-        .step-desc {
-            font-size: 0.85rem;
-            color: var(--text-body);
-            line-height: 1.5;
-            font-weight: 500;
-        }
-
-        /* Name Input */
-        .input-group {
-            display: flex;
-            margin-bottom: 16px;
-        }
-
-        .input-group input {
+        .bento-stage-card .stage-bar {
             width: 100%;
-            padding: 12px 18px;
-            border-radius: var(--radius-md);
-            background: #ffffff;
-            border: 2px solid var(--color-primary-border);
+            height: 5px;
+            background: #ffe4ec;
+            border-radius: 999px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .bento-stage-card .stage-bar-fill {
+            width: 0%;
+            height: 100%;
+            background: var(--color-primary);
+            transition: width 0.2s ease;
+        }
+
+        /* Active Stage */
+        .bento-stage-card.active {
+            border-color: var(--color-primary-border-bold);
+            background: #fff5f8;
+            box-shadow: 0 8px 24px rgba(225, 29, 72, 0.18);
+            transform: translateY(-3px);
+        }
+
+        .bento-stage-card.active .stage-tag {
+            color: var(--color-primary);
+            font-weight: 900;
+        }
+
+        .bento-stage-card.active .stage-title {
             color: var(--text-heading);
-            font-family: var(--font-sans);
-            font-size: 0.98rem;
-            font-weight: 600;
-            outline: none;
-            transition: all 0.2s ease;
+            font-weight: 800;
         }
 
-        .input-group input:focus {
-            border-color: var(--color-primary);
-            box-shadow: 0 0 0 4px rgba(225, 29, 72, 0.12);
+        .bento-stage-card.active .stage-progress-text {
+            color: var(--color-primary-dark);
         }
 
-        /* Camera Box (16:9 widescreen không méo mặt) */
-        .camera-box {
+        /* Completed Stage */
+        .bento-stage-card.completed {
+            border-color: var(--color-emerald);
+            background: var(--color-emerald-bg);
+        }
+
+        .bento-stage-card.completed .stage-tag,
+        .bento-stage-card.completed .stage-title,
+        .bento-stage-card.completed .stage-progress-text {
+            color: var(--color-emerald);
+        }
+
+        .bento-stage-card.completed .stage-bar-fill {
+            background: var(--color-emerald);
+        }
+
+        /* Bento Grid 2 Columns (Centerpiece Camera + Side Telemetry) */
+        .bento-workstation-grid {
+            display: grid;
+            grid-template-columns: 1.48fr 0.92fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        /* Left Column: Camera Centerpiece Card */
+        .bento-camera-card {
+            background: var(--bg-card);
+            border: 2px solid var(--color-primary-border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            box-shadow: var(--shadow-bento);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Camera Box 16:9 Widescreen */
+        .camera-viewport {
             position: relative;
             width: 100%;
             aspect-ratio: 16 / 9;
@@ -226,8 +346,7 @@
             border-radius: var(--radius-md);
             overflow: hidden;
             border: 2px solid var(--color-primary-border-bold);
-            margin-bottom: 16px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         }
 
         video {
@@ -235,11 +354,13 @@
             height: 100%;
             object-fit: cover;
             transform: scaleX(-1);
+            display: block;
         }
 
         canvas { display: none; }
 
-        .cam-overlay {
+        /* Biometric HUD Overlay */
+        .cam-hud-overlay {
             position: absolute;
             inset: 0;
             display: flex;
@@ -248,27 +369,46 @@
             pointer-events: none;
         }
 
-        .face-oval {
-            width: 48%;
-            height: 82%;
+        .hud-corner {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border-color: rgba(225, 29, 72, 0.65);
+            border-style: solid;
+        }
+        .c-tl { top: 14px; left: 14px; border-width: 3px 0 0 3px; border-top-left-radius: 6px; }
+        .c-tr { top: 14px; right: 14px; border-width: 3px 3px 0 0; border-top-right-radius: 6px; }
+        .c-bl { bottom: 14px; left: 14px; border-width: 0 0 3px 3px; border-bottom-left-radius: 6px; }
+        .c-br { bottom: 14px; right: 14px; border-width: 0 3px 3px 0; border-bottom-right-radius: 6px; }
+
+        .face-oval-guide {
+            width: 44%;
+            height: 80%;
             border: 2.5px dashed var(--color-primary);
             border-radius: 50%;
-            box-shadow: 0 0 25px rgba(225, 29, 72, 0.4);
+            box-shadow: 0 0 25px rgba(225, 29, 72, 0.35);
             transition: all 0.25s ease;
+            position: relative;
         }
 
-        .face-oval.capturing {
+        .face-oval-guide.capturing {
             border-color: var(--color-emerald);
             border-style: solid;
             box-shadow: 0 0 35px rgba(16, 185, 129, 0.6);
+            animation: pulseGlow 0.8s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            from { box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
+            to { box-shadow: 0 0 40px rgba(16, 185, 129, 0.8); }
         }
 
         /* Countdown & Transition Overlay */
         .stage-countdown-overlay {
             position: absolute;
             inset: 0;
-            background: rgba(255, 245, 248, 0.94);
-            backdrop-filter: blur(6px);
+            background: rgba(255, 245, 248, 0.95);
+            backdrop-filter: blur(8px);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -283,49 +423,49 @@
             background: #ffe4ec;
             color: var(--text-heading);
             border: 1.5px solid var(--color-primary);
-            font-size: 0.8rem;
+            font-size: 0.82rem;
             font-weight: 800;
-            padding: 4px 14px;
+            padding: 5px 16px;
             border-radius: 999px;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             letter-spacing: 0.05em;
         }
 
         .overlay-title {
-            font-size: 1.25rem;
+            font-size: 1.35rem;
             font-weight: 900;
             color: var(--text-heading);
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
 
         .overlay-desc {
-            font-size: 0.9rem;
+            font-size: 0.92rem;
             color: var(--text-body);
             max-width: 440px;
             line-height: 1.5;
             font-weight: 600;
-            margin-bottom: 14px;
+            margin-bottom: 16px;
         }
 
         .countdown-number {
             font-family: var(--font-mono);
-            font-size: 4.2rem;
+            font-size: 4.6rem;
             font-weight: 900;
             color: var(--color-primary);
-            text-shadow: 0 4px 18px rgba(225, 29, 72, 0.3);
+            text-shadow: 0 4px 18px rgba(225, 29, 72, 0.35);
             line-height: 1;
-            margin-bottom: 14px;
+            margin-bottom: 16px;
             animation: pulseNumber 1s infinite alternate;
         }
 
         @keyframes pulseNumber {
             0% { transform: scale(1); }
-            100% { transform: scale(1.1); }
+            100% { transform: scale(1.12); }
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
         }
 
         .btn-skip-countdown {
@@ -333,224 +473,492 @@
             border: 2px solid var(--color-primary);
             color: var(--color-primary);
             font-family: var(--font-sans);
-            font-size: 0.88rem;
+            font-size: 0.9rem;
             font-weight: 700;
-            padding: 8px 20px;
+            padding: 10px 24px;
             border-radius: var(--radius-md);
             cursor: pointer;
             transition: all 0.2s ease;
-            box-shadow: 0 4px 10px rgba(225, 29, 72, 0.1);
+            box-shadow: 0 4px 12px rgba(225, 29, 72, 0.12);
         }
 
         .btn-skip-countdown:hover {
             background: var(--color-primary);
             color: #ffffff;
+            transform: translateY(-2px);
         }
 
-        /* Progress Area */
-        .progress-box {
-            margin-bottom: 16px;
+        /* Action Buttons */
+        .btn-action-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            padding: 16px 28px;
+            border-radius: var(--radius-md);
+            font-family: var(--font-sans);
+            font-size: 1.08rem;
+            font-weight: 800;
+            border: none;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            letter-spacing: 0.02em;
+            background: linear-gradient(135deg, #e11d48, #be185d);
+            color: #ffffff;
+            box-shadow: 0 8px 24px rgba(225, 29, 72, 0.35);
         }
 
-        .progress-labels {
+        .btn-action-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(225, 29, 72, 0.5);
+            background: linear-gradient(135deg, #f43f5e, #9d174d);
+        }
+
+        .btn-action-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Right Column: Bento Telemetry Cards */
+        .bento-telemetry-column {
             display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .bento-info-card {
+            background: var(--bg-card);
+            border: 2px solid var(--color-primary-border);
+            border-radius: var(--radius-md);
+            padding: 18px 20px;
+            box-shadow: var(--shadow-bento);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .info-card-header {
+            display: flex;
+            align-items: center;
             justify-content: space-between;
-            font-size: 0.86rem;
+        }
+
+        .info-card-title {
+            font-size: 0.82rem;
+            font-weight: 800;
+            color: var(--text-heading);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .info-card-badge {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background: #ffe4ec;
+            color: var(--color-primary-dark);
+        }
+
+        /* Profile Input Card */
+        .profile-input-box {
+            position: relative;
+        }
+
+        .profile-input-box input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            background: #ffffff;
+            border: 1.5px solid var(--color-primary-border);
+            color: var(--text-heading);
+            font-family: var(--font-sans);
+            font-size: 0.95rem;
+            font-weight: 700;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .profile-input-box input:focus {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.12);
+        }
+
+        /* Live Guide Box */
+        .live-guide-content {
+            background: #fff8fa;
+            border: 1.5px solid var(--color-primary-border);
+            border-left: 4px solid var(--color-primary);
+            border-radius: var(--radius-sm);
+            padding: 12px 14px;
+        }
+
+        .live-guide-title {
+            font-size: 0.92rem;
+            font-weight: 800;
+            color: var(--text-heading);
+            margin-bottom: 4px;
+        }
+
+        .live-guide-desc {
+            font-size: 0.84rem;
+            color: var(--text-body);
+            line-height: 1.45;
+            font-weight: 500;
+        }
+
+        /* Total Progress Card */
+        .progress-stat-row {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+        }
+
+        .progress-stat-row strong {
+            font-family: var(--font-mono);
+            font-size: 1.25rem;
+            color: var(--color-primary);
+            font-weight: 900;
+        }
+
+        .progress-stat-row span {
+            font-size: 0.82rem;
             color: var(--text-muted);
             font-weight: 600;
-            margin-bottom: 6px;
         }
 
-        .progress-labels strong {
-            color: var(--text-heading);
-        }
-
-        .progress-track {
+        .main-progress-track {
             width: 100%;
             height: 10px;
             background: #ffe4ec;
-            border-radius: 5px;
+            border-radius: 999px;
             overflow: hidden;
             border: 1px solid var(--color-primary-border);
         }
 
-        .progress-fill {
+        .main-progress-fill {
             width: 0%;
             height: 100%;
             background: linear-gradient(90deg, #f43f5e, #be185d);
             transition: width 0.15s ease-out;
         }
 
-        /* Buttons (Đã xóa bỏ hoàn toàn icon tia sét) */
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            padding: 15px 24px;
-            border-radius: var(--radius-md);
-            font-family: var(--font-sans);
-            font-size: 1.05rem;
-            font-weight: 800;
-            border: none;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            letter-spacing: 0.02em;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #e11d48, #be185d);
-            color: #ffffff;
-            box-shadow: 0 6px 20px rgba(225, 29, 72, 0.35);
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 26px rgba(225, 29, 72, 0.5);
-            background: linear-gradient(135deg, #f43f5e, #9d174d);
-        }
-
-        .btn-primary:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn-success {
-            background: linear-gradient(135deg, #059669, #10b981);
-            color: #ffffff;
-            margin-top: 12px;
-            font-size: 0.95rem;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-        }
-
-        /* Success Dialog */
-        .success-box {
-            background: var(--color-emerald-bg);
-            border: 2px solid var(--color-emerald);
-            border-radius: var(--radius-md);
-            padding: 18px;
-            text-align: center;
-            margin-top: 16px;
-        }
-
-        .success-box h3 {
-            color: var(--color-emerald);
-            font-size: 1.2rem;
-            font-weight: 800;
-            margin-bottom: 8px;
-        }
-
-        .success-box p {
-            font-size: 0.9rem;
-            color: #064e3b;
-            line-height: 1.6;
+        .progress-subtext {
+            font-size: 0.82rem;
+            color: var(--text-body);
             font-weight: 600;
         }
 
+        /* Best Practice Tips */
+        .tips-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .tips-list li {
+            font-size: 0.82rem;
+            color: var(--text-body);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+
+        .tips-list li svg {
+            color: var(--color-primary);
+            flex-shrink: 0;
+        }
+
+        /* Success Dialog */
+        .success-bento-card {
+            background: var(--color-emerald-bg);
+            border: 2px solid var(--color-emerald);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 12px 36px rgba(16, 185, 129, 0.15);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .success-bento-card h3 {
+            color: var(--color-emerald);
+            font-size: 1.35rem;
+            font-weight: 900;
+        }
+
+        .success-bento-card p {
+            font-size: 0.92rem;
+            color: #064e3b;
+            line-height: 1.6;
+            font-weight: 600;
+            max-width: 650px;
+        }
+
+        .btn-download-again {
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: #ffffff;
+            border: none;
+            padding: 12px 28px;
+            border-radius: var(--radius-md);
+            font-family: var(--font-sans);
+            font-size: 0.95rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-download-again:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.45);
+        }
+
         .hidden { display: none !important; }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 900px) {
+            .bento-workstation-grid {
+                grid-template-columns: 1fr;
+            }
+            .bento-stages-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .bento-stages-row {
+                grid-template-columns: 1fr;
+            }
+            .header-brand {
+                flex-direction: column;
+                text-align: center;
+            }
+            .bento-header-card {
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <div class="header-logo">
-                <!-- SVG Logo Hoa Sen Hồng -->
-                <svg width="32" height="32" viewBox="0 0 64 64" fill="none">
-                    <path d="M32 14 C36 24 44 28 44 38 C44 46 38 50 32 50 C26 50 20 46 20 38 C20 28 28 24 32 14 Z" fill="#e11d48"/>
-                    <path d="M32 26 C38 32 48 34 50 42 C51 46 47 50 40 48 C36 44 34 38 32 26 Z" fill="#f43f5e" opacity="0.85"/>
-                    <path d="M32 26 C26 32 16 34 14 42 C13 46 17 50 24 48 C28 44 30 38 32 26 Z" fill="#f43f5e" opacity="0.85"/>
-                    <circle cx="32" cy="40" r="3" fill="#fef08a"/>
-                </svg>
-            </div>
-            <h1>ĐĂNG KÝ KHUÔN MẶT</h1>
-            <p>Hệ thống thu thập dữ liệu sinh trắc học 4 giai đoạn chuẩn AI (25 - 25 - 25 - 25)</p>
+    <!-- Top Navigation Bar -->
+    <nav class="top-nav">
+        <a href="index.html" class="nav-back-link">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            <span>Quay lại Bảng Điều Khiển Smart Home</span>
+        </a>
+        <div class="nav-badge-live">
+            <span class="live-dot"></span>
+            <span>TRẠM THU THẬP SINH TRẮC HỌC FACE ID</span>
         </div>
+    </nav>
 
-        <!-- 4 Giai đoạn (25 25 25 25) -->
-        <div class="stages-grid">
-            <div class="stage-pill active" id="pillStage1">
-                <span class="pill-num">BƯỚC 1</span>
-                <span class="pill-name">Đeo kính / Thẳng</span>
-                <span class="pill-count" id="pillCount1">0/25</span>
+    <!-- Bento Station Container -->
+    <main class="bento-station-wrapper">
+        <!-- Bento Header Card -->
+        <header class="bento-header-card">
+            <div class="header-brand">
+                <div class="header-logo-circle">
+                    <!-- SVG Logo Hoa Sen Hồng Đồng Bộ -->
+                    <svg width="34" height="34" viewBox="0 0 64 64" fill="none">
+                        <path d="M32 14 C36 24 44 28 44 38 C44 46 38 50 32 50 C26 50 20 46 20 38 C20 28 28 24 32 14 Z" fill="#e11d48"/>
+                        <path d="M32 26 C38 32 48 34 50 42 C51 46 47 50 40 48 C36 44 34 38 32 26 Z" fill="#f43f5e" opacity="0.85"/>
+                        <path d="M32 26 C26 32 16 34 14 42 C13 46 17 50 24 48 C28 44 30 38 32 26 Z" fill="#f43f5e" opacity="0.85"/>
+                        <circle cx="32" cy="40" r="3" fill="#fef08a"/>
+                    </svg>
+                </div>
+                <div class="header-texts">
+                    <h1>ĐĂNG KÝ KHUÔN MẶT</h1>
+                    <p>Thu thập 100 ảnh sinh trắc học chuẩn AI 4 giai đoạn (25 - 25 - 25 - 25) để nhận diện mở cửa tự động</p>
+                </div>
             </div>
-            <div class="stage-pill" id="pillStage2">
-                <span class="pill-num">BƯỚC 2</span>
-                <span class="pill-name">Đeo kính / Nghiêng</span>
-                <span class="pill-count" id="pillCount2">0/25</span>
+            <div class="header-stat-pill">
+                <span class="stat-label">Tổng chỉ tiêu:</span>
+                <span class="stat-number">100 Ảnh</span>
             </div>
-            <div class="stage-pill" id="pillStage3">
-                <span class="pill-num">BƯỚC 3</span>
-                <span class="pill-name">Tháo kính / Thẳng</span>
-                <span class="pill-count" id="pillCount3">0/25</span>
-            </div>
-            <div class="stage-pill" id="pillStage4">
-                <span class="pill-num">BƯỚC 4</span>
-                <span class="pill-name">Tháo kính / Cười</span>
-                <span class="pill-count" id="pillCount4">0/25</span>
-            </div>
-        </div>
+        </header>
 
-        <!-- Step Instructions -->
-        <div class="step-guide-box">
-            <div class="step-title" id="stepTitle">BƯỚC 1/4: ĐEO KÍNH (NẾU CÓ) - NHÌN THẲNG VÀO CAMERA</div>
-            <div class="step-desc" id="stepDesc">
-                Đeo kính (nếu bạn có đeo kính), giữ đầu thẳng tự nhiên và nhìn vào tâm ống kính camera.
-            </div>
-        </div>
-
-        <!-- Name Input -->
-        <div class="input-group" id="inputGroup">
-            <input type="text" id="ownerNameInput" placeholder="Nhập tên của bạn (Ví dụ: Hung, Tuan, KhachHang...)" value="KhachHang">
-        </div>
-
-        <!-- Video Camera Box (16:9 Widescreen) -->
-        <div class="camera-box">
-            <video id="webcam" playsinline autoplay muted></video>
-            <div class="cam-overlay">
-                <div class="face-oval" id="faceOval"></div>
+        <!-- Bento Row: 4 Giai Đoạn (25 25 25 25) -->
+        <section class="bento-stages-row">
+            <!-- Stage 1 -->
+            <div class="bento-stage-card active" id="pillStage1">
+                <div class="card-top">
+                    <span class="stage-tag">BƯỚC 1 (25 ẢNH)</span>
+                    <span class="stage-icon">👤</span>
+                </div>
+                <div class="stage-title">Đeo kính / Thẳng</div>
+                <div class="stage-progress-text" id="pillCount1">0 / 25 ảnh</div>
+                <div class="stage-bar">
+                    <div class="stage-bar-fill" id="stageBarFill1"></div>
+                </div>
             </div>
 
-            <!-- Overlay chuyển bước & Đếm ngược 3, 2, 1 -->
-            <div class="stage-countdown-overlay hidden" id="stageCountdownOverlay">
-                <span class="overlay-badge" id="overlayBadge">GIAI ĐOẠN 1 / 4</span>
-                <div class="overlay-title" id="overlayTitle">CHUẨN BỊ BƯỚC 1</div>
-                <div class="overlay-desc" id="overlayDesc">Hãy ngồi thẳng, nhìn vào ống kính camera</div>
-                <div class="countdown-number" id="countdownBigNumber">3</div>
-                <button class="btn-skip-countdown" id="btnSkipCountdown">BẮT ĐẦU CHỤP NGAY</button>
+            <!-- Stage 2 -->
+            <div class="bento-stage-card" id="pillStage2">
+                <div class="card-top">
+                    <span class="stage-tag">BƯỚC 2 (25 ẢNH)</span>
+                    <span class="stage-icon">🔄</span>
+                </div>
+                <div class="stage-title">Đeo kính / Nghiêng</div>
+                <div class="stage-progress-text" id="pillCount2">0 / 25 ảnh</div>
+                <div class="stage-bar">
+                    <div class="stage-bar-fill" id="stageBarFill2"></div>
+                </div>
             </div>
-        </div>
-        <canvas id="captureCanvas"></canvas>
 
-        <!-- Progress Bar -->
-        <div class="progress-box">
-            <div class="progress-labels">
-                <span id="progressText">Sẵn sàng thu thập 100 ảnh</span>
-                <strong id="counterText">0 / 100 ảnh (0%)</strong>
+            <!-- Stage 3 -->
+            <div class="bento-stage-card" id="pillStage3">
+                <div class="card-top">
+                    <span class="stage-tag">BƯỚC 3 (25 ẢNH)</span>
+                    <span class="stage-icon">👓</span>
+                </div>
+                <div class="stage-title">Tháo kính / Thẳng</div>
+                <div class="stage-progress-text" id="pillCount3">0 / 25 ảnh</div>
+                <div class="stage-bar">
+                    <div class="stage-bar-fill" id="stageBarFill3"></div>
+                </div>
             </div>
-            <div class="progress-track">
-                <div class="progress-fill" id="progressFill"></div>
-            </div>
-        </div>
 
-        <!-- Main Action Button (Đã xóa bỏ icon tia sét) -->
-        <button class="btn btn-primary" id="btnStartCapture">
-            BẮT ĐẦU THU THẬP 100 ẢNH (4 GIAI ĐOẠN)
-        </button>
+            <!-- Stage 4 -->
+            <div class="bento-stage-card" id="pillStage4">
+                <div class="card-top">
+                    <span class="stage-tag">BƯỚC 4 (25 ẢNH)</span>
+                    <span class="stage-icon">😊</span>
+                </div>
+                <div class="stage-title">Tháo kính / Cười</div>
+                <div class="stage-progress-text" id="pillCount4">0 / 25 ảnh</div>
+                <div class="stage-bar">
+                    <div class="stage-bar-fill" id="stageBarFill4"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bento Grid Workstation (Camera + Telemetry) -->
+        <section class="bento-workstation-grid">
+            <!-- Left Column: Camera Viewport -->
+            <div class="bento-camera-card">
+                <div class="camera-viewport">
+                    <video id="webcam" playsinline autoplay muted></video>
+                    
+                    <!-- HUD Brackets & Face Oval Guide -->
+                    <div class="cam-hud-overlay">
+                        <div class="hud-corner c-tl"></div>
+                        <div class="hud-corner c-tr"></div>
+                        <div class="hud-corner c-bl"></div>
+                        <div class="hud-corner c-br"></div>
+                        <div class="face-oval-guide" id="faceOval"></div>
+                    </div>
+
+                    <!-- Overlay chuyển bước & Đếm ngược 3, 2, 1 -->
+                    <div class="stage-countdown-overlay hidden" id="stageCountdownOverlay">
+                        <span class="overlay-badge" id="overlayBadge">GIAI ĐOẠN 1 / 4</span>
+                        <div class="overlay-title" id="overlayTitle">CHUẨN BỊ BƯỚC 1</div>
+                        <div class="overlay-desc" id="overlayDesc">Hãy ngồi thẳng, nhìn vào ống kính camera</div>
+                        <div class="countdown-number" id="countdownBigNumber">3</div>
+                        <button class="btn-skip-countdown" id="btnSkipCountdown">BẮT ĐẦU CHỤP NGAY</button>
+                    </div>
+                </div>
+                <canvas id="captureCanvas"></canvas>
+
+                <!-- Action Button -->
+                <button class="btn-action-primary" id="btnStartCapture">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    <span>BẮT ĐẦU THU THẬP 100 ẢNH (4 GIAI ĐOẠN)</span>
+                </button>
+            </div>
+
+            <!-- Right Column: Bento Telemetry Column -->
+            <div class="bento-telemetry-column">
+                <!-- Info Card 1: Tên Hồ Sơ -->
+                <div class="bento-info-card">
+                    <div class="info-card-header">
+                        <span class="info-card-title">Tên hồ sơ chủ nhà</span>
+                        <span class="info-card-badge">Bắt buộc</span>
+                    </div>
+                    <div class="profile-input-box">
+                        <input type="text" id="ownerNameInput" placeholder="Ví dụ: chu_nha, van_a, tuan..." value="chu_nha">
+                    </div>
+                </div>
+
+                <!-- Info Card 2: Hướng Dẫn Tư Thế Hiện Tại -->
+                <div class="bento-info-card">
+                    <div class="info-card-header">
+                        <span class="info-card-title">Chỉ dẫn tư thế</span>
+                        <span class="info-card-badge" id="stageStepBadge">Bước 1/4</span>
+                    </div>
+                    <div class="live-guide-content">
+                        <div class="live-guide-title" id="stepTitle">BƯỚC 1/4: ĐEO KÍNH (NẾU CÓ) - NHÌN THẲNG</div>
+                        <div class="live-guide-desc" id="stepDesc">
+                            Đeo kính (nếu bạn có đeo kính), giữ đầu thẳng tự nhiên và nhìn vào tâm ống kính camera.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info Card 3: Tiến Trình Tổng Quan -->
+                <div class="bento-info-card">
+                    <div class="info-card-header">
+                        <span class="info-card-title">Tiến trình thu thập</span>
+                        <span class="info-card-badge" id="progressPctBadge">0%</span>
+                    </div>
+                    <div class="progress-stat-row">
+                        <span id="progressText">Sẵn sàng thu thập</span>
+                        <strong id="counterText">0 / 100 ảnh</strong>
+                    </div>
+                    <div class="main-progress-track">
+                        <div class="main-progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-subtext" id="progressSubDetail">Hệ thống sẽ tự động chụp 25 ảnh mỗi giai đoạn (tổng 100 ảnh)</div>
+                </div>
+
+                <!-- Info Card 4: Tiêu Chuẩn Sinh Trắc Học -->
+                <div class="bento-info-card">
+                    <div class="info-card-header">
+                        <span class="info-card-title">Tiêu chuẩn nhận diện</span>
+                        <span class="info-card-badge">AI Guidance</span>
+                    </div>
+                    <ul class="tips-list">
+                        <li>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            Ánh sáng đồng đều, tránh ngược sáng mạnh
+                        </li>
+                        <li>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            Giữ khoảng cách 50cm – 70cm so với camera
+                        </li>
+                        <li>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            Đưa khuôn mặt vào giữa khung bầu dục viền đỏ
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
 
         <!-- Success Result Box -->
-        <div class="success-box hidden" id="successBox">
-            <h3>ĐÃ THU THẬP ĐỦ 100 ẢNH SINH TRẮC HỌC!</h3>
-            <p>Trình duyệt đã tự động tải xuống file: <strong id="zipFileName">dataset_khach.zip</strong>.</p>
-            <p style="margin-top: 8px; color: var(--color-primary-dark);">
-                Bạn vui lòng gửi file <code>.zip</code> này cho kỹ thuật viên qua <strong>Zalo</strong> để nạp vào hệ thống nhận diện mở cửa nhé!
+        <section class="success-bento-card hidden" id="successBox">
+            <h3>ĐÃ THU THẬP ĐỦ 100 ẢNH SINH TRẮC HỌC CHUẨN XÁC!</h3>
+            <p>Trình duyệt đã tự động tải xuống file nén: <strong id="zipFileName" style="color: var(--color-primary-dark);">dataset_chu_nha.zip</strong>.</p>
+            <p>
+                File zip này chứa đầy đủ 100 ảnh 4 tư thế chuẩn AI. Bạn chỉ cần gửi file này hoặc giải nén vào thư mục <code>ai_module/dataset/chu_nha/</code> để mô hình nhận diện hoạt động!
             </p>
-            <button class="btn btn-success" id="btnDownloadAgain">
+            <button class="btn-download-again" id="btnDownloadAgain">
                 BẤM ĐỂ TẢI LẠI FILE ZIP NẾU CHƯA TẢI ĐƯỢC
             </button>
-        </div>
-    </div>
+        </section>
+    </main>
 
     <script>
         const video = document.getElementById('webcam');
@@ -562,11 +970,14 @@
         const progressText = document.getElementById('progressText');
         const counterText = document.getElementById('counterText');
         const progressFill = document.getElementById('progressFill');
+        const progressPctBadge = document.getElementById('progressPctBadge');
+        const progressSubDetail = document.getElementById('progressSubDetail');
         const successBox = document.getElementById('successBox');
         const zipFileNameLabel = document.getElementById('zipFileName');
         const btnDownloadAgain = document.getElementById('btnDownloadAgain');
         const stepTitle = document.getElementById('stepTitle');
         const stepDesc = document.getElementById('stepDesc');
+        const stageStepBadge = document.getElementById('stageStepBadge');
 
         // Overlay elements
         const stageCountdownOverlay = document.getElementById('stageCountdownOverlay');
@@ -576,7 +987,7 @@
         const countdownBigNumber = document.getElementById('countdownBigNumber');
         const btnSkipCountdown = document.getElementById('btnSkipCountdown');
 
-        // Stage Pills
+        // Stage Pills & Bars
         const pills = [
             document.getElementById('pillStage1'),
             document.getElementById('pillStage2'),
@@ -588,6 +999,12 @@
             document.getElementById('pillCount2'),
             document.getElementById('pillCount3'),
             document.getElementById('pillCount4')
+        ];
+        const stageBarFills = [
+            document.getElementById('stageBarFill1'),
+            document.getElementById('stageBarFill2'),
+            document.getElementById('stageBarFill3'),
+            document.getElementById('stageBarFill4')
         ];
 
         // 4 Giai đoạn chuẩn theo dang_ky_chu_nha.py (25 - 25 - 25 - 25)
@@ -675,7 +1092,6 @@
             try {
                 if (!('speechSynthesis' in window)) return;
                 const voices = window.speechSynthesis.getVoices();
-                // Tìm giọng nói có mã tiếng Việt (vi, vi-VN)
                 const viVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('vi'));
                 
                 if (viVoice) {
@@ -686,13 +1102,11 @@
                     utter.rate = 1.0;
                     window.speechSynthesis.speak(utter);
                 } else {
-                    // Nếu máy tính/trình duyệt không cài tiếng Việt, phát chuông báo du dương thay vì đọc sai tiếng Anh
                     playStageChime();
                 }
             } catch(e) {}
         }
 
-        // Đảm bảo tải danh sách voice sẵn sàng
         if ('speechSynthesis' in window) {
             window.speechSynthesis.onvoiceschanged = () => {
                 window.speechSynthesis.getVoices();
@@ -723,19 +1137,19 @@
             overlayDesc.textContent = stage.prepDesc;
             stepTitle.textContent = stage.title;
             stepDesc.textContent = stage.desc;
+            stageStepBadge.textContent = `Bước ${stage.id}/4`;
 
-            // Đổi màu Pill trạng thái
+            // Cập nhật Bento Stage Cards
             pills.forEach((p, idx) => {
                 if (idx === stage.id - 1) {
-                    p.className = "stage-pill active";
+                    p.className = "bento-stage-card active";
                 } else if (idx < stage.id - 1) {
-                    p.className = "stage-pill completed";
+                    p.className = "bento-stage-card completed";
                 } else {
-                    p.className = "stage-pill";
+                    p.className = "bento-stage-card";
                 }
             });
 
-            // Chuông báo hoặc đọc hướng dẫn chuẩn tiếng Việt
             playStageChime();
             speakPrompt(stage.voiceText);
 
@@ -771,7 +1185,7 @@
 
         btnStartCapture.addEventListener('click', async () => {
             if (isRunning) return;
-            const name = ownerNameInput.value.trim().toLowerCase().replace(/\s+/g, '_') || "khach_hang";
+            const name = ownerNameInput.value.trim().toLowerCase().replace(/\s+/g, '_') || "chu_nha";
             finalZipName = `dataset_${name}.zip`;
 
             isRunning = true;
@@ -836,9 +1250,11 @@
                     // Cập nhật UI
                     const progressPct = Math.round((totalCount / totalTarget) * 100);
                     progressFill.style.width = `${progressPct}%`;
-                    counterText.textContent = `${totalCount} / ${totalTarget} ảnh (${progressPct}%)`;
+                    progressPctBadge.textContent = `${progressPct}%`;
+                    counterText.textContent = `${totalCount} / ${totalTarget} ảnh`;
                     progressText.textContent = `Đang chụp ${stage.title.split(':')[0]} (${stageShotCount}/25)...`;
-                    pillCounts[stageIdx].textContent = `${stageShotCount}/25`;
+                    pillCounts[stageIdx].textContent = `${stageShotCount} / 25 ảnh`;
+                    stageBarFills[stageIdx].style.width = `${(stageShotCount / 25) * 100}%`;
 
                     if (totalCount % 5 === 0) {
                         playBeep(980, 0.04);
@@ -847,15 +1263,17 @@
                     await sleep(captureIntervalMs);
                 }
 
-                pills[stageIdx].className = "stage-pill completed";
-                pillCounts[stageIdx].textContent = `25/25 ✓`;
+                pills[stageIdx].className = "bento-stage-card completed";
+                pillCounts[stageIdx].textContent = `25 / 25 ảnh ✓`;
+                stageBarFills[stageIdx].style.width = `100%`;
                 playStageChime();
             }
 
             // HOÀN TẤT 100 ẢNH
             isRunning = false;
             faceOval.classList.remove('capturing');
-            progressText.textContent = "Đang đóng gói file ZIP...";
+            progressText.textContent = "Đang nén file ZIP sinh trắc học...";
+            progressSubDetail.textContent = "Hoàn thành 100/100 ảnh. Đang xuất file zip tự động.";
 
             // Chuông hoàn tất vui tươi
             playChimeTone(523.25, 0.15, 0.0);
@@ -867,11 +1285,17 @@
                 generatedZipBlob = content;
                 saveAs(content, finalZipName);
 
-                progressText.textContent = "Đã hoàn thành xuất sắc 100 ảnh!";
+                progressText.textContent = "Đã thu thập đủ 100 ảnh!";
                 zipFileNameLabel.textContent = finalZipName;
                 successBox.classList.remove('hidden');
                 btnStartCapture.disabled = false;
-                btnStartCapture.textContent = "CHỤP LẠI NẾU MUỐN";
+                btnStartCapture.innerHTML = `
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="23 4 23 10 17 10"></polyline>
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                    </svg>
+                    <span>CHỤP LẠI NẾU BẠN MUỐN</span>
+                `;
             });
         });
 
