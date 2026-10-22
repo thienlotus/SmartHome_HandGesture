@@ -17,8 +17,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <!-- MediaPipe Hands CDN -->
+    <!-- MediaPipe Vision: Camera Utils, Face Mesh & Hands CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="style.css?v=20261022_5050">
 </head>
@@ -61,6 +62,10 @@
 
             <!-- Telemetry Badges -->
             <div class="header-telemetry">
+                <div class="badge status-badge" id="pythonSyncBadge" title="Đồng bộ thời gian thực với Bat_camera_AI.bat (Python Deep Learning SFace)">
+                    <span class="dot dot-danger" id="pythonSyncDot"></span>
+                    <span id="pythonSyncText">PYTHON AI: SẴN SÀNG</span>
+                </div>
                 <div class="badge status-badge" id="arduinoBadge">
                     <span class="dot dot-danger" id="arduinoDot"></span>
                     <span id="arduinoStatusText">ARDUINO: CHƯA KẾT NỐI</span>

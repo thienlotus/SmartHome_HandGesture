@@ -22,6 +22,17 @@ if hasattr(sys.stderr, 'reconfigure'):
 # Tuyệt đối không phát âm thanh trên loa laptop
 
 # ====================================================================
+# 0. KHỞI CHẠY WEBSOCKET BRIDGE ĐỒNG BỘ THỜI GIAN THỰC VỚI WEB APP
+# ====================================================================
+try:
+    import web_sync
+    web_sync.start_sync_server(host="127.0.0.1", port=8765)
+    web_sync_available = True
+except Exception as e:
+    web_sync_available = False
+    print(f"Warning: Khong the khoi tao web_sync: {e}")
+
+# ====================================================================
 # 1. KẾT NỐI SERIAL VỚI ARDUINO UNO (TỰ ĐỘNG QUÉT CỔNG COM)
 # ====================================================================
 def get_arduino_port():
@@ -1025,6 +1036,53 @@ while cap.isOpened() and not exit_requested:
             arduino_connected = False
 
     # -------------------------------------------------------------
+    # XỬ LÝ LỆNH TỪ GIAO DIỆN WEB (NẾU ĐANG KẾT NỐI ĐỒNG BỘ WEBSOCKET)
+    # -------------------------------------------------------------
+    if web_sync_available:
+        try:
+            incoming_cmds = web_sync.get_pending_commands()
+            for cmd_obj in incoming_cmds:
+                c = cmd_obj.get("cmd")
+                if c == 'SCAN_FACE' and current_app_state == STATE_FACE_GATE:
+                    start_face_scan()
+                elif c == 'LOCK_HOME' and current_app_state == STATE_HOME_DASHBOARD:
+                    if ser:
+                        try:
+                            ser.write(b'C')
+                            ser.flush()
+                        except Exception: pass
+                    door_is_open = False
+                    device_status["Cua"] = "CLOSED"
+                    switch_state(STATE_FACE_GATE, frame)
+                elif c in ['O', 'C', 'A', 'B', '1', '2', '3', '4', 'G', 'S']:
+                    if ser:
+                        try:
+                            ser.write(c.encode())
+                            ser.flush()
+                        except Exception: pass
+                    if c == 'O':
+                        door_is_open = True
+                        device_status["Cua"] = "OPEN"
+                    elif c == 'C':
+                        door_is_open = False
+                        device_status["Cua"] = "CLOSED"
+                    elif c == '1':
+                        device_status["Den"] = "ON"
+                    elif c == '2':
+                        device_status["Den"] = "OFF"
+                    elif c == '3':
+                        device_status["Quat"] = "ON"
+                    elif c == '4':
+                        device_status["Quat"] = "OFF"
+                    elif c == 'B':
+                        for dev in ["Den", "Quat", "TV"]: device_status[dev] = "OFF"
+                        device_status["Rem"] = "DOWN"
+                        device_status["Cua"] = "CLOSED"
+                        door_is_open = False
+        except Exception:
+            pass
+
+    # -------------------------------------------------------------
     # A. XỬ LÝ THEO 3 TRẠNG THÁI GIAO DIỆN (STATE MACHINE)
     # -------------------------------------------------------------
     has_owner = False
@@ -1576,6 +1634,30 @@ while cap.isOpened() and not exit_requested:
     # E. RENDER TOÀN BỘ TIẾNG VIỆT CÓ DẤU (SINGLE-PASS PIL OVERLAY)
     # -------------------------------------------------------------
     frame = flush_vn_text(frame)
+
+    # -------------------------------------------------------------
+    # F. PHÁT SÓNG ĐỒNG BỘ TRẠNG THÁI AI SANG WEB APP THỜI GIAN THỰC (60 FPS)
+    # -------------------------------------------------------------
+    if web_sync_available and (frame_idx % 2 == 0):
+        try:
+            web_sync.broadcast_state({
+                "scene": 1 if current_app_state == STATE_FACE_GATE else (2 if current_app_state == STATE_HOME_DASHBOARD else 3),
+                "state_name": current_app_state,
+                "gate_scanning": gate_scanning,
+                "green_cnt": gate_green_frames,
+                "red_cnt": gate_red_frames,
+                "has_owner": has_owner,
+                "has_stranger": has_stranger,
+                "detected_name": detected_owner_name if has_owner else ("NGƯỜI LẠ" if has_stranger else ""),
+                "conf_score": active_conf_score,
+                "door_open": door_is_open,
+                "devices": device_status,
+                "alarm": alarm_active,
+                "gesture": last_executed_gesture,
+                "arduino_connected": arduino_connected
+            })
+        except Exception:
+            pass
 
     cv2.imshow("Smart Home AI Dashboard", frame)
     

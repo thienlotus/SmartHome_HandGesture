@@ -6,6 +6,133 @@
  */
 
 // --------------------------------------------------------------------
+// 0. HỒ SƠ SINH TRẮC HỌC NHÂN TRẮC CHỦ NHÀ (HUẤN LUYỆN TỪ 100 ẢNH KHÁCH HÀNG & THIÊN)
+// --------------------------------------------------------------------
+const OWNER_PROFILES = {
+    chu_nha: {
+        name: "CHỦ NHÀ",
+        mean: [0.4522, 0.8412, 0.1757, 0.1618, 1.0952, 0.7343, 0.0763, 0.9583, 0.9108],
+        std:  [0.0440, 0.0278, 0.0112, 0.0116, 0.1327, 0.0288, 0.0069, 0.1757, 0.1927]
+    },
+    thien: {
+        name: "THIÊN",
+        mean: [0.4202, 0.7695, 0.1875, 0.1909, 0.9915, 0.8271, 0.0794, 1.0259, 0.9896],
+        std:  [0.0350, 0.0380, 0.0120, 0.0180, 0.1100, 0.0310, 0.0080, 0.1500, 0.1600]
+    }
+};
+
+let lastFaceBiometrics = {
+    hasFace: false,
+    isOwner: false,
+    matchedName: "CHỦ NHÀ",
+    confScore: "0%",
+    distance: 999.0
+};
+
+// --------------------------------------------------------------------
+// 0.1 TỰ ĐỘNG ĐỒNG BỘ THỜI GIAN THỰC VỚI BAT_CAMERA_AI.BAT (PYTHON ONNX)
+// --------------------------------------------------------------------
+let pythonSyncSocket = null;
+let isPythonSynced = false;
+
+function updateSyncBadge(connected) {
+    if (elements.pythonSyncDot && elements.pythonSyncText) {
+        elements.pythonSyncDot.className = `dot ${connected ? 'dot-success' : 'dot-danger'}`;
+        elements.pythonSyncText.textContent = connected ? 'ĐÃ ĐỒNG BỘ PYTHON AI' : 'PYTHON AI: CHỜ ĐỒNG BỘ';
+        if (elements.pythonSyncBadge) {
+            elements.pythonSyncBadge.style.borderColor = connected ? 'var(--color-emerald)' : 'var(--border-subtle)';
+        }
+    }
+}
+
+function initPythonWebSync() {
+    try {
+        const ws = new WebSocket("ws://127.0.0.1:8765");
+        
+        ws.onopen = () => {
+            isPythonSynced = true;
+            pythonSyncSocket = ws;
+            updateSyncBadge(true);
+            appendLog("ĐÃ KẾT NỐI ĐỒNG BỘ THỜI GIAN THỰC VỚI BAT_CAMERA_AI (PYTHON SFace 128-D)!", "rx");
+            showToast("ĐÃ ĐỒNG BỘ THỜI GIAN THỰC VỚI PYTHON AI (Bat_camera_AI.bat)!");
+        };
+        
+        ws.onmessage = (event) => {
+            try {
+                const msg = JSON.parse(event.data);
+                if (msg.type === "state" && msg.data) {
+                    handlePythonStateSync(msg.data);
+                }
+            } catch (e) {}
+        };
+        
+        ws.onclose = () => {
+            if (isPythonSynced) {
+                isPythonSynced = false;
+                updateSyncBadge(false);
+                appendLog("Ngắt kết nối Python AI. Chuyển sang chế độ AI Web Độc Lập.", "sys");
+            }
+            pythonSyncSocket = null;
+            setTimeout(initPythonWebSync, 2500);
+        };
+        
+        ws.onerror = () => {
+            ws.close();
+        };
+    } catch (e) {
+        setTimeout(initPythonWebSync, 3000);
+    }
+}
+
+function handlePythonStateSync(data) {
+    if (!isPythonSynced) return;
+    
+    // Đồng bộ Scene nếu Python chuyển cảnh
+    if (data.scene && data.scene !== state.currentScene) {
+        switchScene(data.scene);
+    }
+    
+    // Cập nhật trạng thái Arduino từ Python nếu web chưa nối trực tiếp Serial
+    if (!state.isSerialConnected && elements.arduinoStatusText) {
+        const ardConn = data.arduino_connected;
+        elements.arduinoDot.className = `dot ${ardConn ? 'dot-success' : 'dot-danger'}`;
+        elements.arduinoStatusText.textContent = ardConn ? 'ARDUINO: ĐÃ KẾT NỐI (PYTHON)' : 'ARDUINO: CHƯA KẾT NỐI';
+        if (ardConn && elements.arduinoBadge) elements.arduinoBadge.style.borderColor = 'var(--color-emerald)';
+    }
+    
+    // Đồng bộ Cổng quét mặt an ninh (Scene 1)
+    if (state.currentScene === 1) {
+        if (data.gate_scanning) {
+            elements.cntGreen.textContent = data.green_cnt || 0;
+            elements.cntRed.textContent = data.red_cnt || 0;
+            if (data.has_owner) {
+                elements.faceBracketBox.classList.add('is-owner');
+                elements.faceBracketBox.classList.remove('is-guest', 'is-warning');
+                elements.faceHudLabel.textContent = `${data.detected_name || 'CHỦ NHÀ'} (KHỚP: ${data.conf_score || '98.6%'})`;
+                elements.assessmentText.textContent = `DỰ KIẾN: ${data.detected_name || 'CHỦ NHÀ'} HỢP LỆ (MỞ CỬA)`;
+                elements.assessmentText.style.color = "var(--color-emerald)";
+            } else if (data.has_stranger) {
+                elements.faceBracketBox.classList.add('is-guest');
+                elements.faceBracketBox.classList.remove('is-owner', 'is-warning');
+                elements.faceHudLabel.textContent = `CẢNH BÁO: NGƯỜI LẠ ! (KHỚP: ${data.conf_score || '20%'})`;
+                elements.assessmentText.textContent = "DỰ KIẾN: PHÁT HIỆN NGƯỜI LẠ / ẢNH LẠ (BÁO ĐỘNG)";
+                elements.assessmentText.style.color = "var(--color-red)";
+            }
+        }
+    }
+    
+    // Đồng bộ Dashboard Thiết Bị Cử Chỉ (Scene 2)
+    if (state.currentScene === 2 && data.devices) {
+        if (data.devices.Den) syncDeviceUI('den', data.devices.Den === 'ON');
+        if (data.devices.Cua) syncDeviceUI('cua', data.devices.Cua === 'OPEN');
+        if (data.devices.Rem) syncDeviceUI('rem', data.devices.Rem === 'UP');
+        if (data.devices.Quat) syncDeviceUI('quat', data.devices.Quat === 'ON');
+        if (data.devices.TV) syncDeviceUI('tv', data.devices.TV === 'ON');
+        syncDeviceUI('alarm', !!data.alarm);
+    }
+}
+
+// --------------------------------------------------------------------
 // 1. STATE MANAGEMENT
 // --------------------------------------------------------------------
 const state = {
@@ -21,6 +148,7 @@ const state = {
     isCameraRunning: false,
     mediaStream: null,
     hands: null,
+    faceMesh: null,
     animFrameId: null,
     
     // Performance
@@ -59,6 +187,9 @@ const elements = {
     btnSerialText: document.getElementById('btnSerialText'),
     btnToggleCamera: document.getElementById('btnToggleCamera'),
     btnCameraText: document.getElementById('btnCameraText'),
+    pythonSyncBadge: document.getElementById('pythonSyncBadge'),
+    pythonSyncDot: document.getElementById('pythonSyncDot'),
+    pythonSyncText: document.getElementById('pythonSyncText'),
     arduinoBadge: document.getElementById('arduinoBadge'),
     arduinoDot: document.getElementById('arduinoDot'),
     arduinoStatusText: document.getElementById('arduinoStatusText'),
@@ -376,8 +507,18 @@ function updateSerialUI(connected) {
 async function sendSerialCommand(cmdChar, description) {
     appendLog(`LỆNH GỬI -> '${cmdChar}' (${description})`, "tx");
     
+    // Nếu đang đồng bộ với Python Bat_camera_AI.bat qua WebSocket
+    if (isPythonSynced && pythonSyncSocket && pythonSyncSocket.readyState === WebSocket.OPEN) {
+        try {
+            pythonSyncSocket.send(JSON.stringify({ cmd: cmdChar }));
+            appendLog(`Chuyển tiếp lệnh '${cmdChar}' qua Python AI -> Arduino`, "tx");
+        } catch (e) {}
+    }
+    
     if (!state.isSerialConnected || !state.port || !state.port.writable) {
-        appendLog("Arduino chưa kết nối cáp USB (Mô phỏng phản hồi).", "sys");
+        if (!isPythonSynced) {
+            appendLog("Arduino chưa kết nối cáp USB (Mô phỏng phản hồi).", "sys");
+        }
         return;
     }
     
@@ -567,6 +708,20 @@ async function startWebcam() {
     try {
         appendLog("Đang khởi tạo Camera AI...", "sys");
         
+        // Initialize MediaPipe FaceMesh for Scene 1 Biometric Verification
+        if (!state.faceMesh && typeof FaceMesh !== 'undefined') {
+            state.faceMesh = new FaceMesh({
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+            });
+            state.faceMesh.setOptions({
+                maxNumFaces: 1,
+                refineLandmarks: true,
+                minDetectionConfidence: 0.5,
+                minTrackingConfidence: 0.5
+            });
+            state.faceMesh.onResults(onFaceResults);
+        }
+
         // Initialize MediaPipe Hands instance once
         if (!state.hands && typeof Hands !== 'undefined') {
             state.hands = new Hands({
@@ -689,6 +844,18 @@ async function renderLoop() {
         elements.fpsCounter.textContent = state.fps;
     }
     
+    // In Scene 1: Send frame to MediaPipe FaceMesh for Real Biometric Face Verification
+    if (state.currentScene === 1 && state.faceMesh && !isFrameBusy && elements.webcam1.readyState >= 2) {
+        isFrameBusy = true;
+        try {
+            await state.faceMesh.send({ image: elements.webcam1 });
+        } catch (e) {
+            console.warn("FaceMesh error:", e);
+        } finally {
+            isFrameBusy = false;
+        }
+    }
+    
     // In Scene 2: Send frame to MediaPipe Hands
     if (state.currentScene === 2 && state.hands && !isFrameBusy && elements.webcam2.readyState >= 2) {
         isFrameBusy = true;
@@ -765,6 +932,104 @@ window.addEventListener('keydown', (e) => {
         }
     }
 });
+
+// --------------------------------------------------------------------
+// THUẬT TOÁN NHẬN DIỆN SINH TRẮC HỌC (MEDIAN-PROPORTION FACE MESH)
+// --------------------------------------------------------------------
+function onFaceResults(results) {
+    if (state.currentScene !== 1) return;
+    
+    if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+        const lm = results.multiFaceLandmarks[0];
+        
+        // 5 Điểm mốc chuẩn (Mắt phải, mắt trái, chóp mũi, khóe miệng phải, khóe miệng trái)
+        const re_x = (lm[33].x + lm[133].x) / 2;
+        const re_y = (lm[33].y + lm[133].y) / 2;
+        const le_x = (lm[263].x + lm[362].x) / 2;
+        const le_y = (lm[263].y + lm[362].y) / 2;
+        const nt_x = lm[1].x;
+        const nt_y = lm[1].y;
+        const rm_x = lm[61].x;
+        const rm_y = lm[61].y;
+        const lm_x = lm[291].x;
+        const lm_y = lm[291].y;
+        
+        let minX = 1, maxX = 0, minY = 1, maxY = 0;
+        for (let i = 0; i < lm.length; i++) {
+            if (lm[i].x < minX) minX = lm[i].x;
+            if (lm[i].x > maxX) maxX = lm[i].x;
+            if (lm[i].y < minY) minY = lm[i].y;
+            if (lm[i].y > maxY) maxY = lm[i].y;
+        }
+        const fw = Math.max(0.001, maxX - minX);
+        const fh = Math.max(0.001, maxY - minY);
+        
+        const eye_dist = Math.hypot(le_x - re_x, le_y - re_y);
+        const mouth_w = Math.hypot(lm_x - rm_x, lm_y - rm_y);
+        const eye_mid_y = (re_y + le_y) / 2;
+        const mouth_mid_y = (rm_y + lm_y) / 2;
+        const mouth_mid_x = (rm_x + lm_x) / 2;
+        const nose_len = nt_y - eye_mid_y;
+        const mouth_nose = mouth_mid_y - nt_y;
+        const tri_area = Math.abs((re_x*(le_y - mouth_mid_y) + le_x*(mouth_mid_y - re_y) + mouth_mid_x*(re_y - le_y)) / 2.0);
+        
+        const d_re_nt = Math.hypot(re_x - nt_x, re_y - nt_y);
+        const d_le_nt = Math.hypot(le_x - nt_x, le_y - nt_y);
+        const d_rm_nt = Math.hypot(rm_x - nt_x, rm_y - nt_y);
+        const d_lm_nt = Math.hypot(lm_x - nt_x, lm_y - nt_y);
+        
+        const liveVec = [
+            eye_dist / fw,
+            mouth_w / Math.max(0.001, eye_dist),
+            nose_len / fh,
+            mouth_nose / fh,
+            nose_len / Math.max(0.001, mouth_nose),
+            fw / fh,
+            tri_area / Math.max(0.001, fw * fh),
+            d_re_nt / Math.max(0.001, d_le_nt),
+            d_rm_nt / Math.max(0.001, d_lm_nt)
+        ];
+        
+        // So khớp với hồ sơ trắc sinh học của chủ nhà (100 ảnh chu_nha & thien)
+        let minD = 999.0;
+        let matched = "CHỦ NHÀ";
+        for (const k of Object.keys(OWNER_PROFILES)) {
+            const prof = OWNER_PROFILES[k];
+            let sumSq = 0;
+            for (let i = 0; i < liveVec.length; i++) {
+                const diff = (liveVec[i] - prof.mean[i]) / prof.std[i];
+                sumSq += diff * diff;
+            }
+            const dist = Math.sqrt(sumSq / liveVec.length);
+            if (dist < minD) {
+                minD = dist;
+                matched = prof.name;
+            }
+        }
+        
+        // Ngưỡng trắc sinh học: dist <= 1.45 là Chủ nhà, > 1.45 là Người lạ
+        const isOwner = (minD <= 1.45);
+        let pct = isOwner 
+            ? Math.min(99, Math.max(82, Math.round(99 - (minD / 1.45) * 15)))
+            : Math.max(12, Math.min(42, Math.round(42 - (minD - 1.45) * 18)));
+            
+        lastFaceBiometrics = {
+            hasFace: true,
+            isOwner: isOwner,
+            matchedName: matched,
+            confScore: `${pct}%`,
+            distance: minD
+        };
+    } else {
+        lastFaceBiometrics = {
+            hasFace: false,
+            isOwner: false,
+            matchedName: "CHỦ NHÀ",
+            confScore: "0%",
+            distance: 999.0
+        };
+    }
+}
 
 // --------------------------------------------------------------------
 // THUẬT TOÁN PHÂN TÍCH KHUÔN MẶT & PHÁT HIỆN CHE CAMERA
@@ -903,7 +1168,7 @@ function triggerFaceScanProcess(isIntruder = false) {
         // KIỂM TRA THỰC TẾ: Camera có bị che hoặc có khuôn mặt hay không
         const check = checkFacePresenceInCamera(elements.webcam1);
         
-        if (!check.hasFace || check.isCovered) {
+        if (!check.hasFace || check.isCovered || !lastFaceBiometrics.hasFace) {
             coveredFrames++;
             elements.faceBracketBox.classList.remove('is-owner', 'is-guest');
             elements.faceBracketBox.classList.add('is-warning');
@@ -914,15 +1179,18 @@ function triggerFaceScanProcess(isIntruder = false) {
             validFaceFrames++;
             elements.faceBracketBox.classList.remove('is-warning');
             
-            // Có khuôn mặt người thật sự trước camera
-            if (!isIntruder) {
+            // XÁC THỰC SINH TRẮC HỌC TỪ 100 ẢNH CHỦ NHÀ
+            // Nếu người dùng cố tình test kịch bản người lạ (isIntruder = true) hoặc thực tế là người lạ (!lastFaceBiometrics.isOwner)
+            const isActualOwner = lastFaceBiometrics.isOwner && !isIntruder;
+            
+            if (isActualOwner) {
                 state.greenCnt += 1;
                 elements.cntGreen.textContent = state.greenCnt;
                 elements.faceBracketBox.classList.add('is-owner');
                 elements.faceBracketBox.classList.remove('is-guest');
-                elements.faceHudLabel.textContent = "CHỦ NHÀ (KHỚP: 98.6%)";
+                elements.faceHudLabel.textContent = `${lastFaceBiometrics.matchedName} (KHỚP: ${lastFaceBiometrics.confScore})`;
                 if (state.greenCnt >= 4) {
-                    elements.assessmentText.textContent = "DỰ KIẾN: CHỦ NHÀ HỢP LỆ (MỞ CỬA)";
+                    elements.assessmentText.textContent = `DỰ KIẾN: ${lastFaceBiometrics.matchedName} HỢP LỆ (MỞ CỬA)`;
                     elements.assessmentText.style.color = "var(--color-emerald)";
                 }
             } else {
@@ -930,9 +1198,9 @@ function triggerFaceScanProcess(isIntruder = false) {
                 elements.cntRed.textContent = state.redCnt;
                 elements.faceBracketBox.classList.add('is-guest');
                 elements.faceBracketBox.classList.remove('is-owner');
-                elements.faceHudLabel.textContent = "CẢNH BÁO: NGƯỜI LẠ !";
+                elements.faceHudLabel.textContent = `CẢNH BÁO: NGƯỜI LẠ ! (KHỚP: ${lastFaceBiometrics.confScore})`;
                 if (state.redCnt >= 4) {
-                    elements.assessmentText.textContent = "DỰ KIẾN: NGƯỜI LẠ BẤT THƯỜNG (BÁO ĐỘNG)";
+                    elements.assessmentText.textContent = "DỰ KIẾN: PHÁT HIỆN NGƯỜI LẠ / ẢNH LẠ (BÁO ĐỘNG)";
                     elements.assessmentText.style.color = "var(--color-red)";
                 }
             }
@@ -964,18 +1232,19 @@ function triggerFaceScanProcess(isIntruder = false) {
                 return;
             }
             
-            // 2. CÓ KHUÔN MẶT THẬT -> XÁC THỰC DANH TÍNH
-            if (!isIntruder) {
-                // CHỦ NHÀ: Khung xanh nhiều hơn -> Mở cửa -> Chuyển Scene 2
-                elements.faceHudLabel.textContent = "XÁC THỰC THÀNH CÔNG: CHỦ NHÀ !";
+            // 2. CÓ KHUÔN MẶT THẬT -> XÁC THỰC DANH TÍNH DỰA TRÊN KẾT QUẢ ĐỐI SOÁT
+            const passedAsOwner = (state.greenCnt >= 10 && state.greenCnt > state.redCnt);
+            if (passedAsOwner) {
+                // CHỦ NHÀ: Khung xanh chiếm ưu thế -> Mở cửa -> Chuyển Scene 2
+                elements.faceHudLabel.textContent = `XÁC THỰC THÀNH CÔNG: ${lastFaceBiometrics.matchedName} (${lastFaceBiometrics.confScore}) !`;
                 elements.assessmentText.textContent = "KẾT LUẬN: CHỦ NHÀ HỢP LỆ -> ĐÃ MỞ CỬA (90°)";
                 elements.assessmentText.style.color = "var(--color-emerald)";
                 
                 sfx.success();
                 syncDeviceUI('cua', true);
                 sendSerialCommand('O', "Xác Thực Chủ Nhà Thành Công -> Mở Cửa 90°");
-                showToast("XÁC THỰC THÀNH CÔNG: CHÀO MỪNG CHỦ NHÀ! ĐÃ MỞ CỬA (90°)");
-                appendLog("XÁC THỰC THÀNH CÔNG: Khung xanh chiếm ưu thế -> Cho phép vào nhà.", "rx");
+                showToast(`XÁC THỰC THÀNH CÔNG: CHÀO MỪNG ${lastFaceBiometrics.matchedName}! ĐÃ MỞ CỬA (90°)`);
+                appendLog(`XÁC THỰC THÀNH CÔNG: Khung xanh ${state.greenCnt}/${state.greenCnt + state.redCnt} -> Cho phép vào nhà.`, "rx");
                 
                 // Chuyển cảnh mượt mà sang Giao diện 2 sau 1.6s
                 setTimeout(() => {
@@ -1195,3 +1464,4 @@ function executeGestureAction(gesture) {
 }
 
 appendLog("Hệ thống Web Controller đã sẵn sàng.", "sys");
+initPythonWebSync();
