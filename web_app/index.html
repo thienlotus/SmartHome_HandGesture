@@ -99,19 +99,29 @@
             </div>
         </header>
 
-        <!-- Navigation Scene Tab Bar (Floating Segmented Control) -->
+        <!-- Navigation Scene Tab Bar (Clean Segmented Control) -->
         <nav class="scene-nav-pills" id="sceneNavPills">
             <button class="scene-tab-btn active" id="tabScene1" data-scene="1">
-                <span class="tab-icon">🛡️</span>
-                <span class="tab-text">GIAO DIỆN 1: CỔNG AN NINH FACE ID</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                <span class="tab-text">CỔNG AN NINH FACE ID</span>
             </button>
             <button class="scene-tab-btn" id="tabScene2" data-scene="2">
-                <span class="tab-icon">🖐️</span>
-                <span class="tab-text">GIAO DIỆN 2: CỬ CHỈ TAY & THIẾT BỊ</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                    <line x1="8" y1="21" x2="16" y2="21"/>
+                    <line x1="12" y1="17" x2="12" y2="21"/>
+                </svg>
+                <span class="tab-text">ĐIỀU KHIỂN CỬ CHỈ TAY</span>
             </button>
             <button class="scene-tab-btn" id="tabScene3" data-scene="3">
-                <span class="tab-icon">🚨</span>
-                <span class="tab-text">GIAO DIỆN 3: BÁO ĐỘNG SOS</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                <span class="tab-text">CẢNH BÁO SOS</span>
             </button>
         </nav>
 
@@ -125,10 +135,7 @@
                     <div class="viewport-header">
                         <div class="viewport-title-group">
                             <span class="viewport-mode-tag">CỔNG NHẬN DIỆN SINH TRẮC HỌC</span>
-                            <span class="viewport-sub">Hệ thống quét khuôn mặt 5s: Nhận diện Chủ nhà hoặc Kẻ lạ</span>
-                        </div>
-                        <div class="gate-header-tools">
-                            <span class="badge-tag-demo">CHUẨN BẢN DEMO AI</span>
+                            <span class="viewport-sub">Quét khuôn mặt 5s xác thực Chủ nhà hoặc Người lạ</span>
                         </div>
                     </div>
 
@@ -162,27 +169,26 @@
                         </div>
                     </div>
 
-                    <!-- HAI NÚT QUÉT MẶT DEMO CHUẨN: CHỦ NHÀ & NGƯỜI LẠ -->
+                    <!-- HAI NÚT QUÉT MẶT: CHỦ NHÀ & NGƯỜI LẠ -->
                     <div class="gate-control-bar gate-demo-actions">
-                        <button class="btn btn-scan-owner btn-xl" id="btnScanOwner" title="Quét mặt xác thực Chủ nhà hợp lệ (Mở cửa 90° & Vào nhà)">
+                        <button class="btn btn-scan-owner btn-xl" id="btnScanOwner" title="Quét mặt xác thực Chủ nhà">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                                <polyline points="22 4 12 14.01 9 11.01"/>
+                                <polyline points="20 6 9 17 4 12"/>
                             </svg>
-                            <span>🟢 QUÉT XÁC THỰC: CHỦ NHÀ (MỞ CỬA 90°)</span>
+                            <span>QUÉT XÁC THỰC: CHỦ NHÀ</span>
                         </button>
-                        <button class="btn btn-scan-guest btn-xl" id="btnScanGuest" title="Quét phát hiện Người lạ / Khách lạ (Khóa cửa 0° & Hú còi SOS)">
+                        <button class="btn btn-scan-guest btn-xl" id="btnScanGuest" title="Quét phát hiện Người lạ">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                                <line x1="12" y1="9" x2="12" y2="13"/>
-                                <line x1="12" y1="17" x2="12.01" y2="17"/>
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="15" y1="9" x2="9" y2="15"/>
+                                <line x1="9" y1="9" x2="15" y2="15"/>
                             </svg>
-                            <span>🔴 QUÉT PHÁT HIỆN: NGƯỜI LẠ (BÁO ĐỘNG SOS)</span>
+                            <span>QUÉT PHÁT HIỆN: NGƯỜI LẠ</span>
                         </button>
                     </div>
                 </div>
 
-                <!-- Side Column (Right): Bento Telemetry & Status Widgets -->
+                <!-- Side Column (Right): Bento Status Widgets (Đã bỏ giám sát hệ thống rườm rà) -->
                 <div class="bento-side-column">
                     <!-- Widget 1: Trạng thái Khóa Cửa -->
                     <div class="bento-card bento-widget-security">
@@ -230,38 +236,8 @@
                             </div>
                         </div>
                         <div class="assessment-box">
-                            <span class="assessment-label">ĐÁNH GIÁ AI:</span>
-                            <p class="assessment-content" id="assessmentText">Bấm một trong hai nút bên cạnh để bắt đầu quy trình quét</p>
-                        </div>
-                    </div>
-
-                    <!-- Widget 3: Thông Số Phần Cứng & Môi Trường -->
-                    <div class="bento-card bento-widget-telemetry">
-                        <div class="widget-header">
-                            <span class="widget-title">GIÁM SÁT HỆ THỐNG</span>
-                            <span class="widget-dot-live"></span>
-                        </div>
-                        <div class="telemetry-grid">
-                            <div class="tele-item">
-                                <span class="tele-icon">🔌</span>
-                                <span class="tele-name">Vi điều khiển</span>
-                                <strong class="tele-val" id="teleArduinoPort">Arduino Uno</strong>
-                            </div>
-                            <div class="tele-item">
-                                <span class="tele-icon">🛡️</span>
-                                <span class="tele-name">Cơ chế an ninh</span>
-                                <strong class="tele-val text-success">Kép (Dual)</strong>
-                            </div>
-                            <div class="tele-item">
-                                <span class="tele-icon">👁️</span>
-                                <span class="tele-name">Chống che Cam</span>
-                                <strong class="tele-val text-emerald">Laplacian ON</strong>
-                            </div>
-                            <div class="tele-item">
-                                <span class="tele-icon">📡</span>
-                                <span class="tele-name">Tần số baud</span>
-                                <strong class="tele-val">9600 bps</strong>
-                            </div>
+                            <span class="assessment-label">KẾT QUẢ:</span>
+                            <p class="assessment-content" id="assessmentText">Bấm chọn xác thực Chủ nhà hoặc Người lạ để kiểm tra</p>
                         </div>
                     </div>
                 </div>
@@ -269,19 +245,19 @@
         </section>
 
         <!-- ========================================================= -->
-        <!-- GIAO DIỆN 2: ĐIỀU KHIỂN CỬ CHỈ TAY THỜI GIAN THỰC          -->
+        <!-- GIAO DIỆN 2: ĐIỀU KHIỂN CỬ CHỈ TAY (CHIA ĐÔI 50/50 CAMERA & LỆNH) -->
         <!-- ========================================================= -->
         <section class="scene-view hidden" id="scene2">
             <div class="main-grid">
-                <!-- Left: Hand Tracking Camera Feed -->
+                <!-- Cột Trái: Camera Feed Bàn Tay & Nhật Ký -->
                 <div class="viewport-card">
                     <div class="viewport-header">
                         <div class="viewport-title-group">
-                            <span class="viewport-mode-tag">GIAO DIỆN 2: ĐIỀU KHIỂN CỬ CHỈ TAY THỜI GIAN THỰC</span>
-                            <span class="viewport-sub">Google MediaPipe Hands - 21 khớp xương bàn tay 3D</span>
+                            <span class="viewport-mode-tag">CAMERA NHẬN DIỆN BÀN TAY</span>
+                            <span class="viewport-sub">Google MediaPipe Hands 3D</span>
                         </div>
                         <button class="btn-sm btn-ghost" id="btnLockToGate">
-                            <span>🔒 KHÓA CỬA & VỀ CỔNG AN NINH</span>
+                            <span>KHÓA CỬA & VỀ CỔNG</span>
                         </button>
                     </div>
 
@@ -296,9 +272,9 @@
                             <button class="btn btn-primary btn-pulse btn-trigger-cam">BẬT CAMERA NGAY</button>
                         </div>
 
-                        <!-- Gesture Floating Badge -->
+                        <!-- Gesture Floating Badge (Sạch sẽ, không icon hoạt hình) -->
                         <div class="hud-gesture-badge hidden" id="hudGestureBadge">
-                            <span class="gesture-icon" id="hudGestureIcon">👉</span>
+                            <span id="hudGestureIcon" style="display:none;"></span>
                             <div class="gesture-info">
                                 <span class="gesture-name" id="hudGestureName">1 Ngón trỏ</span>
                                 <span class="gesture-confidence" id="hudGestureScore">Khớp: 98%</span>
@@ -326,21 +302,25 @@
                             </button>
                         </div>
                         <div class="terminal-body" id="serialLogs">
-                            <div class="log-entry log-sys">[HỆ THỐNG] Chào mừng đến với Smart Home Edge AI Web Controller.</div>
-                            <div class="log-entry log-sys">[HỆ THỐNG] Đã nạp thành công 6 cử chỉ điều khiển thiết bị thông minh.</div>
+                            <div class="log-entry log-sys">[HỆ THỐNG] Smart Home Edge AI Controller sẵn sàng.</div>
+                            <div class="log-entry log-sys">[HỆ THỐNG] Đã kích hoạt 6 cử chỉ điều khiển thiết bị.</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Right: Devices Grid -->
+                <!-- Cột Phải: Các Lệnh Điều Khiển Thiết Bị & Bảng Cử Chỉ -->
                 <div class="controls-section">
                     <div class="section-heading">
                         <div>
                             <h2 class="section-title">THIẾT BỊ TRONG NHÀ</h2>
-                            <span class="section-subtitle">Điều khiển bằng cử chỉ tay hoặc bấm trực tiếp</span>
+                            <span class="section-subtitle">Điều khiển bằng cử chỉ tay hoặc nút bấm</span>
                         </div>
-                        <button id="btnAllOff" class="btn btn-danger btn-sm" title="Nắm đấm để tắt tất cả">
-                            🛑 TẮT TẤT CẢ (NẮM ĐẤM)
+                        <button id="btnAllOff" class="btn btn-danger btn-sm" title="Tắt tất cả thiết bị">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
+                                <line x1="12" y1="2" x2="12" y2="12"/>
+                            </svg>
+                            <span>TẮT TẤT CẢ</span>
                         </button>
                     </div>
 
@@ -358,10 +338,10 @@
                             </div>
                             <div class="device-info">
                                 <h3 class="device-name">Đèn Chiếu Sáng</h3>
-                                <span class="device-pin">PIN DIGITAL D8</span>
+                                <span class="device-pin">PIN D8</span>
                             </div>
                             <div class="device-gesture-hint">
-                                <span class="hint-tag">👉 1 Ngón trỏ</span>
+                                <span class="hint-tag">1 Ngón trỏ</span>
                             </div>
                             <button class="btn btn-card" id="btnToggleDen">BẬT / TẮT ĐÈN</button>
                         </div>
@@ -379,10 +359,10 @@
                             </div>
                             <div class="device-info">
                                 <h3 class="device-name">Cửa Chính (Servo)</h3>
-                                <span class="device-pin">PIN PWM D9 (0° - 90°)</span>
+                                <span class="device-pin">PIN D9 (0° - 90°)</span>
                             </div>
                             <div class="device-gesture-hint">
-                                <span class="hint-tag">✌️ 2 Ngón chữ V</span>
+                                <span class="hint-tag">2 Ngón chữ V</span>
                             </div>
                             <div class="card-dual-actions">
                                 <button class="btn btn-card" id="btnOpenCua">MỞ (90°)</button>
@@ -403,10 +383,10 @@
                             </div>
                             <div class="device-info">
                                 <h3 class="device-name">Rèm Cửa (Servo)</h3>
-                                <span class="device-pin">PIN PWM D10</span>
+                                <span class="device-pin">PIN D10</span>
                             </div>
                             <div class="device-gesture-hint">
-                                <span class="hint-tag">🤟 3 Ngón tay</span>
+                                <span class="hint-tag">3 Ngón tay</span>
                             </div>
                             <button class="btn btn-card" id="btnToggleRem">KÉO LÊN (90°)</button>
                         </div>
@@ -426,10 +406,10 @@
                             </div>
                             <div class="device-info">
                                 <h3 class="device-name">Quạt Làm Mát</h3>
-                                <span class="device-pin">PIN RELAY D11</span>
+                                <span class="device-pin">PIN D11</span>
                             </div>
                             <div class="device-gesture-hint">
-                                <span class="hint-tag">🖐️ Xòe 5 ngón</span>
+                                <span class="hint-tag">Xòe 5 ngón</span>
                             </div>
                             <button class="btn btn-card" id="btnToggleQuat">BẬT / TẮT QUẠT</button>
                         </div>
@@ -447,10 +427,10 @@
                             </div>
                             <div class="device-info">
                                 <h3 class="device-name">Tivi Thông Minh</h3>
-                                <span class="device-pin">MÀN HÌNH LCD I2C 0x27</span>
+                                <span class="device-pin">LCD I2C 0x27</span>
                             </div>
                             <div class="device-gesture-hint">
-                                <span class="hint-tag">👌 Dấu OK</span>
+                                <span class="hint-tag">Dấu OK</span>
                             </div>
                             <button class="btn btn-card" id="btnToggleTv">BẬT / TẮT TIVI</button>
                         </div>
@@ -467,26 +447,26 @@
                                 <span class="device-badge badge-off" id="badgeAlarm">BÌNH THƯỜNG</span>
                             </div>
                             <div class="device-info">
-                                <h3 class="device-name">Còi Báo Động SOS</h3>
-                                <span class="device-pin">PIN DIGITAL D7</span>
+                                <h3 class="device-name">Còi Báo Động</h3>
+                                <span class="device-pin">PIN D7</span>
                             </div>
                             <div class="device-gesture-hint">
-                                <span class="hint-tag">🚨 Báo động khẩn</span>
+                                <span class="hint-tag">Báo động khẩn</span>
                             </div>
                             <button class="btn btn-card btn-card-danger" id="btnToggleAlarm">CÒI BÁO ĐỘNG</button>
                         </div>
                     </div>
 
-                    <!-- Guide Card -->
+                    <!-- Bảng Tra Cứu Cử Chỉ (Không icon hoạt hình) -->
                     <div class="guide-card">
-                        <div class="guide-title">BẢNG HÌNH THÁI CỬ CHỈ TAY:</div>
+                        <div class="guide-title">LỆNH CỬ CHỈ ĐIỀU KHIỂN:</div>
                         <div class="guide-grid">
-                            <div class="guide-item"><span class="g-icon">👉</span><div><strong>1 Ngón trỏ</strong><span>Bật/Tắt Đèn (A/B)</span></div></div>
-                            <div class="guide-item"><span class="g-icon">✌️</span><div><strong>2 Ngón chữ V</strong><span>Mở/Đóng Cửa (O/C)</span></div></div>
-                            <div class="guide-item"><span class="g-icon">🤟</span><div><strong>3 Ngón tay</strong><span>Kéo Rèm Lên (U)</span></div></div>
-                            <div class="guide-item"><span class="g-icon">🖐️</span><div><strong>Xòe 5 ngón</strong><span>Bật/Tắt Quạt (F)</span></div></div>
-                            <div class="guide-item"><span class="g-icon">👌</span><div><strong>Dấu OK</strong><span>Bật/Tắt Tivi LCD (T)</span></div></div>
-                            <div class="guide-item"><span class="g-icon">✊</span><div><strong>Nắm đấm</strong><span>Tắt tất cả thiết bị (B)</span></div></div>
+                            <div class="guide-item"><div><strong>1 Ngón trỏ</strong><span>Bật / Tắt Đèn</span></div></div>
+                            <div class="guide-item"><div><strong>2 Ngón chữ V</strong><span>Mở / Đóng Cửa</span></div></div>
+                            <div class="guide-item"><div><strong>3 Ngón tay</strong><span>Kéo Rèm Lên</span></div></div>
+                            <div class="guide-item"><div><strong>Xòe 5 ngón</strong><span>Bật / Tắt Quạt</span></div></div>
+                            <div class="guide-item"><div><strong>Dấu OK</strong><span>Bật / Tắt Tivi</span></div></div>
+                            <div class="guide-item"><div><strong>Nắm đấm</strong><span>Tắt Tất Cả Thiết Bị</span></div></div>
                         </div>
                     </div>
                 </div>
@@ -494,37 +474,37 @@
         </section>
 
         <!-- ========================================================= -->
-        <!-- GIAO DIỆN 3: CẢNH BÁO ĐỎ BÁO ĐỘNG SOS (CHUẨN BẢN DEMO)     -->
+        <!-- GIAO DIỆN 3: CẢNH BÁO SOS (GỌN GÀNG, KHÔNG RƯỜM RÀ)       -->
         <!-- ========================================================= -->
         <section class="scene-view hidden" id="scene3">
             <div class="alarm-view-card">
                 <div class="alarm-pulsing-banner">
                     <div class="siren-light"></div>
-                    <h2 class="alarm-big-title">🚨 CẢNH BÁO AN NINH: PHÁT HIỆN NGƯỜI LẠ ! 🚨</h2>
-                    <p class="alarm-subtitle">Khuôn mặt không khớp dữ liệu sinh trắc học chủ nhà. Cửa đã bị khóa chặt và còi chống trộm đang hú vang!</p>
+                    <h2 class="alarm-big-title">CẢNH BÁO AN NINH: PHÁT HIỆN NGƯỜI LẠ</h2>
+                    <p class="alarm-subtitle">Khuôn mặt không khớp dữ liệu sinh trắc học chủ nhà. Cửa đã bị khóa và hệ thống báo động kích hoạt.</p>
                 </div>
 
                 <div class="alarm-status-grid">
                     <div class="alarm-stat-item">
-                        <span class="stat-label">TRẠNG THÁI CỬA CHÍNH</span>
-                        <strong class="stat-val val-locked">KHÓA CHẶT (0°)</strong>
+                        <span class="stat-label">CỬA CHÍNH</span>
+                        <strong class="stat-val val-locked">KHÓA 0°</strong>
                     </div>
                     <div class="alarm-stat-item">
-                        <span class="stat-label">CÒI BÁO ĐỘNG ARDUINO</span>
-                        <strong class="stat-val val-danger">ĐANG HÚ CÒI SOS (LỆNH 'S')</strong>
+                        <span class="stat-label">CÒI BÁO ĐỘNG</span>
+                        <strong class="stat-val val-danger">ĐANG PHÁT TÍN HIỆU</strong>
                     </div>
                     <div class="alarm-stat-item">
                         <span class="stat-label">CAMERA AN NINH</span>
-                        <strong class="stat-val val-active">GHI HÌNH ĐỐI TƯỢNG</strong>
+                        <strong class="stat-val val-active">ĐÃ GHI NHẬN</strong>
                     </div>
                 </div>
 
                 <div class="alarm-actions-row">
-                    <button class="btn btn-danger btn-xl btn-pulse" id="btnCancelAlarm">
-                        🛑 TẮT CÒI & TRỞ VỀ CỔNG AN NINH
+                    <button class="btn btn-danger btn-xl" id="btnCancelAlarm">
+                        TẮT BÁO ĐỘNG & VỀ CỔNG
                     </button>
                     <button class="btn btn-secondary btn-xl" id="btnOverrideOwner">
-                        🔓 XÁC MINH: TÔI LÀ CHỦ NHÀ (MỞ CỬA)
+                        XÁC MINH CHỦ NHÀ: MỞ CỬA
                     </button>
                 </div>
             </div>

@@ -1076,33 +1076,33 @@ function classifyHandGesture(lm) {
     
     // 1. Closed Fist (Nắm đấm -> Tắt toàn bộ thiết bị)
     if (count === 0 && !isThumbExtended) {
-        return { name: 'Closed_Fist', title: 'Nắm đấm (Tắt tất cả)', icon: '✊' };
+        return { name: 'Closed_Fist', title: 'Nắm đấm: Tắt tất cả', icon: '' };
     }
     
     // 2. OK Sign (Ngón cái chạm ngón trỏ + ngón giữa duỗi)
     const thumbIndexDist = Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y);
     if (thumbIndexDist < palm * 0.35 && isMiddleExtended && isRingExtended) {
-        return { name: 'OK_SIGN', title: 'Dấu OK (Bật/Tắt Tivi)', icon: '👌' };
+        return { name: 'OK_SIGN', title: 'Dấu OK: Bật/Tắt Tivi', icon: '' };
     }
     
     // 3. 1 Finger (1 ngón trỏ -> Bật/Tắt Đèn)
     if (isIndexExtended && !isMiddleExtended && !isRingExtended && !isPinkyExtended) {
-        return { name: 'Pointing_Up', title: '1 Ngón trỏ (Bật Đèn)', icon: '👉' };
+        return { name: 'Pointing_Up', title: '1 Ngón trỏ: Bật/Tắt Đèn', icon: '' };
     }
     
     // 4. 2 Fingers (2 ngón chữ V -> Mở/Đóng Cửa)
     if (isIndexExtended && isMiddleExtended && !isRingExtended && !isPinkyExtended) {
-        return { name: 'Victory', title: '2 Ngón chữ V (Mở/Đóng Cửa)', icon: '✌️' };
+        return { name: 'Victory', title: '2 Ngón chữ V: Mở/Đóng Cửa', icon: '' };
     }
     
     // 5. 3 Fingers (3 ngón tay -> Kéo Rèm Lên)
     if (isIndexExtended && isMiddleExtended && isRingExtended && !isPinkyExtended) {
-        return { name: 'Three_Fingers', title: '3 Ngón tay (Kéo Rèm Lên)', icon: '🤟' };
+        return { name: 'Three_Fingers', title: '3 Ngón tay: Kéo Rèm', icon: '' };
     }
     
     // 6. Open Palm (Xòe 5 ngón -> Quạt)
     if (count >= 4 && isThumbExtended) {
-        return { name: 'Open_Palm', title: 'Xòe 5 ngón (Đảo Quạt)', icon: '🖐️' };
+        return { name: 'Open_Palm', title: 'Xòe 5 ngón: Bật/Tắt Quạt', icon: '' };
     }
     
     return null;

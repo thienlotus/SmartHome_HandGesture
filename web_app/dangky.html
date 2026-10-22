@@ -788,15 +788,14 @@
             </div>
         </header>
 
-        <!-- Bento Row: 4 Giai Đoạn (25 25 25 25) -->
+        <!-- Bento Row: 4 Giai Đoạn (25 - 25 - 25 - 25) -->
         <section class="bento-stages-row">
             <!-- Stage 1 -->
             <div class="bento-stage-card active" id="pillStage1">
                 <div class="card-top">
-                    <span class="stage-tag">BƯỚC 1 (25 ẢNH)</span>
-                    <span class="stage-icon">👤</span>
+                    <span class="stage-tag">BƯỚC 1</span>
                 </div>
-                <div class="stage-title">Đeo kính / Thẳng</div>
+                <div class="stage-title">Đeo kính / Nhìn thẳng</div>
                 <div class="stage-progress-text" id="pillCount1">0 / 25 ảnh</div>
                 <div class="stage-bar">
                     <div class="stage-bar-fill" id="stageBarFill1"></div>
@@ -806,10 +805,9 @@
             <!-- Stage 2 -->
             <div class="bento-stage-card" id="pillStage2">
                 <div class="card-top">
-                    <span class="stage-tag">BƯỚC 2 (25 ẢNH)</span>
-                    <span class="stage-icon">🔄</span>
+                    <span class="stage-tag">BƯỚC 2</span>
                 </div>
-                <div class="stage-title">Đeo kính / Nghiêng</div>
+                <div class="stage-title">Đeo kính / Nghiêng phải trái</div>
                 <div class="stage-progress-text" id="pillCount2">0 / 25 ảnh</div>
                 <div class="stage-bar">
                     <div class="stage-bar-fill" id="stageBarFill2"></div>
@@ -819,10 +817,9 @@
             <!-- Stage 3 -->
             <div class="bento-stage-card" id="pillStage3">
                 <div class="card-top">
-                    <span class="stage-tag">BƯỚC 3 (25 ẢNH)</span>
-                    <span class="stage-icon">👓</span>
+                    <span class="stage-tag">BƯỚC 3</span>
                 </div>
-                <div class="stage-title">Tháo kính / Thẳng</div>
+                <div class="stage-title">Tháo kính / Nhìn thẳng</div>
                 <div class="stage-progress-text" id="pillCount3">0 / 25 ảnh</div>
                 <div class="stage-bar">
                     <div class="stage-bar-fill" id="stageBarFill3"></div>
@@ -832,10 +829,9 @@
             <!-- Stage 4 -->
             <div class="bento-stage-card" id="pillStage4">
                 <div class="card-top">
-                    <span class="stage-tag">BƯỚC 4 (25 ẢNH)</span>
-                    <span class="stage-icon">😊</span>
+                    <span class="stage-tag">BƯỚC 4</span>
                 </div>
-                <div class="stage-title">Tháo kính / Cười</div>
+                <div class="stage-title">Tháo kính / Cười tự nhiên</div>
                 <div class="stage-progress-text" id="pillCount4">0 / 25 ảnh</div>
                 <div class="stage-bar">
                     <div class="stage-bar-fill" id="stageBarFill4"></div>
@@ -900,9 +896,9 @@
                         <span class="info-card-badge" id="stageStepBadge">Bước 1/4</span>
                     </div>
                     <div class="live-guide-content">
-                        <div class="live-guide-title" id="stepTitle">BƯỚC 1/4: ĐEO KÍNH (NẾU CÓ) - NHÌN THẲNG</div>
+                        <div class="live-guide-title" id="stepTitle">BƯỚC 1/4: ĐEO KÍNH - NHÌN THẲNG</div>
                         <div class="live-guide-desc" id="stepDesc">
-                            Đeo kính (nếu bạn có đeo kính), giữ đầu thẳng tự nhiên và nhìn vào tâm ống kính camera.
+                            Đeo kính nếu bạn có đeo kính, giữ đầu thẳng và nhìn vào camera.
                         </div>
                     </div>
                 </div>
@@ -1007,13 +1003,13 @@
             document.getElementById('stageBarFill4')
         ];
 
-        // 4 Giai đoạn chuẩn theo dang_ky_chu_nha.py (25 - 25 - 25 - 25)
+        // 4 Giai đoạn chuẩn: 25 - 25 - 25 - 25
         const STAGES = [
             {
                 id: 1,
                 target: 25,
-                title: "BƯỚC 1/4: ĐEO KÍNH (NẾU CÓ) - NHÌN THẲNG",
-                desc: "Đeo kính (nếu bạn có đeo kính), giữ đầu thẳng tự nhiên và nhìn vào camera.",
+                title: "BƯỚC 1/4: ĐEO KÍNH - NHÌN THẲNG",
+                desc: "Đeo kính nếu có, ngồi thẳng và nhìn vào camera.",
                 prepTitle: "CHUẨN BỊ BƯỚC 1: NHÌN THẲNG",
                 prepDesc: "Đeo kính nếu có, ngồi thẳng và nhìn vào ống kính camera.",
                 voiceText: "Bước một, nhìn thẳng"
@@ -1021,28 +1017,28 @@
             {
                 id: 2,
                 target: 50,
-                title: "BƯỚC 2/4: ĐEO KÍNH - NGHIÊNG NHẸ ĐẦU SANG TRÁI VÀ PHẢI",
-                desc: "Từ từ nghiêng nhẹ mặt sang trái rồi sang phải để AI chụp các góc cạnh khuôn mặt.",
-                prepTitle: "CHUẨN BỊ BƯỚC 2: NGHIÊNG ĐẦU",
-                prepDesc: "Giữ nguyên kính, từ từ nghiêng nhẹ đầu sang trái rồi sang phải.",
-                voiceText: "Bước hai, nghiêng nhẹ đầu"
+                title: "BƯỚC 2/4: ĐEO KÍNH - NGHIÊNG PHẢI TRÁI",
+                desc: "Giữ nguyên kính, từ từ nghiêng mặt sang phải rồi sang trái.",
+                prepTitle: "CHUẨN BỊ BƯỚC 2: NGHIÊNG PHẢI TRÁI",
+                prepDesc: "Giữ nguyên kính, từ từ nghiêng mặt sang phải rồi sang trái.",
+                voiceText: "Bước hai, nghiêng phải trái"
             },
             {
                 id: 3,
                 target: 75,
-                title: "BƯỚC 3/4: THÁO KÍNH RA - NHÌN THẲNG",
-                desc: "Hãy tháo kính ra (nếu không có kính hãy ngước cằm nhẹ lên), nhìn thẳng vào camera.",
-                prepTitle: "CHUẨN BỊ BƯỚC 3: THÁO KÍNH RA",
-                prepDesc: "Hãy tháo kính ra, nhìn thẳng vào camera để AI nhận diện khi không có kính.",
+                title: "BƯỚC 3/4: THÁO KÍNH - NHÌN THẲNG",
+                desc: "Tháo kính ra, nhìn thẳng vào camera.",
+                prepTitle: "CHUẨN BỊ BƯỚC 3: THÁO KÍNH",
+                prepDesc: "Tháo kính ra, nhìn thẳng vào camera.",
                 voiceText: "Bước ba, hãy tháo kính ra"
             },
             {
                 id: 4,
                 target: 100,
-                title: "BƯỚC 4/4: THÁO KÍNH - NGHIÊNG ĐẦU VÀ CƯỜI TỰ NHIÊN",
-                desc: "Không đeo kính, nghiêng nhẹ đầu và cười tự nhiên để AI ghi nhớ cơ mặt khi giao tiếp.",
-                prepTitle: "CHUẨN BỊ BƯỚC 4: NGHIÊNG ĐẦU VÀ CƯỜI",
-                prepDesc: "Nghiêng nhẹ đầu và cười tự nhiên.",
+                title: "BƯỚC 4/4: THÁO KÍNH - CƯỜI TỰ NHIÊN",
+                desc: "Không đeo kính, cười tự nhiên nhìn vào camera.",
+                prepTitle: "CHUẨN BỊ BƯỚC 4: CƯỜI TỰ NHIÊN",
+                prepDesc: "Không đeo kính, cười tự nhiên nhìn vào camera.",
                 voiceText: "Bước bốn, cười tự nhiên"
             }
         ];
