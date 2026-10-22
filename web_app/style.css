@@ -141,15 +141,12 @@ body.theme-emergency {
 }
 
 .brand-logo {
-    width: 48px;
-    height: 48px;
-    background: #ffe4ec;
-    border: 2px solid var(--border-bold);
-    border-radius: var(--radius-md);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 14px rgba(225, 29, 72, 0.2);
+    background: transparent;
+    border: none;
+    box-shadow: none;
 }
 
 .brand-title {

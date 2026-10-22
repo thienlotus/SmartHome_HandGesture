@@ -6,8 +6,8 @@
     <title>Đăng Ký Khuôn Mặt - Smart Home AI</title>
     <meta name="description" content="Trang thu thập dữ liệu khuôn mặt 100 ảnh sinh trắc học chuẩn AI 4 giai đoạn (25-25-25-25) giao diện Bento Grid cao cấp.">
     
-    <!-- Logo thương hiệu Hoa Sen trên thanh Tab (Favicon SVG) -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='lotus' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23fb7185'/%3E%3Cstop offset='50%25' stop-color='%23e11d48'/%3E%3Cstop offset='100%25' stop-color='%239d174d'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='30' fill='%23fff1f5' stroke='%23e11d48' stroke-width='2'/%3E%3Cpath d='M32 14 C36 24 44 28 44 38 C44 46 38 50 32 50 C26 50 20 46 20 38 C20 28 28 24 32 14 Z' fill='url(%23lotus)'/%3E%3Cpath d='M32 26 C38 32 48 34 50 42 C51 46 47 50 40 48 C36 44 34 38 32 26 Z' fill='%23f43f5e' opacity='0.85'/%3E%3Cpath d='M32 26 C26 32 16 34 14 42 C13 46 17 50 24 48 C28 44 30 38 32 26 Z' fill='%23f43f5e' opacity='0.85'/%3E%3Ccircle cx='32' cy='40' r='3' fill='%23fef08a'/%3E%3C/svg%3E">
+    <!-- Favicon: Biểu tượng Ngôi nhà Thông minh Hiện đại Màu hồng (Không khung) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none'%3E%3Cdefs%3E%3ClinearGradient id='pinkHomeFavDk' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23fb7185'/%3E%3Cstop offset='60%25' stop-color='%23e11d48'/%3E%3Cstop offset='100%25' stop-color='%239d174d'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M4 14.5L16 4.5L28 14.5V26C28 27.1046 27.1046 28 26 28H6C4.89543 28 4 27.1046 4 26V14.5Z' stroke='url(%23pinkHomeFavDk)' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M12.5 28V19C12.5 17.6193 13.6193 16.5 15 16.5H17C18.3807 16.5 19.5 17.6193 19.5 19V28' stroke='url(%23pinkHomeFavDk)' stroke-width='2.3' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='16' cy='11.5' r='1.8' fill='%23e11d48'/%3E%3C/svg%3E">
 
     <!-- Google Fonts: Be Vietnam Pro & JetBrains Mono chuẩn 100% tiếng Việt -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -158,16 +158,16 @@
         }
 
         .header-logo-circle {
-            width: 58px;
-            height: 58px;
-            background: #ffe4ec;
-            border: 2px solid var(--color-primary-border-bold);
-            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            width: auto;
+            height: auto;
+            padding: 0;
             flex-shrink: 0;
-            box-shadow: 0 4px 14px rgba(225, 29, 72, 0.2);
         }
 
         .header-texts h1 {
@@ -768,13 +768,19 @@
         <!-- Bento Header Card -->
         <header class="bento-header-card">
             <div class="header-brand">
-                <div class="header-logo-circle">
-                    <!-- SVG Logo Hoa Sen Hồng Đồng Bộ -->
-                    <svg width="34" height="34" viewBox="0 0 64 64" fill="none">
-                        <path d="M32 14 C36 24 44 28 44 38 C44 46 38 50 32 50 C26 50 20 46 20 38 C20 28 28 24 32 14 Z" fill="#e11d48"/>
-                        <path d="M32 26 C38 32 48 34 50 42 C51 46 47 50 40 48 C36 44 34 38 32 26 Z" fill="#f43f5e" opacity="0.85"/>
-                        <path d="M32 26 C26 32 16 34 14 42 C13 46 17 50 24 48 C28 44 30 38 32 26 Z" fill="#f43f5e" opacity="0.85"/>
-                        <circle cx="32" cy="40" r="3" fill="#fef08a"/>
+                <div class="header-logo-circle" title="Smart Home AI">
+                    <!-- SVG Ngôi Nhà Thông Minh Hiện Đại Màu Hồng (Không khung) -->
+                    <svg width="42" height="42" viewBox="0 0 32 32" fill="none">
+                        <defs>
+                            <linearGradient id="pinkHomeGradDk" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#fb7185"/>
+                                <stop offset="50%" stop-color="#e11d48"/>
+                                <stop offset="100%" stop-color="#9d174d"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M4 14.5L16 4.5L28 14.5V26C28 27.1046 27.1046 28 26 28H6C4.89543 28 4 27.1046 4 26V14.5Z" stroke="url(#pinkHomeGradDk)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12.5 28V19C12.5 17.6193 13.6193 16.5 15 16.5H17C18.3807 16.5 19.5 17.6193 19.5 19V28" stroke="url(#pinkHomeGradDk)" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+                        <circle cx="16" cy="11.5" r="1.8" fill="#e11d48"/>
                     </svg>
                 </div>
                 <div class="header-texts">
