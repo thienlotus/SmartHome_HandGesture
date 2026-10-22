@@ -738,19 +738,30 @@ if (elements.btnScanGuest) {
     });
 }
 
-// Phím Space: Kích hoạt BẬT QUÉT MẶT AN NINH (Chuẩn theo bản demo ban đầu)
+// Phím tắt điều khiển Quét mặt:
+// - Nhấn SPACE hoặc Click nút: Quét xác thực Chủ nhà (Mở cửa 90°)
+// - Nhấn phím 'G' (Guest) hoặc SHIFT+SPACE / SHIFT+CLICK: Thử nghiệm phát hiện Người lạ (Báo động SOS & Khóa 0°)
 window.addEventListener('keydown', (e) => {
-    if (e.code === 'Space' && state.currentScene === 1) {
-        e.preventDefault();
-        const isIntruder = e.shiftKey || e.altKey;
-        if (elements.btnStartFaceScan) {
-            if (!state.isCameraRunning) {
-                startWebcam().then(() => triggerFaceScanProcess(isIntruder));
-            } else {
-                triggerFaceScanProcess(isIntruder);
+    if (state.currentScene === 1) {
+        if (e.code === 'Space') {
+            e.preventDefault();
+            const isIntruder = e.shiftKey || e.altKey;
+            if (elements.btnStartFaceScan) {
+                if (!state.isCameraRunning) {
+                    startWebcam().then(() => triggerFaceScanProcess(isIntruder));
+                } else {
+                    triggerFaceScanProcess(isIntruder);
+                }
             }
-        } else if (elements.btnScanOwner) {
-            elements.btnScanOwner.click();
+        } else if (e.code === 'KeyG') {
+            e.preventDefault();
+            if (elements.btnStartFaceScan) {
+                if (!state.isCameraRunning) {
+                    startWebcam().then(() => triggerFaceScanProcess(true));
+                } else {
+                    triggerFaceScanProcess(true);
+                }
+            }
         }
     }
 });
